@@ -1,0 +1,258 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { createUserWithEmailAndPassword, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile, type User } from 'firebase/auth';
+import { getDoc } from 'firebase/firestore';
+import {
+  Activity, ArrowLeft, ArrowRight, Bell, CalendarClock, Camera, Check, CheckCircle2, ChevronRight,
+  Clock3, CloudUpload, Database, FileText, Headphones, LayoutDashboard, LockKeyhole,
+  LogOut, Menu, Plus, RefreshCw, Search, ShieldCheck, UserRound, Users, Wallet, X, type LucideIcon,
+} from 'lucide-react';
+import { auth } from './firebase';
+import {
+  addLead, advanceLead, approveRequest, createTicket, memberFor, pendingRequests,
+  registerPolicy, requestAccess, requestRef, resolveTicket, subscribeRecords,
+  uploadDocument, type AccessRequest, type EnterpriseRole, type LiveCollection, type LiveRecord
+} from './backend';
+import { money, navigationByRole, roles, type Section } from './data';
+
+const sections: Record<Section, { label: string; icon: LucideIcon }> = {
+  resumen: { label: 'Vista general', icon: LayoutDashboard },
+  prospectos: { label: 'Oportunidades', icon: Activity },
+  polizas: { label: 'Pólizas y expedientes', icon: ShieldCheck },
+  clientes: { label: 'Clientes', icon: Users },
+  solicitudes: { label: 'Solicitudes', icon: Headphones },
+  finanzas: { label: 'Comisiones', icon: Wallet },
+  equipo: { label: 'Equipo y permisos', icon: UserRound },
+  documentos: { label: 'Documentos', icon: FileText },
+  configuracion: { label: 'Configuración', icon: Database }
+};
+const companyRoles: EnterpriseRole[] = ['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
+const statuses: Record<string,string> = {
+  Nuevo:'Nuevo', Contactado:'Contactado', Cotización:'Cotización',
+  Negociación:'Negociación', Ganado:'Ganado'
+};
+const loadingText = 'Cargando entorno seguro…';
+const readable = (value: unknown): string =>
+  typeof value === 'number' ? new Intl.NumberFormat('es-NI').format(value)
+  : typeof value === 'string' ? value : '—';
+function friendlyError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (message.includes('auth/invalid-credential')) return 'Correo o contraseña incorrectos.';
+  if (message.includes('auth/email-already-in-use')) return 'Ese correo ya tiene una cuenta.';
+  if (message.includes('auth/weak-password')) return 'La contraseña debe tener al menos 6 caracteres.';
+  if (message.includes('auth/operation-not-allowed')) return 'Activa el método Correo/Contraseña en Firebase Authentication.';
+  if (message.includes('auth/unauthorized-domain')) return 'El dominio de Vercel debe autorizarse en Firebase Authentication.';
+  if (message.includes('permission-denied') || message.includes('storage/unauthorized')) return 'Acceso rechazado: verifica que publicaste las reglas y que tu perfil esté autorizado.';
+  if (message.includes('storage/retry-limit-exceeded')) return 'La carga no pudo completarse. Revisa Storage y la conexión.';
+  return message;
+}
+function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
+ user: User | null;
+ stage: 'signed-out'|'verify'|'request'|'pending';
+ onRetry:()=>Promise<void>;
+ onRequest:(name:string,role:EnterpriseRole)=>Promise<void>;
+ onBack:()=>void;
+}) {
+ const [register,setRegister]=useState(false);
+ const [busy,setBusy]=useState(false);
+ const [error,setError]=useState('');
+ const [email,setEmail]=useState('');
+ const [password,setPassword]=useState('');
+ const [name,setName]=useState('');
+ const [area,setArea]=useState<EnterpriseRole>('ventas');
+ async function action(work:()=>Promise<unknown>) {
+   setBusy(true);setError('');
+   try { await work(); } catch(e) { setError(friendlyError(e)); }
+   finally { setBusy(false); }
+ }
+ async function authSubmit(e:FormEvent) {
+   e.preventDefault();
+   await action(async()=>{
+     if(register) {
+       const created=await createUserWithEmailAndPassword(auth,email.trim(),password);
+       if(name.trim()) await updateProfile(created.user,{displayName:name.trim().slice(0,90)});
+       await sendEmailVerification(created.user);
+     } else {
+       await signInWithEmailAndPassword(auth,email.trim(),password);
+     }
+   });
+ }
+ return <div className="live-auth-screen"><div className="live-auth-decoration"><div className="live-auth-orbit"/><ShieldCheck size={72} strokeWidth={1}/></div><div className="live-auth-card">
+  <button className="live-back" onClick={onBack}><ArrowLeft size={16}/> Volver a la web</button>
+  <div className="live-auth-brand"><span><ShieldCheck size={24}/></span><div><strong>SEGUROS<span>.</span></strong><small>PRIVATE WORKSPACE · XARCON</small></div></div>
+  {stage==='signed-out'&&<><div className="live-auth-title"><span>ACCESO EMPRESARIAL</span><h1>{register?'Solicita tu cuenta.':'Bienvenido de nuevo.'}</h1><p>{register?'Crea una cuenta y solicita autorización. Ninguna cuenta obtiene permisos automáticamente.':'Ingresa con tu correo empresarial y credenciales autorizadas.'}</p></div><form className="live-form" onSubmit={authSubmit}>
+   {register&&<label>Nombre y apellido<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label>}
+   <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@empresa.com"/></label>
+   <label>Contraseña<input type="password" minLength={6} autoComplete={register?'new-password':'current-password'} required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"/></label>
+   {error&&<p className="live-error">{error}</p>}
+   <button disabled={busy} className="btn btn-dark full" type="submit">{busy?'Procesando…':register?'Crear cuenta':'Iniciar sesión'} <ArrowRight size={16}/></button>
+  </form><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
+  {stage==='verify'&&<div className="live-auth-title"><span>VERIFICACIÓN OBLIGATORIA</span><h1>Revisa tu correo.</h1><p>Te enviamos un enlace de verificación a <strong>{user?.email}</strong>. Confírmalo y después actualiza tu acceso.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Ya verifiqué mi correo <RefreshCw size={16}/></button><button className="live-switch" onClick={()=>action(async()=>{if(user)await sendEmailVerification(user);})}>Reenviar correo de verificación</button>{error&&<p className="live-error">{error}</p>}</div>}
+  {stage==='request'&&<div className="live-auth-title"><span>APROBACIÓN PENDIENTE DE SOLICITAR</span><h1>Completa tu solicitud.</h1><p>Tu correo está verificado. Un administrador revisará tu incorporación y asignará los permisos necesarios.</p><form className="live-form" onSubmit={e=>{e.preventDefault();void action(()=>onRequest(name||user?.displayName||'',area));}}><label>Nombre de identificación<input required value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label><label>Área solicitada<select value={area} onChange={e=>setArea(e.target.value as EnterpriseRole)}>{companyRoles.map(r=><option key={r} value={r}>{roles.find(x=>x.id===r)?.label||r}</option>)}</select></label>{error&&<p className="live-error">{error}</p>}<button className="btn btn-dark full" disabled={busy} type="submit">Solicitar autorización <ArrowRight size={16}/></button></form></div>}
+  {stage==='pending'&&<div className="live-auth-title"><span>ACCESO POR APROBAR</span><h1>Tu solicitud está en revisión.</h1><p>La dirección de la empresa debe autorizar tu perfil. Podrás entrar cuando se apruebe tu cuenta.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Comprobar acceso <RefreshCw size={16}/></button>{error&&<p className="live-error">{error}</p>}</div>}
+  {user&&<button className="live-switch" onClick={()=>void signOut(auth)}>Cerrar sesión · {user.email}</button>}
+  <div className="live-auth-foot"><LockKeyhole size={14}/> Tus permisos se validan en Firebase, no en la interfaz.</div>
+ </div><p className="live-auth-copyright">SEGUROS OS · DESARROLLADO POR XARCON · 2026</p></div>;
+}
+type EntryModal = 'lead' | 'ticket' | 'policy' | 'file' | null;
+const recordNames:LiveCollection[]=['leads','policies','tickets','commissions','documents','members'];
+function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection[] {
+  if(admin)return recordNames;
+  switch(role) {
+   case 'direccion':return recordNames.filter(n=>n!=='members');
+   case 'ventas':return ['leads','policies','documents'];
+   case 'operaciones':return ['policies','tickets','documents'];
+   case 'servicio':return ['policies','tickets','documents'];
+   case 'finanzas':return ['policies','commissions','documents'];
+   case 'supervision':return ['leads','tickets','documents','members'];
+   case 'cliente':return ['policies','tickets','documents'];
+  }
+}
+function LivePanel({user,role,admin,onPublic,onDemo}:{
+ user:User;role:EnterpriseRole;admin:boolean;onPublic:()=>void;onDemo:()=>void;
+}) {
+ const [section,setSection]=useState<Section>('resumen');
+ const [mobile,setMobile]=useState(false);
+ const [search,setSearch]=useState('');
+ const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
+ const [pending,setPending]=useState<AccessRequest[]>([]);
+ const [modal,setModal]=useState<EntryModal>(null);
+ const [submitting,setSubmitting]=useState(false);
+ const [notice,setNotice]=useState('');
+ const [error,setError]=useState('');
+ const [newRole,setNewRole]=useState<EnterpriseRole>('ventas');
+ const fileInput=useRef<HTMLInputElement>(null);
+ const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});
+ const activeTabs=navigationByRole[role];
+ const collections=useMemo(()=>accessibleCollections(role,admin),[role,admin]);
+ useEffect(()=>{
+   const cleanups=collections.map(name=>subscribeRecords(name, data=>{
+     setRows(prev=>({...prev,[name]:data}));
+   },e=>setError('No pudimos consultar '+name+': '+friendlyError(e)),role==='cliente'&&['policies','tickets','documents'].includes(name)?user.uid:undefined));
+   return ()=>cleanups.forEach(fn=>fn());
+ },[collections,role,user.uid]);
+ const refreshRequests=useCallback(async()=>{if(!admin)return;try{setPending(await pendingRequests());}catch(e){setError(friendlyError(e));}},[admin]);
+ useEffect(()=>{if(admin)void refreshRequests();},[admin,refreshRequests]);
+ const leads=rows.leads||[];
+ const policies=rows.policies||[];
+ const tickets=rows.tickets||[];
+ const commissions=rows.commissions||[];
+ const documents=rows.documents||[];
+ const members=rows.members||[];
+ const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
+ const filtered=(items:LiveRecord[])=>items.filter(matches);
+ const name=roles.find(r=>r.id===role)?.label||role;
+ const canSales=admin||['direccion','ventas','supervision'].includes(role);
+ const canOperate=admin||['direccion','operaciones'].includes(role);
+ const canService=admin||['direccion','servicio','operaciones'].includes(role);
+ const canUpload=true;
+ const canManage=admin;
+ const go=(tab:Section)=>{setSection(tab);setMobile(false);setSearch('');setError('');};
+ function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});setModal(null);}
+ async function submit(e:FormEvent) {
+   e.preventDefault();setSubmitting(true);setError('');
+   try {
+     if(modal==='lead')await addLead({name:form.name,product:form.product,value:Number(form.amount),channel:form.channel},user);
+     if(modal==='ticket')await createTicket({subject:form.name,detail:form.detail,type:form.type},user,role);
+     if(modal==='policy')await registerPolicy({clientName:form.name,insurer:form.insurer,product:form.product,premium:Number(form.amount)},user);
+     setNotice('Registro guardado en Firestore.');
+     clearForm();
+   }catch(e){setError(friendlyError(e));}finally{setSubmitting(false);}
+ }
+ async function pickFile(files:FileList|null) {
+   if(!files?.length)return;
+   setSubmitting(true);setError('');
+   try {await uploadDocument(files[0],user,role);setNotice('Documento almacenado en Firebase Storage y registrado en Firestore.');setModal(null);}
+   catch(e){setError(friendlyError(e));}finally{setSubmitting(false);}
+ }
+ async function approve(item:AccessRequest) {
+   setSubmitting(true);setError('');
+   try{await approveRequest(item,newRole);setNotice('Perfil autorizado. El usuario debe actualizar su sesión.');await refreshRequests();}
+   catch(e){setError(friendlyError(e));}finally{setSubmitting(false);}
+ }
+ return <div className="app-shell live-shell">
+  {mobile&&<button className="sidebar-scrim" onClick={()=>setMobile(false)} aria-label="Cerrar menú"/>}
+  <aside className={'sidebar '+(mobile?'sidebar-open':'')}>
+   <div className="sidebar-top"><div className="brand brand-small"><span className="brand-mark"><ShieldCheck size={23}/></span><span className="brand-type"><strong>SEGUROS<span className="brand-dot">.</span></strong><small>ENTORNO EMPRESARIAL</small></span></div><button className="mobile-close" onClick={()=>setMobile(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
+   <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
+   <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span></div><ShieldCheck size={15}/></div>
+   <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span></button>;})}</nav>
+   <div className="sidebar-spacer"/>
+   <div className="live-sidebar-links"><button onClick={onDemo}><LayoutDashboard size={16}/> Ver demostración <ArrowRight size={15}/></button><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
+   <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>POWERED BY XARCON</strong><small>Gestión de seguros · 2026</small></div></div>
+  </aside>
+  <div className="app-main">
+   <header className="app-topbar"><div className="breadcrumbs"><button className="mobile-menu" onClick={()=>setMobile(true)} aria-label="Abrir menú"><Menu size={23}/></button><span>Empresa</span><ChevronRight size={14}/><strong>{sections[section].label}</strong></div><div className="topbar-right"><span className="demo-top-note"><span/> FIREBASE CONECTADO</span><span className="topbar-avatar">{user.email?.slice(0,2).toUpperCase()}</span></div></header>
+   <main className="workspace live-workspace">
+    <div className="date-line"><CalendarClock size={15}/> ESPACIO PRIVADO · USUARIO AUTENTICADO</div>
+    <div className="live-title-row"><div><h1>{sections[section].label}</h1><p>Información real del proyecto · Sin datos precargados ni operaciones simuladas.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='polizas'&&canOperate&&<button className="btn btn-dark" onClick={()=>setModal('policy')}><Plus size={16}/> Expediente preliminar</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
+    {error&&<div className="live-error-banner"><LockKeyhole size={16}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Cerrar error"><X size={16}/></button></div>}
+    {notice&&<div className="live-success-banner"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Cerrar aviso"><X size={16}/></button></div>}
+    <div className="live-body">
+     {section==='resumen'&&<><div className="metric-grid">
+      <div className="metric"><span>Oportunidades</span><strong>{leads.length}</strong><small>Registros en Firestore</small></div>
+      <div className="metric"><span>Expedientes</span><strong>{policies.length}</strong><small>Pólizas en seguimiento</small></div>
+      <div className="metric"><span>Solicitudes</span><strong>{tickets.length}</strong><small>Atención al cliente</small></div>
+      <div className="metric"><span>Documentos</span><strong>{documents.length}</strong><small>Archivos registrados</small></div>
+     </div><div className="live-overview-grid"><div className="data-card live-feature-card"><div className="live-feature-icon"><ShieldCheck size={28}/></div><div><span>GESTIÓN CONECTADA</span><h2>Un expediente digital para cada operación.</h2><p>Esta vista consulta las colecciones autorizadas en Firestore. Los datos únicamente aparecerán cuando se registren desde la empresa.</p></div></div><div className="data-card live-feature-details"><h3>Estado de integración</h3><p><CheckCircle2 size={16}/> Firebase Authentication</p><p><CheckCircle2 size={16}/> Cloud Firestore</p><p><CheckCircle2 size={16}/> Cloud Storage (según reglas del proyecto)</p><small>El acceso real requiere reglas desplegadas y rol aprobado por la dirección.</small></div></div></>}
+     {section!=='resumen'&&section!=='configuracion'&&<>
+      <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
+      {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='finanzas'||section==='documentos')&&(()=>{
+        const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':section==='finanzas'?'commissions':'documents';
+        const data=filtered(rows[kind]||[]);
+        return <div className="data-card live-list"><div className="data-card-head"><div><h3>{sections[section].label}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
+        {data.length===0?<div className="live-empty"><Database size={29}/><strong>Sin registros disponibles</strong><p>Cuando se guarden datos reales y estés autorizado, aparecerán aquí.</p></div>:<div className="table-wrap"><table><thead><tr><th>REFERENCIA</th><th>DETALLE</th><th>CLASIFICACIÓN</th><th>VALOR / TAMAÑO</th><th>ESTADO</th><th/></tr></thead><tbody>{data.map(record=><tr key={record.id}>
+          <td className="td-id">{record.id.slice(0,11)}</td>
+          <td className="strong-cell">{readable(record.name||record.clientName||record.subject||record.fileName||record.policyId)}</td>
+          <td>{readable(record.product||record.type||record.insurer||record.contentType)}</td>
+          <td>{kind==='leads'?money(Number(record.estimatedPremium)||0):kind==='policies'?money(Number(record.premium)||0):kind==='commissions'?money(Number(record.amount)||0):kind==='documents'?Math.round(Number(record.bytes||0)/1024)+' KB':'—'}</td>
+          <td><span className="live-status">{readable(record.status||'Registrado')}</span></td>
+          <td>{kind==='leads'&&canSales&&record.status!=='Ganado'&&<button className="live-row-button" title="Avanzar etapa" onClick={async()=>{try{await advanceLead(record);}catch(e){setError(friendlyError(e));}}}>Siguiente <ArrowRight size={14}/></button>}{kind==='tickets'&&canService&&record.status!=='Resuelto'&&<button className="live-row-button" onClick={async()=>{try{await resolveTicket(record.id);}catch(e){setError(friendlyError(e));}}}>Resolver <Check size={14}/></button>}</td>
+         </tr>)}</tbody></table></div>}</div>;
+      })()}
+     </>}
+     {section==='clientes'&&<div className="data-card live-narrow"><div className="live-empty"><Users size={30}/><strong>Directorio centralizado de clientes</strong><p>La colección de clientes se habilitará tras aprobar los campos, el consentimiento y las reglas de acceso. Por seguridad, todavía no se recopilan cédulas ni datos de salud.</p></div></div>}
+     {section==='equipo'&&<><div className="data-card live-list"><div className="data-card-head"><div><h3>Personal autorizado</h3><p>Solo la dirección puede conceder permisos; los usuarios no pueden asignarse roles.</p></div><span className="table-count">{members.length}</span></div>{members.length===0?<div className="live-empty">No hay personal registrado todavía.</div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>CORREO</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td className="strong-cell">{readable(m.displayName)}</td><td>{readable(m.email)}</td><td>{readable(m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>
+      {canManage&&<div className="data-card live-list"><div className="data-card-head"><div><h3>Solicitudes pendientes de aprobación</h3><p>Selecciona el rol verificado antes de conceder acceso.</p></div><button className="btn btn-soft" onClick={()=>void refreshRequests()}><RefreshCw size={15}/> Actualizar</button></div>{pending.length===0?<div className="live-empty">No hay solicitudes de acceso pendientes.</div>:<div className="live-approvals">{pending.map(req=><div className="live-approval" key={req.id}><span className="live-avatar">{req.displayName.slice(0,2).toUpperCase()}</span><div><strong>{req.displayName}</strong><small>{req.email} · Solicitó: {req.requestedRole}</small></div><select value={newRole} onChange={e=>setNewRole(e.target.value as EnterpriseRole)}>{companyRoles.map(r=><option key={r} value={r}>{roles.find(x=>x.id===r)?.label}</option>)}</select><button disabled={submitting} className="btn btn-dark" onClick={()=>void approve(req)}>Aprobar <Check size={14}/></button></div>)}</div>}</div>}</>}
+     {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión autorizada</h3><p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
+    </div><footer className="workspace-footer"><span>XARCON INSURANCE OS · ENTORNO CONECTADO</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
+   </main>
+  </div>
+  {modal&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)clearForm();}}><div className="modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow">REGISTRO FIREBASE</span><h2>{modal==='lead'?'Nueva oportunidad':modal==='ticket'?'Nueva solicitud':modal==='policy'?'Expediente preliminar':'Adjuntar documento'}</h2><p>Esta acción afecta los datos reales de la empresa.</p></div><button className="icon-btn" onClick={clearForm} aria-label="Cerrar"><X size={18}/></button></div>{modal==='file'?<div className="live-file-form"><p>Se subirán documentos PDF o imágenes (máximo 8 MB), sujetos a las reglas privadas de Cloud Storage.</p><button className="btn btn-dark full" disabled={submitting} onClick={()=>fileInput.current?.click()}><CloudUpload size={16}/> {submitting?'Subiendo…':'Elegir desde el dispositivo'}</button><input ref={fileInput} hidden type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/><button className="btn btn-soft full" disabled={submitting} onClick={()=>document.getElementById('live-camera-input')?.click()}><Camera size={16}/> Abrir cámara</button><input hidden id="live-camera-input" type="file" accept="image/*" capture="environment" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/></div>:<form className="modal-form" onSubmit={e=>void submit(e)}>
+      <label>{modal==='lead'?'Nombre del prospecto':modal==='policy'?'Nombre de referencia del cliente':'Asunto de la solicitud'}<input required minLength={2} value={form.name} onChange={e=>setForm(s=>({...s,name:e.target.value}))} placeholder={modal==='ticket'?'Ej. Solicitud de seguimiento':'Nombre de ejemplo'}/></label>
+      {modal==='ticket'?<><label>Tipo<select value={form.type} onChange={e=>setForm(s=>({...s,type:e.target.value}))}><option>Consulta</option><option>Modificación</option><option>Renovación</option><option>Siniestro</option></select></label><label>Detalle<textarea required maxLength={2000} rows={4} value={form.detail} onChange={e=>setForm(s=>({...s,detail:e.target.value}))}/></label></>:<><label>Producto<select value={form.product} onChange={e=>setForm(s=>({...s,product:e.target.value}))}><option>Seguro de vida</option><option>Seguro vehicular</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></label>{modal==='policy'&&<label>Aseguradora<input required value={form.insurer} onChange={e=>setForm(s=>({...s,insurer:e.target.value}))} placeholder="Nombre de aseguradora"/></label>}{modal==='lead'&&<label>Origen<select value={form.channel} onChange={e=>setForm(s=>({...s,channel:e.target.value}))}><option>Web</option><option>WhatsApp</option><option>Referido</option><option>Redes</option></select></label>}<label>{modal==='lead'?'Prima estimada (USD)':'Prima de referencia (USD)'}<input type="number" min={0} required value={form.amount} onChange={e=>setForm(s=>({...s,amount:e.target.value}))}/></label></>}
+      {error&&<p className="live-error">{error}</p>}
+      <button type="submit" className="btn btn-dark full" disabled={submitting}>{submitting?'Guardando…':'Registrar en Firestore'} <ArrowRight size={16}/></button>
+    </form>}</div></div>}
+ </div>;
+}
+export default function ConnectedWorkspace({onPublic,onDemo}:{onPublic:()=>void;onDemo:()=>void}){
+ const [user,setUser]=useState<User|null>(null);
+ const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'active'>('loading');
+ const [role,setRole]=useState<EnterpriseRole>('ventas');
+ const [admin,setAdmin]=useState(false);
+ const [error,setError]=useState('');
+ const sync=useCallback(async(nextUser:User|null)=>{
+   setUser(nextUser);setError('');
+   if(!nextUser){setStage('signed-out');setAdmin(false);return;}
+   if(!nextUser.emailVerified){setStage('verify');return;}
+   try{
+     const token=await nextUser.getIdTokenResult(true);
+     if(token.claims.admin===true){setAdmin(true);setRole('direccion');setStage('active');return;}
+     const member=await memberFor(nextUser);
+     if(member){setAdmin(false);setRole(member.role);setStage('active');return;}
+     const request=await getDoc(requestRef(nextUser.uid));
+     setAdmin(false);setStage(request.exists()?'pending':'request');
+   }catch(e){setError(friendlyError(e));setStage('pending');}
+ },[]);
+ useEffect(()=>onAuthStateChanged(auth,u=>{void sync(u);},e=>{setError(friendlyError(e));setStage('signed-out');}),[sync]);
+ async function retry(){
+   if(auth.currentUser){await reload(auth.currentUser);await auth.currentUser.getIdToken(true);await sync(auth.currentUser);}
+ }
+ async function sendRequest(name:string,requestedRole:EnterpriseRole){
+   const u=auth.currentUser;if(!u)return;await requestAccess(u,name,requestedRole);await sync(u);
+ }
+ return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
+ :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} onPublic={onPublic} onDemo={onDemo}/>
+ :<><AuthBox user={user} stage={stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
+}
