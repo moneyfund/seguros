@@ -73,7 +73,7 @@ function PublicSite({openWorkspace}:{openWorkspace:()=>void}){
     <nav aria-label="Navegación principal" className={mobile?'insurance-nav open':'insurance-nav'}>
      <a href="#servicios" onClick={()=>setMobile(false)}>Coberturas</a><a href="#filosofia" onClick={()=>setMobile(false)}>Cómo trabajamos</a><a href="#proceso" onClick={()=>setMobile(false)}>Nuestro proceso</a><a href="#contacto" onClick={()=>setMobile(false)}>Contacto</a>
     </nav>
-    <div className="insurance-header-actions"><button className="insurance-login" onClick={openWorkspace}><LockKeyhole size={15}/> Acceso empresarial</button><button className="insurance-header-cta" onClick={()=>setQuote(true)}>Solicitar orientación <ArrowUpRight size={15}/></button></div>
+    <div className="insurance-header-actions"><button className="insurance-login" aria-label="Entrar al sistema empresarial" onClick={openWorkspace}><LockKeyhole size={15}/> Acceso empresarial</button><button className="insurance-header-cta" onClick={()=>setQuote(true)}>Solicitar orientación <ArrowUpRight size={15}/></button></div>
     <button className="insurance-menu" aria-label={mobile?'Cerrar menú':'Abrir menú'} onClick={()=>setMobile(x=>!x)}>{mobile?<X size={23}/>:<Menu size={23}/>}</button>
    </div>
   </header>
