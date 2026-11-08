@@ -1,7 +1,271 @@
 rules_version = '2';
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Por seguridad, hasta implementar Auth + RBAC validado en servidor.
+
+    // Los administradores iniciales deben iniciar sesion con
+    // Firebase Authentication (Google) y correo verificado.
+    function verified() {
+      return request.auth != null &&
+        request.auth.token.email_verified == true;
+    }
+
+    function isOwner() {
+      return verified() &&
+        request.auth.token.email in [
+          'norvingarcia220@gmail.com',
+          'amyblandon171@gmail.com'
+        ];
+    }
+
+    function memberPath() {
+      return /databases/$(database)/documents/companies/main/members/$(request.auth.uid);
+    }
+
+    function isActiveMember() {
+      return verified() &&
+        exists(memberPath()) &&
+        get(memberPath()).data.active == true;
+    }
+
+    function hasRole(allowed) {
+      return isOwner() ||
+        (isActiveMember() && get(memberPath()).data.role in allowed);
+    }
+
+    function isClient() {
+      return isActiveMember() &&
+        get(memberPath()).data.role == 'cliente';
+    }
+
+    function changedOnly(allowedFields) {
+      return request.resource.data.diff(resource.data)
+        .affectedKeys().hasOnly(allowedFields);
+    }
+
+    // SOLO la empresa 'main' (modelo de esta primera version).
+    match /companies/main {
+      allow read, write: if false;
+
+      // Cuentas internas. Los usuarios no pueden darse privilegios.
+      match /members/{memberUid} {
+        allow get: if isOwner() ||
+          (verified() && request.auth.uid == memberUid) ||
+          hasRole(['supervision']);
+        allow list: if isOwner() || hasRole(['supervision']);
+
+        allow create: if isOwner() &&
+          request.resource.data.keys().hasAll(
+            ['email','displayName','role','active','approvedAt']
+          ) &&
+          request.resource.data.role in [
+            'direccion','ventas','operaciones','servicio',
+            'finanzas','supervision','cliente'
+          ] &&
+          request.resource.data.active is bool;
+
+        allow update, delete: if isOwner();
+      }
+
+      // Solicitudes de ingreso creadas por la propia cuenta.
+      match /accessRequests/{uid} {
+        allow get: if isOwner() ||
+          (verified() && request.auth.uid == uid);
+        allow list: if isOwner();
+
+        allow create: if verified() &&
+          request.auth.uid == uid &&
+          request.resource.data.keys().hasAll(
+            ['email','displayName','requestedRole','status','requestedAt']
+          ) &&
+          request.resource.data.keys().hasOnly(
+            ['email','displayName','requestedRole','status','requestedAt']
+          ) &&
+          request.resource.data.email == request.auth.token.email &&
+          request.resource.data.displayName is string &&
+          request.resource.data.displayName.size() >= 2 &&
+          request.resource.data.displayName.size() <= 90 &&
+          request.resource.data.requestedRole in [
+            'direccion','ventas','operaciones','servicio',
+            'finanzas','supervision','cliente'
+          ] &&
+          request.resource.data.status == 'pending' &&
+          request.resource.data.requestedAt is timestamp;
+
+        allow update: if isOwner() &&
+          changedOnly(['status','reviewedAt']) &&
+          request.resource.data.status in ['approved','rejected'];
+
+        allow delete: if isOwner();
+      }
+
+      // Oportunidades comerciales: agentes, supervisores y gerencia.
+      match /leads/{leadId} {
+        allow read: if isOwner() ||
+          hasRole(['direccion','supervision']) ||
+          (hasRole(['ventas']) &&
+           resource.data.assignedToUid == request.auth.uid);
+
+        allow create: if hasRole(['direccion','supervision','ventas']) &&
+          request.resource.data.keys().hasAll([
+            'name','product','estimatedPremium','status','channel',
+            'assignedToUid','assignedToName','createdBy','createdAt'
+          ]) &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.assignedToUid == request.auth.uid &&
+          request.resource.data.status == 'Nuevo' &&
+          request.resource.data.name is string &&
+          request.resource.data.name.size() > 1 &&
+          request.resource.data.name.size() <= 120 &&
+          request.resource.data.estimatedPremium >= 0 &&
+          request.resource.data.createdAt is timestamp;
+
+        allow update: if (isOwner() ||
+          hasRole(['direccion','supervision']) ||
+          (hasRole(['ventas']) &&
+           resource.data.assignedToUid == request.auth.uid)) &&
+          changedOnly(['status','updatedAt']) &&
+          request.resource.data.status in [
+            'Nuevo','Contactado','Cotización','Negociación','Ganado'
+          ];
+
+        allow delete: if isOwner();
+      }
+
+      // Expedientes de polizas: cliente solo sus propias polizas
+      // con clientUid = su UID autenticado.
+      match /policies/{policyId} {
+        allow read: if hasRole([
+            'direccion','ventas','operaciones','servicio',
+            'finanzas','supervision'
+          ]) ||
+          (isClient() && resource.data.clientUid == request.auth.uid);
+
+        allow create: if hasRole(['direccion','operaciones']) &&
+          request.resource.data.keys().hasAll([
+            'clientName','insurer','product','premium',
+            'status','clientUid','createdBy','createdAt'
+          ]) &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.clientUid == '' &&
+          request.resource.data.status == 'En gestión' &&
+          request.resource.data.clientName is string &&
+          request.resource.data.clientName.size() > 1 &&
+          request.resource.data.premium >= 0 &&
+          request.resource.data.createdAt is timestamp;
+
+        allow update: if isOwner() ||
+          (hasRole(['direccion','operaciones']) &&
+           changedOnly(['status','updatedAt']));
+
+        allow delete: if isOwner();
+      }
+
+      // Casos de servicio y solicitudes del asegurado.
+      match /tickets/{ticketId} {
+        allow read: if hasRole([
+            'direccion','operaciones','servicio','supervision'
+          ]) ||
+          (isClient() && resource.data.clientUid == request.auth.uid);
+
+        allow create: if hasRole([
+            'direccion','operaciones','servicio','supervision','cliente'
+          ]) &&
+          request.resource.data.keys().hasAll([
+            'subject','detail','type','status','priority',
+            'clientUid','createdBy','createdAt'
+          ]) &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.status == 'Pendiente' &&
+          request.resource.data.priority == 'Media' &&
+          request.resource.data.subject is string &&
+          request.resource.data.subject.size() >= 2 &&
+          request.resource.data.subject.size() <= 130 &&
+          request.resource.data.detail is string &&
+          request.resource.data.detail.size() <= 2000 &&
+          request.resource.data.createdAt is timestamp &&
+          (
+            (isClient() &&
+             request.resource.data.clientUid == request.auth.uid) ||
+            (!isClient() && request.resource.data.clientUid == '')
+          );
+
+        allow update: if hasRole(['direccion','operaciones','servicio']) &&
+          changedOnly(['status','updatedAt']) &&
+          request.resource.data.status == 'Resuelto';
+
+        allow delete: if isOwner();
+      }
+
+      // Liquidaciones: lectura restringida a finanzas y direccion.
+      // Hasta definir conciliacion, solo propietarios pueden escribir.
+      match /commissions/{commissionId} {
+        allow read: if hasRole(['direccion','finanzas']);
+        allow create, update, delete: if isOwner();
+      }
+
+      // Metadatos documentales. El empleado solo ve sus propios
+      // archivos; el cliente solo los que estan asociados a su UID.
+      match /documents/{documentId} {
+        allow read: if isOwner() ||
+          (isActiveMember() &&
+           resource.data.uploaderUid == request.auth.uid) ||
+          (isClient() &&
+           resource.data.clientUid == request.auth.uid);
+
+        allow create: if hasRole([
+            'direccion','ventas','operaciones','servicio',
+            'finanzas','supervision','cliente'
+          ]) &&
+          request.resource.data.keys().hasAll([
+            'fileName','contentType','bytes','storagePath',
+            'uploaderUid','clientUid','createdAt'
+          ]) &&
+          request.resource.data.uploaderUid == request.auth.uid &&
+          request.resource.data.storagePath is string &&
+          request.resource.data.storagePath.matches(
+            'companies/main/documents/' + request.auth.uid + '/.*'
+          ) &&
+          request.resource.data.contentType in [
+            'application/pdf','image/jpeg','image/png','image/webp'
+          ] &&
+          request.resource.data.bytes > 0 &&
+          request.resource.data.bytes <= 8388608 &&
+          request.resource.data.createdAt is timestamp &&
+          (
+            (isClient() &&
+             request.resource.data.clientUid == request.auth.uid) ||
+            (!isClient() && request.resource.data.clientUid == '')
+          );
+
+        allow update: if false;
+        allow delete: if isOwner();
+      }
+
+      // Colecciones en reserva. Solo gerencia, hasta definir alcance.
+      match /clients/{clientId} {
+        allow read: if hasRole(['direccion']);
+        allow write: if isOwner();
+      }
+
+      match /insurers/{insurerId} {
+        allow read: if hasRole([
+          'direccion','ventas','operaciones','servicio','finanzas','supervision'
+        ]);
+        allow write: if isOwner();
+      }
+
+      match /settings/{settingId} {
+        allow read, write: if isOwner();
+      }
+
+      match /auditLogs/{auditId} {
+        allow read: if isOwner();
+        allow write: if false;
+      }
+    }
+
+    // Todo lo no autorizado arriba permanece privado.
     match /{document=**} {
       allow read, write: if false;
     }
