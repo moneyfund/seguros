@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { createUserWithEmailAndPassword, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signOut, updateProfile, type User } from 'firebase/auth';
+import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User } from 'firebase/auth';
 import { getDoc } from 'firebase/firestore';
 import {
   Activity, ArrowLeft, ArrowRight, Bell, CalendarClock, Camera, Check, CheckCircle2, ChevronRight,
   Clock3, CloudUpload, Database, FileText, Headphones, LayoutDashboard, LockKeyhole,
   LogOut, Menu, Plus, RefreshCw, Search, ShieldCheck, UserRound, Users, Wallet, X, type LucideIcon,
 } from 'lucide-react';
-import { auth } from './firebase';
+import { auth, isInitialAdmin } from './firebase';
 import {
   addLead, advanceLead, approveRequest, createTicket, memberFor, pendingRequests,
   registerPolicy, requestAccess, requestRef, resolveTicket, subscribeRecords,
@@ -53,6 +53,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
  onBack:()=>void;
 }) {
  const [register,setRegister]=useState(false);
+ const googleLogin=()=>action(async()=>{ await signInWithPopup(auth,new GoogleAuthProvider()); });
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
  const [email,setEmail]=useState('');
@@ -85,7 +86,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
    <label>Contraseña<input type="password" minLength={6} autoComplete={register?'new-password':'current-password'} required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"/></label>
    {error&&<p className="live-error">{error}</p>}
    <button disabled={busy} className="btn btn-dark full" type="submit">{busy?'Procesando…':register?'Crear cuenta':'Iniciar sesión'} <ArrowRight size={16}/></button>
-  </form><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
+  </form><div className="live-google-divider">o accede con tu cuenta Google</div><button disabled={busy} className="live-google-btn" onClick={googleLogin}><span className="google-g">G</span> Continuar con Google <ArrowRight size={16}/></button><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
   {stage==='verify'&&<div className="live-auth-title"><span>VERIFICACIÓN OBLIGATORIA</span><h1>Revisa tu correo.</h1><p>Te enviamos un enlace de verificación a <strong>{user?.email}</strong>. Confírmalo y después actualiza tu acceso.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Ya verifiqué mi correo <RefreshCw size={16}/></button><button className="live-switch" onClick={()=>action(async()=>{if(user)await sendEmailVerification(user);})}>Reenviar correo de verificación</button>{error&&<p className="live-error">{error}</p>}</div>}
   {stage==='request'&&<div className="live-auth-title"><span>APROBACIÓN PENDIENTE DE SOLICITAR</span><h1>Completa tu solicitud.</h1><p>Tu correo está verificado. Un administrador revisará tu incorporación y asignará los permisos necesarios.</p><form className="live-form" onSubmit={e=>{e.preventDefault();void action(()=>onRequest(name||user?.displayName||'',area));}}><label>Nombre de identificación<input required value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label><label>Área solicitada<select value={area} onChange={e=>setArea(e.target.value as EnterpriseRole)}>{companyRoles.map(r=><option key={r} value={r}>{roles.find(x=>x.id===r)?.label||r}</option>)}</select></label>{error&&<p className="live-error">{error}</p>}<button className="btn btn-dark full" disabled={busy} type="submit">Solicitar autorización <ArrowRight size={16}/></button></form></div>}
   {stage==='pending'&&<div className="live-auth-title"><span>ACCESO POR APROBAR</span><h1>Tu solicitud está en revisión.</h1><p>La dirección de la empresa debe autorizar tu perfil. Podrás entrar cuando se apruebe tu cuenta.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Comprobar acceso <RefreshCw size={16}/></button>{error&&<p className="live-error">{error}</p>}</div>}
@@ -238,7 +239,7 @@ export default function ConnectedWorkspace({onPublic,onDemo}:{onPublic:()=>void;
    if(!nextUser.emailVerified){setStage('verify');return;}
    try{
      const token=await nextUser.getIdTokenResult(true);
-     if(token.claims.admin===true){setAdmin(true);setRole('direccion');setStage('active');return;}
+     if(isInitialAdmin(nextUser.email)||token.claims.admin===true){setAdmin(true);setRole('direccion');setStage('active');return;}
      const member=await memberFor(nextUser);
      if(member){setAdmin(false);setRole(member.role);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
