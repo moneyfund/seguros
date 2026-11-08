@@ -23,3 +23,9 @@ export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
 export const storage = getStorage(firebaseApp);
 export const companyId = 'main' as const;
+
+/** Initial business owners. Firebase rules must independently enforce this allowlist. */
+export const initialAdminEmails = ['norvingarcia220@gmail.com', 'amyblandon171@gmail.com'] as const;
+export function isInitialAdmin(email: string | null | undefined): boolean {
+  return !!email && initialAdminEmails.some(adminEmail => adminEmail === email.trim().toLowerCase());
+}
