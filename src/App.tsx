@@ -1,3 +1,4 @@
+import ConnectedWorkspace from './ConnectedWorkspace';
 import { useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import {
  Activity, ArrowDownRight, ArrowLeft, ArrowRight, ArrowUpRight, BarChart3, Bell, BriefcaseBusiness,
@@ -134,7 +135,7 @@ function DemoApp({goPublic}:{goPublic:()=>void}){
    <nav className="sidebar-nav" aria-label="Navegación de la plataforma">{permitted.map(n=>{const Icon=navInfo[n].icon;return <button key={n} onClick={()=>chooseSection(n)} className={'sidebar-item '+(current===n?'active':'')}><Icon size={18}/><span>{navInfo[n].label}</span>{n==='solicitudes'&&<i>4</i>}</button>;})}</nav>
    <div className="sidebar-spacer"/>
    <div className="sidebar-switch"><label htmlFor="role-select">CAMBIAR PERFIL DEMO</label><div className="role-select"><select id="role-select" value={role} onChange={e=>chooseRole(e.target.value as Role)}>{roles.map(r=><option value={r.id} key={r.id}>{r.label}</option>)}</select><ChevronDown size={15}/></div><small>Las vistas no representan permisos de seguridad reales.</small></div>
-   <button className="sidebar-public" onClick={goPublic}><Globe2 size={17}/> Volver a web pública <ArrowUpRight size={16}/></button>
+   <button className="sidebar-public" onClick={()=>{window.location.hash='#/workspace';window.location.reload();}}><LockKeyhole size={17}/> Acceso empresarial <ArrowUpRight size={16}/></button><button className="sidebar-public" onClick={goPublic}><Globe2 size={17}/> Volver a web pública <ArrowUpRight size={16}/></button>
    <div className="sidebar-bottom"><span className="xarcon-symbol">X</span><div><strong>POWERED BY XARCON</strong><small>Enterprise systems · 2026</small></div></div>
   </aside>
   <div className="app-main">
@@ -203,7 +204,13 @@ function DemoApp({goPublic}:{goPublic:()=>void}){
  </div>;
 }
 export default function App(){
- const [mode,setMode]=useState<'public'|'app'>(()=>window.location.hash.startsWith('#/demo')?'app':'public');
- function go(mode:'public'|'app'){setMode(mode);window.history.replaceState({},'',mode==='app'?'#/demo':'#/');window.scrollTo({top:0,behavior:'instant'});}
- return mode==='public'?<PublicSite openDemo={()=>go('app')}/>:<DemoApp goPublic={()=>go('public')}/>;
+ const [mode,setMode]=useState<'public'|'demo'|'workspace'>(()=>window.location.hash.startsWith('#/workspace')?'workspace':window.location.hash.startsWith('#/demo')?'demo':'public');
+ function go(destination:'public'|'demo'|'workspace'){
+   setMode(destination);
+   window.history.replaceState({},'',destination==='workspace'?'#/workspace':destination==='demo'?'#/demo':'#/');
+   window.scrollTo({top:0,behavior:'instant'});
+ }
+ if(mode==='workspace') return <ConnectedWorkspace onPublic={()=>go('public')} onDemo={()=>go('demo')}/>;
+ if(mode==='demo') return <DemoApp goPublic={()=>go('public')}/>;
+ return <><PublicSite openDemo={()=>go('demo')}/><div className="real-access-float"><button onClick={()=>go('workspace')}><LockKeyhole size={16}/> Acceso empresarial seguro <ArrowRight size={16}/></button></div></>;
 }
