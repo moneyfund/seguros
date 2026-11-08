@@ -1,0 +1,9 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Por seguridad, hasta implementar Auth + RBAC validado en servidor.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
