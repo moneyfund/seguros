@@ -2,7 +2,7 @@
 
 Primera versión visual de una plataforma modular para una **empresa intermediaria de seguros**, desarrollada por XARCON como propuesta para revisión de alcance con los propietarios.
 
-> **No es un sistema operativo listo para producción.** Todos los clientes, aseguradoras, importes, pólizas, comisiones y métricas son ficticios. La demostración no utiliza autenticación real ni persiste datos; los roles únicamente muestran vistas de interfaz. No se deben introducir datos reales ni documentos sensibles.
+> **Primera versión en construcción, no lista para operar con expedientes de clientes.** La demostración en `/#/demo` usa información ficticia. El nuevo espacio `/#/workspace` integra Firebase Authentication (Google/correo), Firestore y Storage, sujeto a las reglas reales de seguridad que se deben publicar desde Firebase Console. No introducir documentación sensible hasta verificar y auditar los permisos.
 
 ## Incluye
 
@@ -32,20 +32,28 @@ npm run dev
 npm run build
 ```
 
-Acceder a la web pública en `/` y a la demostración interna en `/#/demo`.
+Acceder a la web pública en `/`, a la demostración ficticia en `/#/demo` y al espacio autenticado en `/#/workspace`.
 
-## Integración futura con Firebase
+## Proyecto Firebase conectado
 
-Los archivos `firestore.rules` y `storage.rules` deniegan todo acceso hasta configurar una arquitectura segura. `.env.example` incluye variables de configuración públicas del SDK para el entorno correspondiente. **No se ha conectado Firestore, Storage ni Firebase Authentication.**
+- Proyecto: `seguros-d1a86`.
+- Entrada privada: `/#/workspace`.
+- Authentication: Google y correo/contraseña (activar proveedores en Firebase Console).
+- Firestore: colecciones bajo `companies/main`, con roles empresariales, expedientes, ventas, solicitudes, comisiones, documentos y solicitudes de autorización.
+- Storage: carga segura disponible en el código, pero **requiere publicar sus propias reglas**; `storage.rules` permanece en modo denegar todos por defecto hasta completar permisos.
+- Administradores iniciales autorizados por correo verificado: `norvingarcia220@gmail.com` y `amyblandon171@gmail.com`. No se crean automáticamente cuentas o usuarios con privilegios de otros correos.
+- Reglas versionadas en `firestore.rules`, listas para revisar y copiar en Firebase Console → Firestore Database → Rules.
+- Una vez publicadas las reglas, verificar con cuentas de prueba y probar que un agente no pueda leer otra área o elevarse privilegios.
+- Los documentos de demostración no se migran a producción.
+- La base SQL aún no se ha implementado; este MVP utiliza Firestore.
 
-Al recibir el proyecto Firebase, las etapas siguientes son:
+### Próximos pasos de entrega real
 
-1. Levantar requisitos funcionales aprobados y el modelo de datos: usuarios, perfiles, departamentos, prospectos, clientes, cotizaciones, pólizas, aseguradoras, solicitudes, liquidaciones, documentos, eventos de auditoría.
-2. Definir autenticación de correos empresariales y proceso de autorización por administradores, con privilegios gestionados en backend; verificar cada operación en reglas/servidor.
-3. Separar el acceso a datos en una capa de repositorios y reemplazar las fuentes ficticias por Firestore; los documentos se almacenarán privadamente en Storage con referencias restringidas.
-4. Incorporar validaciones de campos, cargas seguras, registros de auditoría, pruebas de permisos y respaldos.
-5. Confirmar condiciones legales, consentimientos y operaciones regulatorias para intermediación de seguros en Nicaragua.
-6. Analizar si la base relacional SQL será necesaria desde el inicio o en una fase posterior, antes de fijar el modelo definitivo y las integraciones con aseguradoras.
+1. Publicar y probar reglas Firestore y Storage, con protección de cédulas, pólizas y documentos.
+2. Validar registro, acceso y autorizaciones de Amy y XARCON usando cuentas verificadas.
+3. Definir condiciones de cada póliza, compañía aseguradora, conciliación y comisiones.
+4. Implementar un esquema de auditoría confiable desde backend, historiales, avisos y backups.
+5. Evaluar estructura de datos relacional SQL para la versión contractual definitiva.
 
 ## Advertencias de protección de datos
 
