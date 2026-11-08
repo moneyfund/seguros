@@ -128,7 +128,13 @@ function LivePanel({user,role,admin,onPublic,onDemo}:{
  useEffect(()=>{
    const cleanups=collections.map(name=>subscribeRecords(name, data=>{
      setRows(prev=>({...prev,[name]:data}));
-   },e=>setError('No pudimos consultar '+name+': '+friendlyError(e)),role==='cliente'&&['policies','tickets','documents'].includes(name)?user.uid:undefined));
+   },e=>setError('No pudimos consultar '+name+': '+friendlyError(e)),role==='cliente'&&['policies','tickets','documents'].includes(name)
+      ? { field: 'clientUid' as const, uid: user.uid }
+      : name==='leads'&&role==='ventas'&&!admin
+      ? { field: 'assignedToUid' as const, uid: user.uid }
+      : name==='documents'&&!admin
+      ? { field: 'uploaderUid' as const, uid: user.uid }
+      : undefined));
    return ()=>cleanups.forEach(fn=>fn());
  },[collections,role,user.uid]);
  const refreshRequests=useCallback(async()=>{if(!admin)return;try{setPending(await pendingRequests());}catch(e){setError(friendlyError(e));}},[admin]);
