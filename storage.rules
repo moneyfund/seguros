@@ -1,7 +1,99 @@
 rules_version = '2';
+
 service firebase.storage {
   match /b/{bucket}/o {
-    // No abrir acceso por defecto a cédulas, pólizas ni otros documentos.
+
+    // Acceso únicamente para usuarios autenticados y verificados.
+    function verified() {
+      return request.auth != null &&
+        request.auth.token.email_verified == true;
+    }
+
+    // Administradores fundadores de XARCON / empresa de seguros.
+    function isOwner() {
+      return verified() &&
+        request.auth.token.email in [
+          'norvingarcia220@gmail.com',
+          'amyblandon171@gmail.com'
+        ];
+    }
+
+    // Lee el rol aprobado en Firestore.
+    // Firebase puede solicitar habilitar permisos Storage -> Firestore.
+    function isActiveMember() {
+      return verified() &&
+        firestore.exists(
+          /databases/(default)/documents/companies/main/members/$(request.auth.uid)
+        ) &&
+        firestore.get(
+          /databases/(default)/documents/companies/main/members/$(request.auth.uid)
+        ).data.active == true &&
+        firestore.get(
+          /databases/(default)/documents/companies/main/members/$(request.auth.uid)
+        ).data.role in [
+          'direccion', 'ventas', 'operaciones', 'servicio',
+          'finanzas', 'supervision', 'cliente'
+        ];
+    }
+
+    function supportedDocument() {
+      return request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= 8 * 1024 * 1024 &&
+        request.resource.contentType in [
+          'application/pdf',
+          'image/jpeg',
+          'image/png',
+          'image/webp'
+        ];
+    }
+
+    // Cada usuario autorizado guarda sus archivos en su carpeta UID.
+    // Este mismo patrón se usa en src/backend.ts.
+    match /companies/main/documents/{ownerUid}/{fileName} {
+      // Los administradores ven todos; el empleado o cliente solo los suyos.
+      allow get: if isOwner() ||
+        (isActiveMember() && request.auth.uid == ownerUid);
+
+      // Para evitar enumerar carpetas ajenas, solo los administradores listan.
+      allow list: if isOwner();
+
+      // No es posible subir archivos en la carpeta de otro usuario.
+      allow create: if (isOwner() || isActiveMember()) &&
+        request.auth.uid == ownerUid &&
+        supportedDocument() &&
+        fileName.matches('.*[.](pdf|jpg|png|webp)') &&
+        request.resource.metadata.uploaderUid == ownerUid;
+
+      // Los archivos existentes no deben sobreescribirse.
+      allow update: if false;
+
+      // Eliminación centralizada, para mantener el control de expedientes.
+      allow delete: if isOwner();
+    }
+
+    // Fotografías de perfil: 2 MB como máximo.
+    match /companies/main/profilePhotos/{ownerUid}/{fileName} {
+      allow get: if isOwner() ||
+        (isActiveMember() && request.auth.uid == ownerUid);
+      allow list: if isOwner();
+
+      allow create: if (isOwner() || isActiveMember()) &&
+        request.auth.uid == ownerUid &&
+        request.resource != null &&
+        request.resource.size > 0 &&
+        request.resource.size <= 2 * 1024 * 1024 &&
+        request.resource.contentType in [
+          'image/jpeg', 'image/png', 'image/webp'
+        ] &&
+        fileName.matches('.*[.](jpg|png|webp)');
+
+      allow update: if false;
+      allow delete: if isOwner() ||
+        (isActiveMember() && request.auth.uid == ownerUid);
+    }
+
+    // Todo lo demás queda privado.
     match /{allPaths=**} {
       allow read, write: if false;
     }
