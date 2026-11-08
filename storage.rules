@@ -1,0 +1,9 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // No abrir acceso por defecto a cédulas, pólizas ni otros documentos.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
