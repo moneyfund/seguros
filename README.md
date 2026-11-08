@@ -32,13 +32,16 @@ npm run dev
 npm run build
 ```
 
-Acceder a la web pública en `/`, a la demostración ficticia en `/#/demo` y al espacio autenticado en `/#/workspace`.
+Acceder al inicio de sesión en `/` o `/#/acceso`; acceder a la web pública en `/#/inicio`. Los enlaces anteriores a `/#/demo` redirigen al acceso empresarial.
 
 ## Experiencia visual y navegación
 
-- `/` — sitio público de presentación comercial, rediseñado con **Poppins**, verde profundo, superficies plateadas y fotografías de contexto asegurador.
-- `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados pueden ver registros de la compañía.
-- `/#/demo` — maqueta con datos ficticios para presentación. La ruta directa histórica redirige al acceso empresarial; la demo se abre desde una sesión activa.
+**Ruta principal desde noviembre de 2026:** la aplicación inicia en Firebase Authentication. El antiguo panel demostrativo fue retirado del enrutamiento de producción para impedir acceso accidental a datos ficticios.
+
+
+- `/` — entrada empresarial con Firebase Authentication. Para visitantes sin sesión, muestra la pantalla de acceso.
+- `/#/acceso` y `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados pueden ver registros de la compañía.
+- `/#/demo` — ruta retirada; cualquier enlace anterior ahora redirige al acceso empresarial. La demostración pública ya no está disponible.
 - La web pública nunca envía información de formularios ficticios a Firestore.
 - Fotografías con licencia gratuita de Pexels (consultar condiciones aplicables): [reunión de asesoría](https://www.pexels.com/photo/an-insurance-agent-discussing-documents-to-a-client-8441785/), [revisión de documentos](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) y [familia](https://www.pexels.com/photo/a-family-smiling-together-7983214/). Las imágenes se cargan desde el CDN de Pexels.
 
@@ -47,7 +50,7 @@ La identidad comercial es provisional hasta recibir el nombre, marca, informaci�
 ## Proyecto Firebase conectado
 
 - Proyecto: `seguros-d1a86`.
-- Entrada privada: `/#/workspace`.
+- Entrada privada: `/`, `/#/acceso` o `/#/workspace`.
 - Authentication: Google y correo/contraseña (activar proveedores en Firebase Console).
 - Firestore: colecciones bajo `companies/main`, con roles empresariales, expedientes, ventas, solicitudes, comisiones, documentos y solicitudes de autorización.
 - Storage: carga segura disponible en el código, pero **requiere publicar sus propias reglas**; `storage.rules` permanece en modo denegar todos por defecto hasta completar permisos.
