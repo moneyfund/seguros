@@ -34,6 +34,16 @@ npm run build
 
 Acceder a la web pública en `/`, a la demostración ficticia en `/#/demo` y al espacio autenticado en `/#/workspace`.
 
+## Experiencia visual y navegación
+
+- `/` — sitio público de presentación comercial, rediseñado con **Poppins**, verde profundo, superficies plateadas y fotografías de contexto asegurador.
+- `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados pueden ver registros de la compañía.
+- `/#/demo` — maqueta con datos ficticios para presentación. La ruta directa histórica redirige al acceso empresarial; la demo se abre desde una sesión activa.
+- La web pública nunca envía información de formularios ficticios a Firestore.
+- Fotografías con licencia gratuita de Pexels (consultar condiciones aplicables): [reunión de asesoría](https://www.pexels.com/photo/an-insurance-agent-discussing-documents-to-a-client-8441785/), [revisión de documentos](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) y [familia](https://www.pexels.com/photo/a-family-smiling-together-7983214/). Las imágenes se cargan desde el CDN de Pexels.
+
+La identidad comercial es provisional hasta recibir el nombre, marca, información legal y datos de contacto autorizados por los propietarios.
+
 ## Proyecto Firebase conectado
 
 - Proyecto: `seguros-d1a86`.
