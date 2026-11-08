@@ -1,0 +1,110 @@
+/* XARCON Insurance OS / restrained operational UI */
+.app-shell,.live-shell{font-family:'Poppins',Arial,sans-serif;--forest:#123d32;--ink:#22352e;--bg:#f2f4f3}
+.app-shell h1,.app-shell h2,.app-shell h3,.app-shell h4,.app-shell button,.app-shell select,.app-shell input,.app-shell textarea,.app-shell .data-card-head h3,.app-shell .metric>strong,.live-auth-screen h1,.live-auth-screen strong,.live-auth-screen button,.modal h2,.modal input,.modal label{font-family:'Poppins',Arial,sans-serif!important}
+.live-shell{background:#f3f5f4}
+.live-shell .sidebar{background:#17392e;border-right:1px solid #ffffff18;padding:23px 13px 15px;width:256px;min-width:256px;box-shadow:3px 0 20px #12312208}
+.live-shell .sidebar .brand{margin:2px 12px 29px}
+.live-shell .sidebar .brand-mark{border-radius:6px;background:#e2eae5;color:#164432;box-shadow:none}
+.live-shell .sidebar .brand-type strong{font-size:15px;letter-spacing:.6px}
+.live-shell .sidebar .brand-type small{font-size:7px}
+.live-shell .workspace-title{font-weight:600;letter-spacing:1.2px;color:#97b3a3}
+.live-shell .workspace-profile{background:#ffffff0d;border:1px solid #628a7538;border-radius:7px;padding:12px 11px;margin-bottom:31px}
+.live-shell .workspace-avatar{border-radius:6px;background:#cfded3;color:#1b5138}
+.live-shell .workspace-profile-copy strong{font-weight:550}
+.live-shell .sidebar-group-label{font-size:8px;letter-spacing:1.5px;color:#98b3a2}
+.live-shell .sidebar-item{height:44px;margin-bottom:2px;border-radius:6px;padding-inline:13px;color:#b8cabf;font-weight:450;font-size:11px}
+.live-shell .sidebar-item.active{background:#e1e9e4;color:#1c4936;box-shadow:none;font-weight:600}
+.live-shell .sidebar-item:hover:not(.active){background:#ffffff16;color:#f9fffb}
+.live-shell .sidebar-item svg{width:17px;height:17px}
+.live-shell .sidebar-item i{background:#b1cbbc;color:#185137}
+.live-sidebar-links{margin-top:18px}
+.live-sidebar-links button{font-weight:450;color:#b7cbbd;font-size:10px}
+.live-shell .sidebar-bottom{padding-top:16px}
+.live-shell .sidebar-bottom strong{letter-spacing:.4px}
+.live-shell .app-topbar{height:73px;border-bottom:1px solid #e0e6e1;background:#fff;padding-inline:39px}
+.live-shell .breadcrumbs{font-size:11px;color:#8da198}
+.live-shell .breadcrumbs strong{color:#2e4e3d;font-weight:600}
+.live-shell .topbar-right{gap:17px}
+.live-shell .demo-top-note{letter-spacing:.7px;font-weight:600;color:#538164;font-size:9px}
+.live-shell .demo-top-note span{background:#4c9d74}
+.live-top-docs{display:flex;align-items:center;gap:7px;border:1px solid #e0e8e1;border-radius:5px;padding:9px 12px;background:#f8faf8;color:#3c674f;font-size:10px;font-weight:550}
+.live-top-docs:hover{background:#edf4ef}
+.live-top-signout{width:30px;height:30px;border:0;background:transparent;color:#6b8877;display:grid;place-items:center;border-radius:5px}
+.live-top-signout:hover{background:#f2f5f2;color:#2b6b48}
+.live-shell .topbar-avatar{width:37px;height:37px;border-radius:7px;border:0;background:#d8e4dc;color:#2c6246;font-weight:650}
+.live-shell .workspace{padding:35px 39px 0;max-width:1570px}
+.live-shell .date-line{font-size:9px;letter-spacing:1px;color:#779384;font-weight:550}
+.live-crumb-separator{color:#bdcac1;margin:0 3px}
+.live-shell .live-title-row{padding:0 0 25px;margin:17px 0 23px;border-bottom:1px solid #dfe6e0}
+.live-shell .live-title-row h1{font-size:clamp(25px,3vw,34px);font-weight:600;letter-spacing:-1.15px;margin-bottom:9px;color:#193f30}
+.live-shell .live-title-row p{color:#819388;font-size:11px}
+.live-shell .btn{border-radius:5px;font-size:10px;font-weight:600;letter-spacing:0;min-height:42px}
+.live-shell .btn-dark{background:#174737}
+.live-shell .btn-dark:hover{background:#22634a}
+.live-shell .btn-soft{background:#f1f5f2;border-color:#d9e4dc}
+.live-shell .data-card{border:1px solid #e2e9e3;border-radius:8px;box-shadow:0 4px 18px #182a2210}
+.live-shell .data-card-head{padding:22px 23px}
+.live-shell .data-card-head h3{font-size:14px;letter-spacing:-.2px;font-weight:600}
+.live-shell .data-card-head p{font-size:10px}
+.live-shell .metric{border:1px solid #e0e7e1;border-radius:8px;box-shadow:0 4px 18px #102d1c0a;padding:23px}
+.live-shell .metric>strong{font-size:30px;font-weight:600;letter-spacing:-.6px;color:#1b4432}
+.live-shell .metric-grid{gap:13px}
+.live-home-intro{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:9px 0 4px}
+.live-home-eyebrow,.live-card-eyebrow{display:block;font-size:9px;letter-spacing:1.1px;color:#6d9678;font-weight:650;margin-bottom:11px}
+.live-home-intro h2{font-size:23px;font-weight:600;letter-spacing:-.75px;color:#224935;margin:0 0 7px}
+.live-home-intro p{font-size:10.5px;color:#7b9181;line-height:1.8;margin:0}
+.live-home-security{display:flex;align-items:center;gap:7px;padding:9px 12px;white-space:nowrap;border:1px solid #dbe8df;background:#e8f2ea;color:#427552;font-size:9px;border-radius:5px;font-weight:600}
+.live-metric-button{cursor:pointer;display:flex;flex-direction:column;align-items:stretch;text-align:left;gap:15px;transition:transform .16s,border-color .16s}
+.live-metric-button:hover{transform:translateY(-2px);border-color:#b6d0be}
+.live-metric-label{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:10.5px;color:#789181;font-weight:550}
+.live-metric-label>svg{color:#5c9673;background:#eff5f0;padding:5px;width:30px;height:30px;border-radius:5px}
+.live-metric-button>strong{margin:0!important}
+.live-metric-button>small{color:#899f8e;font-size:9.5px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #eff2ef;padding-top:12px}
+.live-metric-button>small svg{color:#7ea790}
+.live-work-panels{display:grid;grid-template-columns:1.05fr .95fr;gap:17px}
+.live-workqueue>.data-card-head>svg{color:#81a48c}
+.live-workqueue .data-card-head,.live-quick-panel .data-card-head{padding-bottom:20px}
+.live-work-items{display:flex;flex-direction:column;padding:0 21px 21px}
+.live-work-items button{border:0;background:transparent;width:100%;display:flex;gap:11px;align-items:center;padding:16px 1px;border-top:1px solid #edf1ed;text-align:left;color:#769182}
+.live-work-items button:hover{background:#f9fbf9}
+.live-work-icon{display:grid;place-items:center;width:37px;height:37px;flex:0 0 37px;border-radius:6px;background:#eef3ef;color:#52866a}
+.live-work-items button>span:nth-child(2){display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.live-work-items button>span:nth-child(2) strong{font-size:11px;color:#345c43;font-weight:600}
+.live-work-items button>span:nth-child(2) small{font-size:9.5px;color:#8d9e92}
+.live-work-count{background:#f2f5f2;border:1px solid #e3e9e4;border-radius:4px;padding:5px 9px;color:#69816f;font-size:10px;font-weight:600}
+.live-quick-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1px;background:#e7ece8;border-top:1px solid #edf1ed}
+.live-quick-grid button{border:0;background:#fff;padding:19px 16px;display:flex;align-items:center;gap:10px;color:#678977;min-height:64px;text-align:left}
+.live-quick-grid button:hover{background:#f2f7f3}
+.live-quick-grid button span{font-size:10px;color:#385c45;flex:1;font-weight:550}
+.live-quick-grid button>svg:last-child{color:#a5b8a8}
+.live-quick-footer{display:flex;gap:8px;align-items:center;color:#7d9482;padding:14px 17px;background:#f8faf8;font-size:9px}
+.live-shell .table-wrap th{font-size:9px;letter-spacing:.7px;color:#819586;padding:14px 19px;background:#f6f8f6}
+.live-shell .table-wrap td{font-size:10px;color:#61796a;padding:15px 19px}
+.live-shell .td-id{color:#386c4c!important}
+.live-shell .live-status{border-radius:4px;font-size:9px}
+.live-shell .live-row-button{border-radius:4px}
+.live-shell .live-search-row label{height:42px;border-radius:5px;background:#fff}
+.live-shell .live-empty{padding:54px 24px}
+.live-shell .live-empty>svg{color:#729a7a}
+.live-shell .live-empty strong{font-size:13px;font-weight:600}
+.live-shell .live-empty p{font-size:10px}
+.live-shell .table-count{border-radius:4px}
+.live-shell .workspace-footer{color:#839789}
+.live-auth-screen{background:#163a30;font-family:'Poppins',sans-serif}
+.live-auth-screen .live-auth-decoration{display:none}
+.live-auth-screen .live-auth-card{max-width:465px;border-radius:8px;border:1px solid #d9e5dc;padding:35px;box-shadow:0 25px 80px #07201644}
+.live-auth-screen .live-auth-brand{margin-bottom:29px}
+.live-auth-screen .live-auth-brand>span{border-radius:5px}
+.live-auth-screen .live-auth-brand strong{font-size:19px;font-weight:650;letter-spacing:0}
+.live-auth-screen .live-auth-brand small{font-size:8px}
+.live-auth-screen .live-auth-title h1{font-size:29px;letter-spacing:-1px;font-weight:600;color:#244834}
+.live-auth-screen .live-auth-title p{font-size:11px;line-height:1.9}
+.live-auth-screen .live-form input,.live-auth-screen .live-form select{height:44px;border-radius:5px;background:#f9faf9;font-size:11px}
+.live-auth-screen .live-form label{font-size:10.5px;font-weight:600}
+.live-auth-screen .live-google-btn{border-radius:5px}
+.live-auth-screen .live-auth-foot{margin:25px -35px -35px;border-radius:0 0 8px 8px}
+.live-auth-screen .live-back{font-size:10px}
+.live-auth-screen .live-switch{font-size:10px}
+@media(max-width:1050px){.live-shell .sidebar{width:229px;min-width:229px}.live-shell .workspace{padding-inline:25px}.live-shell .app-topbar{padding-inline:25px}.live-work-panels{grid-template-columns:1fr}.live-quick-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.live-shell .sidebar{width:267px;min-width:267px}.live-shell .workspace{padding:25px 17px 0}.live-shell .app-topbar{padding:0 17px}.live-shell .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.live-home-intro{align-items:start}.live-home-intro h2{font-size:20px}.live-home-security{font-size:8px}.live-quick-grid{grid-template-columns:repeat(2,1fr)}.live-top-docs span{display:none}.live-top-docs{width:33px;height:33px;padding:0;display:grid;place-items:center}.live-shell .live-title-row{flex-direction:column;align-items:start}.live-shell .live-title-row h1{font-size:27px}.live-shell .metric{padding:17px}}
+@media(max-width:460px){.live-shell .metric-grid{gap:9px}.live-shell .metric>strong{font-size:25px}.live-metric-label{font-size:9px}.live-home-security{display:none}.live-quick-grid{grid-template-columns:1fr}.live-work-items{padding-inline:15px}.live-quick-grid button{padding:14px}.live-shell .topbar-right{gap:9px}.live-auth-screen .live-auth-card{padding:25px}.live-auth-screen .live-auth-foot{margin:25px -25px -25px}}
