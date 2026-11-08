@@ -26,10 +26,6 @@ const sections: Record<Section, { label: string; icon: LucideIcon }> = {
   configuracion: { label: 'Configuración', icon: Database }
 };
 const companyRoles: EnterpriseRole[] = ['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
-const statuses: Record<string,string> = {
-  Nuevo:'Nuevo', Contactado:'Contactado', Cotización:'Cotización',
-  Negociación:'Negociación', Ganado:'Ganado'
-};
 const loadingText = 'Cargando entorno seguro…';
 const readable = (value: unknown): string =>
   typeof value === 'number' ? new Intl.NumberFormat('es-NI').format(value)
@@ -108,8 +104,8 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
    case 'cliente':return ['policies','tickets','documents'];
   }
 }
-function LivePanel({user,role,admin,onPublic,onDemo}:{
- user:User;role:EnterpriseRole;admin:boolean;onPublic:()=>void;onDemo:()=>void;
+function LivePanel({user,role,admin,onPublic}:{
+ user:User;role:EnterpriseRole;admin:boolean;onPublic:()=>void;
 }) {
  const [section,setSection]=useState<Section>('resumen');
  const [mobile,setMobile]=useState(false);
@@ -185,7 +181,7 @@ function LivePanel({user,role,admin,onPublic,onDemo}:{
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
    <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}</nav>
    <div className="sidebar-spacer"/>
-   <div className="live-sidebar-links"><button onClick={onDemo}><LayoutDashboard size={16}/> Ver demostración <ArrowRight size={15}/></button><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
+   <div className="live-sidebar-links"><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
    <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>POWERED BY XARCON</strong><small>Gestión de seguros · 2026</small></div></div>
   </aside>
   <div className="app-main">
@@ -247,7 +243,7 @@ function LivePanel({user,role,admin,onPublic,onDemo}:{
     </form>}</div></div>}
  </div>;
 }
-export default function ConnectedWorkspace({onPublic,onDemo}:{onPublic:()=>void;onDemo:()=>void}){
+export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  const [user,setUser]=useState<User|null>(null);
  const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'active'>('loading');
  const [role,setRole]=useState<EnterpriseRole>('ventas');
@@ -274,6 +270,6 @@ export default function ConnectedWorkspace({onPublic,onDemo}:{onPublic:()=>void;
    const u=auth.currentUser;if(!u)return;await requestAccess(u,name,requestedRole);await sync(u);
  }
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
- :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} onPublic={onPublic} onDemo={onDemo}/>
+ :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} onPublic={onPublic}/>
  :<><AuthBox user={user} stage={stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
