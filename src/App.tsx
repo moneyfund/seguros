@@ -106,7 +106,7 @@ function SectionHeader({eyebrow,title,desc,action}:{eyebrow:string;title:string;
 function CardTable({children,header,sub,action}:{children:ReactNode;header:string;sub?:string;action?:ReactNode}){
  return <section className="data-card"><div className="data-card-head"><div><h3>{header}</h3>{sub&&<p>{sub}</p>}</div>{action}</div><div className="table-wrap">{children}</div></section>;
 }
-function DemoApp({goPublic}:{goPublic:()=>void}){
+function DemoApp({goPublic,goWorkspace}:{goPublic:()=>void;goWorkspace:()=>void}){
  const [role,setRole]=useState<Role>('direccion');
  const [section,setSection]=useState<Section>('resumen');
  const [mobileOpen,setMobileOpen]=useState(false);
@@ -153,7 +153,7 @@ function DemoApp({goPublic}:{goPublic:()=>void}){
    <nav className="sidebar-nav" aria-label="Navegación de la plataforma">{permitted.map(n=>{const Icon=navInfo[n].icon;return <button key={n} onClick={()=>chooseSection(n)} className={'sidebar-item '+(current===n?'active':'')}><Icon size={18}/><span>{navInfo[n].label}</span>{n==='solicitudes'&&<i>4</i>}</button>;})}</nav>
    <div className="sidebar-spacer"/>
    <div className="sidebar-switch"><label htmlFor="role-select">CAMBIAR PERFIL DEMO</label><div className="role-select"><select id="role-select" value={role} onChange={e=>chooseRole(e.target.value as Role)}>{roles.map(r=><option value={r.id} key={r.id}>{r.label}</option>)}</select><ChevronDown size={15}/></div><small>Las vistas no representan permisos de seguridad reales.</small></div>
-   <button className="sidebar-public" onClick={()=>{window.location.hash='#/workspace';window.location.reload();}}><LockKeyhole size={17}/> Acceso empresarial <ArrowUpRight size={16}/></button><button className="sidebar-public" onClick={goPublic}><Globe2 size={17}/> Volver a web pública <ArrowUpRight size={16}/></button>
+   <button className="sidebar-public" onClick={goWorkspace}><LockKeyhole size={17}/> Acceso empresarial <ArrowUpRight size={16}/></button><button className="sidebar-public" onClick={goPublic}><Globe2 size={17}/> Volver a web pública <ArrowUpRight size={16}/></button>
    <div className="sidebar-bottom"><span className="xarcon-symbol">X</span><div><strong>POWERED BY XARCON</strong><small>Enterprise systems · 2026</small></div></div>
   </aside>
   <div className="app-main">
@@ -229,6 +229,6 @@ export default function App(){
    window.scrollTo({top:0,behavior:'instant'});
  }
  if(mode==='workspace') return <ConnectedWorkspace onPublic={()=>go('public')} onDemo={()=>go('demo')}/>;
- if(mode==='demo') return <DemoApp goPublic={()=>go('workspace')}/>;
+ if(mode==='demo') return <DemoApp goPublic={()=>go('public')} goWorkspace={()=>go('workspace')}/>;
  return <PublicSite openWorkspace={()=>go('workspace')}/>;
 }
