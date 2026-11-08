@@ -65,14 +65,18 @@ export async function approveRequest(item: AccessRequest, role: EnterpriseRole) 
   });
   await updateDoc(requestRef(item.id), { status: 'approved', reviewedAt: serverTimestamp() });
 }
+export type RecordScope = {
+  field: 'clientUid' | 'uploaderUid' | 'assignedToUid';
+  uid: string;
+};
 export function subscribeRecords(
   name: LiveCollection,
   callback: (rows: LiveRecord[]) => void,
   onError: (error: Error) => void,
-  clientUid?: string
+  scope?: RecordScope
 ) {
-  const source = clientUid
-    ? query(recordsCollection(name), where('clientUid', '==', clientUid))
+  const source = scope
+    ? query(recordsCollection(name), where(scope.field, '==', scope.uid))
     : recordsCollection(name);
   return onSnapshot(source, (snapshot: QuerySnapshot<DocumentData>) => {
     callback(snapshot.docs.map(d => ({ id: d.id, ...d.data() })));
