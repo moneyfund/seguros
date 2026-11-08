@@ -27,13 +27,7 @@ service firebase.storage {
         ) &&
         firestore.get(
           /databases/(default)/documents/companies/main/members/$(request.auth.uid)
-        ).data.active == true &&
-        firestore.get(
-          /databases/(default)/documents/companies/main/members/$(request.auth.uid)
-        ).data.role in [
-          'direccion', 'ventas', 'operaciones', 'servicio',
-          'finanzas', 'supervision', 'cliente'
-        ];
+        ).data.active == true;
     }
 
     function supportedDocument() {
