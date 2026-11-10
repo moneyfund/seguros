@@ -12,6 +12,7 @@ import CustomerDossier from './CustomerDossier';
 import { seedInsurancePortfolio } from './insuranceSeed';
 import {
   advancePilotLead, createPilotClient, createPilotLead, createPilotPolicy, createPilotTicket,
+  openPilotRenewalCase,
   downloadPilotDocument, pilotCollectionNames, resolvePilotTicket,
   subscribePilot, uploadPilotDocument,
   type PilotRows, type PilotCollection, type PilotDocument, type PilotLead, type PilotTicket
@@ -176,7 +177,11 @@ export default function PilotWorkspace({user}:{user:User}) {
     {tab==='resumen'&&<ExecutiveDashboard
       clients={clients} leads={leads} policies={policies} commissions={commissions}
       tickets={tickets} documents={docs} activities={activities}
-      onNavigate={setTab}
+      onNavigate={setTab} busy={busy}
+      onStartRenewal={policy=>void perform(async()=>{
+        const opened=await openPilotRenewalCase(user,policy);
+        if(!opened)throw new Error('Ya existe un caso de renovación para esta póliza de prueba.');
+      },'Caso de renovación ficticio abierto en Servicio y registrado en auditoría.',false)}
     />}
     {tab==='aseguradoras'&&<InsuranceDirectory policies={policies} onSelect={company=>{
       setForm({...makeForm(),insurerId:company.id});
