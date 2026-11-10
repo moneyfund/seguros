@@ -316,6 +316,23 @@ service cloud.firestore {
         allow read, write: if isOwner();
       }
 
+      // Dedicated fictitious-data laboratory, readable and writable ONLY by verified owners.
+      // These collections never authorize normal employees and never alter live CRM records.
+      match /{pilotCollection}/{pilotRecordId} {
+        allow read: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ];
+        allow create, update: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ] && request.resource.data.isPilot == true;
+        allow delete: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ];
+      }
+
       match /auditLogs/{auditId} {
         allow read: if isOwner();
         allow write: if false;
