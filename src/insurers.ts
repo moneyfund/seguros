@@ -14,6 +14,8 @@ export interface NicaraguanInsurer {
   established: string;
   shortName: string;
   monogram: string;
+  /** Original insurer brand image stored locally in public/; not a remote hotlink. */
+  logo: string;
 }
 export const regulatorDirectory =
   'https://siboif.gob.ni/supervision/intendencia-seguros/instituciones';
@@ -21,27 +23,27 @@ export const nicaraguanInsurers: readonly NicaraguanInsurer[] = [
   {
     id:'iniser',displayName:'INISER',legalName:'Instituto Nicaragüense de Seguros y Reaseguros (INISER)',
     registryId:'3101',authorization:'Decreto No. 107',established:'1979-10-16',
-    shortName:'INISER',monogram:'IN'
+    shortName:'INISER',monogram:'IN',logo:'/iniser.png'
   },
   {
     id:'assa',displayName:'ASSA Seguros',legalName:'ASSA, Compañía de Seguros, S.A.',
     registryId:'3102',authorization:'SIB-OIF-IV-28-96',established:'1996-12-23',
-    shortName:'ASSA',monogram:'AS'
+    shortName:'ASSA',monogram:'AS',logo:'/assa.webp'
   },
   {
     id:'america',displayName:'Seguros América',legalName:'Compañía de Seguros América, S.A.',
     registryId:'3103',authorization:'SIB-OIF-IV-29-96',established:'1996-12-27',
-    shortName:'América',monogram:'AM'
+    shortName:'América',monogram:'AM',logo:'/america.png'
   },
   {
     id:'lafise',displayName:'Seguros LAFISE',legalName:'Seguros Lafise, S.A.',
     registryId:'3104',authorization:'SIB-OIF-IV-30-96',established:'1996-12-27',
-    shortName:'LAFISE',monogram:'LF'
+    shortName:'LAFISE',monogram:'LF',logo:'/lafise.png'
   },
   {
     id:'mapfre',displayName:'MAPFRE Nicaragua',legalName:'MAPFRE | SEGUROS NICARAGUA, S.A.',
     registryId:'3105',authorization:'SIB-OIF-V-15-97',established:'1997-03-11',
-    shortName:'MAPFRE',monogram:'MF'
+    shortName:'MAPFRE',monogram:'MF',logo:'/mapre.png'
   }
 ] as const;
 export function insurerById(id:string) {return nicaraguanInsurers.find(i=>i.id===id);}
