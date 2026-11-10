@@ -46,7 +46,7 @@ function friendlyError(error: unknown) {
 }
 function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
  user: User | null;
- stage: 'signed-out'|'verify'|'request'|'pending';
+ stage: 'signed-out'|'verify'|'request'|'pending'|'rejected';
  onRetry:()=>Promise<void>;
  onRequest:(name:string,role:EnterpriseRole)=>Promise<void>;
  onBack:()=>void;
@@ -88,6 +88,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
   </form><div className="live-google-divider">o accede con tu cuenta Google</div><button disabled={busy} className="live-google-btn" onClick={googleLogin}><span className="google-g">G</span> Continuar con Google <ArrowRight size={16}/></button><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
   {stage==='verify'&&<div className="live-auth-title"><span>VERIFICACIÓN OBLIGATORIA</span><h1>Revisa tu correo.</h1><p>Te enviamos un enlace de verificación a <strong>{user?.email}</strong>. Confírmalo y después actualiza tu acceso.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Ya verifiqué mi correo <RefreshCw size={16}/></button><button className="live-switch" onClick={()=>action(async()=>{if(user)await sendEmailVerification(user);})}>Reenviar correo de verificación</button>{error&&<p className="live-error">{error}</p>}</div>}
   {stage==='request'&&<StaffApplicationForm user={user} onSubmitted={onRetry}/>}
+  {stage==='rejected'&&<div className="live-auth-title"><span>SOLICITUD RECHAZADA</span><h1>No se habilitó tu acceso.</h1><p>Comunícate con dirección para revisar el resultado de tu solicitud. No adjuntes nuevamente documentos hasta que se autorice otra evaluación.</p></div>}
   {stage==='pending'&&<div className="live-auth-title"><span>ACCESO POR APROBAR</span><h1>Tu solicitud está en revisión.</h1><p>La dirección de la empresa debe autorizar tu perfil. Podrás entrar cuando se apruebe tu cuenta.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Comprobar acceso <RefreshCw size={16}/></button>{error&&<p className="live-error">{error}</p>}</div>}
   {user&&<button className="live-switch" onClick={()=>void signOut(auth)}>Cerrar sesión · {user.email}</button>}
   <div className="live-auth-foot"><LockKeyhole size={14}/> Tus permisos se validan en Firebase, no en la interfaz.</div>
@@ -234,7 +235,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
      </>}
      {section==='clientes'&&<div className="data-card live-narrow"><div className="live-empty"><Users size={30}/><strong>Directorio centralizado de clientes</strong><p>La colección de clientes se habilitará tras aprobar los campos, el consentimiento y las reglas de acceso. Por seguridad, todavía no se recopilan cédulas ni datos de salud.</p></div></div>}
      {section==='equipo'&&<>
-      {canManage?<><StaffApprovalCenter/><StaffMembersCenter members={members as StaffMember[]}/></>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
+      {canManage?<><StaffApprovalCenter/><StaffMembersCenter members={members as unknown as StaffMember[]}/></>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
      </>}
      {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3><p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
@@ -251,7 +252,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
 }
 export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  const [user,setUser]=useState<User|null>(null);
- const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'active'>('loading');
+ const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'rejected'|'active'>('loading');
  const [role,setRole]=useState<EnterpriseRole>('ventas');
  const [admin,setAdmin]=useState(false);
  const [grantedRoles,setGrantedRoles]=useState<EnterpriseRole[]>([]);
@@ -267,7 +268,7 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
      const member=await memberFor(nextUser);
      if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections?.length?member.allowedSections:null);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
-     setAdmin(false);setStage(request.exists()?'pending':'request');
+     setAdmin(false);setStage(!request.exists() || request.data()?.status==='draft' ? 'request' : request.data()?.status==='rejected' ? 'rejected' : 'pending');
    }catch(e){setError(friendlyError(e));setStage('pending');}
  },[]);
  useEffect(()=>onAuthStateChanged(auth,u=>{void sync(u);},e=>{setError(friendlyError(e));setStage('signed-out');}),[sync]);
