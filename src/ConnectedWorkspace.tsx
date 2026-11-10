@@ -117,7 +117,7 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
 function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}:{
  user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;route:string;
 }) {
- const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'>('resumen');
+ const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'|'sin-acceso'>('resumen');
  const [mobile,setMobile]=useState(false);
  const [search,setSearch]=useState('');
  const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
@@ -130,19 +130,29 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  const fileInput=useRef<HTMLInputElement>(null);
  const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
- const collections=useMemo(()=>[...new Set((grantedRoles.length?grantedRoles:[role]).flatMap(r=>accessibleCollections(r,admin)))],[role,admin,grantedRoles]);
+ const collections=useMemo(()=>{
+   const viewFor:Partial<Record<LiveCollection,Section>>={
+     leads:'prospectos',policies:'polizas',tickets:'solicitudes',
+     commissions:'finanzas',documents:'documentos',members:'equipo'
+   };
+   const rolesForMember=grantedRoles.length?grantedRoles:[role];
+   return [...new Set(rolesForMember.flatMap(r=>accessibleCollections(r,admin)))].filter(name=>{
+     const view=viewFor[name];
+     return !view || admin || activeTabs.includes(view);
+   });
+ },[role,admin,grantedRoles,activeTabs]);
  useEffect(()=>{
    const cleanups=collections.map(name=>subscribeRecords(name, data=>{
      setRows(prev=>({...prev,[name]:data}));
    },e=>setError('No pudimos consultar '+name+': '+friendlyError(e)),role==='cliente'&&['policies','tickets','documents'].includes(name)
       ? { field: 'clientUid' as const, uid: user.uid }
-      : name==='leads'&&role==='ventas'&&!admin
+      : name==='leads'&&!admin&&!grantedRoles.some(r=>r==='direccion'||r==='supervision')
       ? { field: 'assignedToUid' as const, uid: user.uid }
       : name==='documents'&&!admin
       ? { field: 'uploaderUid' as const, uid: user.uid }
       : undefined));
    return ()=>cleanups.forEach(fn=>fn());
- },[collections,role,user.uid]);
+ },[collections,role,user.uid,admin,grantedRoles]);
  const refreshRequests=useCallback(async()=>{if(!admin)return;try{setPending(await pendingRequests());}catch(e){setError(friendlyError(e));}},[admin]);
  useEffect(()=>{if(admin)void refreshRequests();},[admin,refreshRequests]);
  const leads=rows.leads||[];
@@ -154,12 +164,12 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const displaySection=section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':sections[section].label;
+ const displaySection=section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
- const canSales=hasStaffRole(['direccion','ventas','supervision']);
- const canOperate=hasStaffRole(['direccion','operaciones']);
- const canService=hasStaffRole(['direccion','servicio','operaciones']);
- const canUpload=true;
+ const canSales=activeTabs.includes('prospectos')&&hasStaffRole(['direccion','ventas','supervision']);
+ const canOperate=activeTabs.includes('polizas')&&hasStaffRole(['direccion','operaciones']);
+ const canService=activeTabs.includes('solicitudes')&&hasStaffRole(['direccion','servicio','operaciones']);
+ const canUpload=admin||activeTabs.includes('documentos');
  const canManage=admin;
  const go=(tab:Section)=>{
    if(!admin&&!activeTabs.includes(tab))return;
@@ -172,7 +182,8 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  };
  useEffect(()=>{
    if(admin && route==='direccion/solicitudes'){setSection('equipo');return;}
-   if(admin && route==='direccion/vistas'){setSection('roles-preview');return;}
+   if(admin && (route==='direccion/vistas'||route==='mi-panel')){setSection('roles-preview');return;}
+   if(!admin && route.startsWith('direccion/')){setSection('sin-acceso');return;}
    if(admin && route==='registro'){setSection('registro-preview');return;}
    if(admin && route==='laboratorio'){setSection('piloto');return;}
    if(route.startsWith('modulo/')){
@@ -232,6 +243,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
      {section==='piloto'&&admin&&<PilotWorkspace user={user}/>}
      {section==='roles-preview'&&admin&&<RoleViewPreview/>}
      {section==='registro-preview'&&admin&&<RegistrationPreview/>}
+     {section==='sin-acceso'&&!admin&&<div className="data-card live-narrow"><div className="live-empty"><LockKeyhole size={32}/><strong>Acceso reservado a Dirección</strong><p>Esta cuenta no tiene permisos administrativos. Tu panel muestra únicamente las vistas aprobadas para tu usuario.</p><button className="btn btn-dark" onClick={()=>special('mi-panel')}>Abrir mi panel <ArrowRight size={16}/></button></div></div>}
      {section==='resumen'&&<><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
       <div className="metric-grid live-metric-grid">
        {[
@@ -252,7 +264,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></>}
-     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&<>
+     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='finanzas'||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':section==='finanzas'?'commissions':'documents';
