@@ -193,6 +193,34 @@ export async function createPilotTicket(user:User,input:{clientId:string;subject
   batch.set(doc(pilotCollection('pilotActivities')),activity(user,input.clientId,'Solicitud abierta: '+subject,'servicio'));
   await batch.commit();
 }
+/**
+ * Open a repeat-safe renewal service case from an actual saved pilot policy.
+ * This creates a case in Firestore; it does not contact or renew any insurer.
+ */
+export async function openPilotRenewalCase(user:User,policy:PilotPolicy):Promise<boolean> {
+  requireOwner(user);
+  const policyRef=pilotDoc('pilotPolicies',policy.id);
+  const caseRef=pilotDoc('pilotTickets','renewal-'+policy.id);
+  return runTransaction(db,async transaction=>{
+    const stored=await transaction.get(policyRef);
+    const previous=await transaction.get(caseRef);
+    if(!stored.exists() || stored.data().isPilot!==true)
+      throw new Error('No se encontró la póliza del laboratorio.');
+    if(previous.exists()) return false;
+    const customer=stored.data().clientId as string;
+    transaction.set(caseRef,{
+      isPilot:true,clientId:customer,policyId:policy.id,caseType:'Renovación',
+      subject:'Renovación · '+String(stored.data().policyNumber||'póliza de ejemplo'),
+      detail:'Caso de prueba generado para dar seguimiento al vencimiento '+String(stored.data().endDate||'')+'. No se ha renovado ni emitido ninguna cobertura.',
+      status:'Pendiente',createdBy:user.uid,createdAt:serverTimestamp()
+    });
+    transaction.set(doc(pilotCollection('pilotActivities')),activity(
+      user,customer,'Gestión ficticia de renovación abierta','renovacion'
+    ));
+    return true;
+  });
+}
+
 export async function resolvePilotTicket(user:User,ticket:PilotTicket) {
   requireOwner(user);
   const batch=writeBatch(db);
