@@ -329,7 +329,7 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
    if(!nextUser){setStage('signed-out');setAdmin(false);return;}
    if(!nextUser.emailVerified){setStage('verify');return;}
    try{
-     const token=await nextUser.getIdTokenResult(true);
+     await nextUser.getIdToken(true);
      if(isInitialAdmin(nextUser.email)){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
      const member=await memberFor(nextUser);
      if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections!==undefined?member.allowedSections:null);setStage('active');return;}
