@@ -91,7 +91,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode }:{
    <label>Contraseña<input type="password" minLength={6} autoComplete={register?'new-password':'current-password'} required value={password} onChange={e=>setPassword(e.target.value)} placeholder="Mínimo 6 caracteres"/></label>
    {error&&<p className="live-error">{error}</p>}
    <button disabled={busy} className="btn btn-dark full" type="submit">{busy?'Procesando…':register?'Crear cuenta':'Iniciar sesión'} <ArrowRight size={16}/></button>
-  </form><div className="live-google-divider">o accede con tu cuenta Google</div><button disabled={busy} className="live-google-btn" onClick={googleLogin}><span className="google-g">G</span> Continuar con Google <ArrowRight size={16}/></button><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
+  </form><a className="access-guide-entry" href="#/accesos"><ShieldCheck size={15}/> Ver acceso de empleados, dirección y colaboradores <ArrowRight size={15}/></a><div className="live-google-divider">o accede con tu cuenta Google</div><button disabled={busy} className="live-google-btn" onClick={googleLogin}><span className="google-g">G</span> Continuar con Google <ArrowRight size={16}/></button><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
   {stage==='verify'&&<div className="live-auth-title"><span>VERIFICACIÓN OBLIGATORIA</span><h1>Revisa tu correo.</h1><p>Te enviamos un enlace de verificación a <strong>{user?.email}</strong>. Confírmalo y después actualiza tu acceso.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Ya verifiqué mi correo <RefreshCw size={16}/></button><button className="live-switch" onClick={()=>action(async()=>{if(user)await sendEmailVerification(user);})}>Reenviar correo de verificación</button>{error&&<p className="live-error">{error}</p>}</div>}
   {stage==='request'&&<StaffApplicationForm user={user} onSubmitted={onRetry}/>}
   {stage==='rejected'&&<div className="live-auth-title"><span>SOLICITUD RECHAZADA</span><h1>No se habilitó tu acceso.</h1><p>Comunícate con dirección para revisar el resultado de tu solicitud. No adjuntes nuevamente documentos hasta que se autorice otra evaluación.</p></div>}
@@ -218,7 +218,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
     <button className={'sidebar-item '+(section==='piloto'?'active':'')} onClick={()=>special('laboratorio')}><FlaskConical size={18}/><span>Laboratorio operativo</span></button>
     </>}</nav>
    <div className="sidebar-spacer"/>
-   <div className="live-sidebar-links"><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
+   <div className="live-sidebar-links"><button onClick={()=>special('accesos')}><ShieldCheck size={16}/> Guía de accesos</button><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
    <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY XARCON</strong><small>Gestión profesional de seguros</small></div></div>
   </aside>
   <div className="app-main">
