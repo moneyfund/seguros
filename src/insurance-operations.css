@@ -134,3 +134,7 @@
 .ins-dossier-note{margin:0;padding:0 22px 17px;font-size:10px;color:#8b9c8e;background:#f9fcf9}
 @media(max-width:800px){.ins-dossier-content{grid-template-columns:1fr}.ins-dossier-section{border-right:0;border-bottom:1px solid #e9f0eb}.ins-dossier-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ins-dossier-facts{grid-template-columns:1fr 1fr}}
 @media(max-width:460px){.ins-dossier-header{padding:17px}.ins-dossier-header h3{font-size:19px}.ins-dossier-stats>div{padding:12px}.ins-dossier-stats strong{font-size:17px}.ins-dossier-open{font-size:9px;padding:8px 6px}.ins-dossier-facts{grid-template-columns:1fr}.ins-dossier-actions{padding:13px}}
+
+.ins-renewal-list>button:disabled{opacity:.65;cursor:default;background:#f9fbf9}
+.ins-renewal-list>button:disabled .ins-renewal-days{color:#40815b}
+.ins-renewal-list>button:not(:disabled) .ins-renewal-days{text-decoration:underline;text-underline-offset:3px}
