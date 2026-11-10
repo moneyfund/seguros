@@ -42,6 +42,18 @@ service firebase.storage {
         ];
     }
 
+    // Pilot-only fictional attachments. Real identity/policy documents must not be uploaded.
+    match /companies/main/pilotDocuments/{ownerUid}/{fileName} {
+      allow get: if isOwner();
+      allow list: if false;
+      allow create: if isOwner() &&
+        request.auth.uid == ownerUid &&
+        supportedDocument() &&
+        fileName.matches('[0-9a-f-]+[.](pdf|jpg|png|webp)');
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
     // Applicant files are private. No public downloads or folder listing.
     // Staff identity domain is configured in Firestore after the domain is purchased.
     function institutionalApplicant(uid) {
