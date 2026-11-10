@@ -30,6 +30,14 @@ service firebase.storage {
         ).data.active == true;
     }
 
+    function canViewDocuments() {
+      return isOwner() || (
+        isActiveMember() &&
+        firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid))
+          .data.get('allowedSections', []).hasAny(['documentos'])
+      );
+    }
+
     function supportedDocument() {
       return request.resource != null &&
         request.resource.size > 0 &&
@@ -94,13 +102,13 @@ service firebase.storage {
     match /companies/main/documents/{ownerUid}/{fileName} {
       // Los administradores ven todos; el empleado o cliente solo los suyos.
       allow get: if isOwner() ||
-        (isActiveMember() && request.auth.uid == ownerUid);
+        (canViewDocuments() && request.auth.uid == ownerUid);
 
       // Para evitar enumerar carpetas ajenas, solo los administradores listan.
       allow list: if isOwner();
 
       // No es posible subir archivos en la carpeta de otro usuario.
-      allow create: if (isOwner() || isActiveMember()) &&
+      allow create: if canViewDocuments() &&
         request.auth.uid == ownerUid &&
         supportedDocument() &&
         fileName.matches('.*[.](pdf|jpg|png|webp)') &&
