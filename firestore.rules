@@ -120,16 +120,30 @@ service cloud.firestore {
           (isInstitutionalUser() &&
            request.auth.uid == uid &&
            resource.data.status == 'draft' &&
-           request.resource.data.status == 'pending' &&
-           changedOnly(['status','profilePhotoPath','identityDocumentPath','submittedAt']) &&
-           request.resource.data.profilePhotoPath.matches(
-             'companies/main/onboarding/' + uid + '/photo-.*[.](jpg|png|webp)'
-           ) &&
-           request.resource.data.identityDocumentPath.matches(
-             'companies/main/onboarding/' + uid + '/identity-.*[.](pdf|jpg|png|webp)'
-           ) &&
-           request.resource.data.submittedAt is timestamp)
-          ||
+           (
+             (request.resource.data.status == 'draft' &&
+              changedOnly(['displayName','phone','requestedDepartment','requestedRole']) &&
+              request.resource.data.email == request.auth.token.email &&
+              request.resource.data.displayName is string &&
+              request.resource.data.displayName.size() >= 3 &&
+              request.resource.data.displayName.size() <= 90 &&
+              request.resource.data.phone is string &&
+              request.resource.data.phone.matches('[+]?[0-9 ()-]{8,20}') &&
+              request.resource.data.requestedDepartment in [
+                'direccion','ventas','operaciones','servicio','finanzas','supervision'
+              ] &&
+              request.resource.data.requestedRole == request.resource.data.requestedDepartment)
+             ||
+             (request.resource.data.status == 'pending' &&
+              changedOnly(['status','profilePhotoPath','identityDocumentPath','submittedAt']) &&
+              request.resource.data.profilePhotoPath.matches(
+                'companies/main/onboarding/' + uid + '/photo-.*[.](jpg|png|webp)'
+              ) &&
+              request.resource.data.identityDocumentPath.matches(
+                'companies/main/onboarding/' + uid + '/identity-.*[.](pdf|jpg|png|webp)'
+              ) &&
+              request.resource.data.submittedAt is timestamp)
+           )) ||
           (isOwner() &&
            resource.data.status == 'pending' &&
            changedOnly([
