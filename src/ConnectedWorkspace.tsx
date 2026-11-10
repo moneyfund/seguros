@@ -16,6 +16,8 @@ import {
 import { money, navigationByRole, roles, type Section } from './data';
 import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
 import type { StaffMember } from './staff';
+import PilotWorkspace from './PilotWorkspace';
+import { FlaskConical } from 'lucide-react';
 
 const sections: Record<Section, { label: string; icon: LucideIcon }> = {
   resumen: { label: 'Vista general', icon: LayoutDashboard },
@@ -111,7 +113,7 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
 function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
  user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;
 }) {
- const [section,setSection]=useState<Section>('resumen');
+ const [section,setSection]=useState<Section|'piloto'>('resumen');
  const [mobile,setMobile]=useState(false);
  const [search,setSearch]=useState('');
  const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
@@ -148,6 +150,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
+ const displaySection=section==='piloto'?'Laboratorio operativo':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
  const canSales=hasStaffRole(['direccion','ventas','supervision']);
  const canOperate=hasStaffRole(['direccion','operaciones']);
@@ -184,19 +187,20 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span></div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
-   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}</nav>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{admin&&<button className={'sidebar-item '+(section==='piloto'?'active':'')} onClick={()=>{setSection('piloto');setMobile(false);setError('');setNotice('');}}><FlaskConical size={18}/><span>Laboratorio operativo</span></button>}</nav>
    <div className="sidebar-spacer"/>
    <div className="live-sidebar-links"><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
    <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY XARCON</strong><small>Gestión profesional de seguros</small></div></div>
   </aside>
   <div className="app-main">
-   <header className="app-topbar"><div className="breadcrumbs"><button className="mobile-menu" onClick={()=>setMobile(true)} aria-label="Abrir menú"><Menu size={23}/></button><span>Empresa</span><ChevronRight size={14}/><strong>{sections[section].label}</strong></div><div className="topbar-right"><span className="demo-top-note"><span/> SESIÓN VERIFICADA</span><button className="live-top-docs" title="Ir al centro documental" onClick={()=>go('documentos')}><FileText size={16}/><span>Documentos</span></button><button className="live-top-signout" title="Cerrar sesión" onClick={()=>void signOut(auth)}><LogOut size={15}/></button><span className="topbar-avatar">{(user.displayName||user.email||'US').slice(0,2).toUpperCase()}</span></div></header>
+   <header className="app-topbar"><div className="breadcrumbs"><button className="mobile-menu" onClick={()=>setMobile(true)} aria-label="Abrir menú"><Menu size={23}/></button><span>Empresa</span><ChevronRight size={14}/><strong>{displaySection}</strong></div><div className="topbar-right"><span className="demo-top-note"><span/> SESIÓN VERIFICADA</span><button className="live-top-docs" title="Ir al centro documental" onClick={()=>go('documentos')}><FileText size={16}/><span>Documentos</span></button><button className="live-top-signout" title="Cerrar sesión" onClick={()=>void signOut(auth)}><LogOut size={15}/></button><span className="topbar-avatar">{(user.displayName||user.email||'US').slice(0,2).toUpperCase()}</span></div></header>
    <main className="workspace live-workspace">
-    <div className="date-line"><CalendarClock size={15}/> ACOS · PLATAFORMA EMPRESARIAL <span className="live-crumb-separator">/</span> {name.toUpperCase()} <span className="live-crumb-separator">/</span> {sections[section].label.toUpperCase()}</div>
-    <div className="live-title-row"><div><h1>{sections[section].label}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='polizas'&&canOperate&&<button className="btn btn-dark" onClick={()=>setModal('policy')}><Plus size={16}/> Expediente preliminar</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
+    <div className="date-line"><CalendarClock size={15}/> ACOS · PLATAFORMA EMPRESARIAL <span className="live-crumb-separator">/</span> {name.toUpperCase()} <span className="live-crumb-separator">/</span> {displaySection.toUpperCase()}</div>
+    <div className="live-title-row"><div><h1>{displaySection}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='polizas'&&canOperate&&<button className="btn btn-dark" onClick={()=>setModal('policy')}><Plus size={16}/> Expediente preliminar</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
     {error&&<div className="live-error-banner"><LockKeyhole size={16}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Cerrar error"><X size={16}/></button></div>}
     {notice&&<div className="live-success-banner"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Cerrar aviso"><X size={16}/></button></div>}
     <div className="live-body">
+     {section==='piloto'&&admin&&<PilotWorkspace user={user}/>}
      {section==='resumen'&&<><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
       <div className="metric-grid live-metric-grid">
        {[
@@ -217,12 +221,12 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></>}
-     {section!=='resumen'&&section!=='configuracion'&&<>
+     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='finanzas'||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':section==='finanzas'?'commissions':'documents';
         const data=filtered(rows[kind]||[]);
-        return <div className="data-card live-list"><div className="data-card-head"><div><h3>{sections[section].label}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
+        return <div className="data-card live-list"><div className="data-card-head"><div><h3>{displaySection}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
         {data.length===0?<div className="live-empty"><Database size={29}/><strong>Sin registros disponibles</strong><p>Todavía no hay registros para esta sección. Puedes comenzar con una nueva operación cuando tu perfil tenga autorización.</p></div>:<div className="table-wrap"><table><thead><tr><th>REFERENCIA</th><th>DETALLE</th><th>CLASIFICACIÓN</th><th>VALOR / TAMAÑO</th><th>ESTADO</th><th/></tr></thead><tbody>{data.map(record=><tr key={record.id}>
           <td className="td-id">{record.id.slice(0,11)}</td>
           <td className="strong-cell">{readable(record.name||record.clientName||record.subject||record.fileName||record.policyId)}</td>
