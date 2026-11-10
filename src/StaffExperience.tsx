@@ -4,9 +4,9 @@ import { Check, FileBadge2, ImagePlus, LockKeyhole, RefreshCw, ShieldCheck, User
 import { navigationByRole, roles as roleDefinitions, type Section } from './data';
 import type { EnterpriseRole } from './backend';
 import {
-  approveStaffApplication, departments, employeeCodeFor, isInstitutionalEmail,
+  approveStaffApplication, createStaffInvitation, departments, employeeCodeFor, hasStaffInvitation,
   openProtectedStaffDocument, pendingStaffApplications, rejectStaffApplication,
-  sectionsForRoles, staffEmailDomain, submitStaffApplication, updateStaffMember,
+  sectionsForRoles, submitStaffApplication, updateStaffMember,
   type StaffApplication, type StaffDepartment, type StaffMember
 } from './staff';
 
@@ -44,7 +44,17 @@ export function StaffApplicationForm({user,onSubmitted}:{user:User|null;onSubmit
   const [identity,setIdentity]=useState<File|null>(null);
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
-  const enabled=!!user?.email && isInstitutionalEmail(user.email);
+  const [invited,setInvited]=useState(false);
+  const [checking,setChecking]=useState(true);
+  useEffect(()=>{
+    let valid=true;
+    setChecking(true);
+    if (!user) {setChecking(false);setInvited(false);return;}
+    void hasStaffInvitation(user).then(allowed=>{if(valid){setInvited(allowed);setChecking(false);}})
+      .catch(ex=>{if(valid){setError(friendly(ex));setInvited(false);setChecking(false);}});
+    return ()=>{valid=false;};
+  },[user]);
+  const enabled=!!user?.email && user.emailVerified && invited;
   async function submit(e:FormEvent) {
     e.preventDefault();
     if (!user || !photo || !identity) {setError('Debes adjuntar fotografía e identificación.');return;}
@@ -59,8 +69,8 @@ export function StaffApplicationForm({user,onSubmitted}:{user:User|null;onSubmit
     <h1>Solicita tu acceso a ACOS.</h1>
     <p>Completa tu perfil. Dirección verificará tu identidad y decidirá tu departamento, código y permisos.</p>
     <div className="staff-email-info"><ShieldCheck size={17}/><span>Correo verificado: <strong>{user?.email||'No disponible'}</strong></span></div>
-    {!staffEmailDomain?<p className="staff-warning">La recepción de solicitudes está pendiente de la compra y configuración del dominio institucional. Este formulario aún no permite enviar documentación.</p>
-    :!enabled?<p className="staff-warning">Debes iniciar sesión con tu correo institucional @{staffEmailDomain}. No envíes cédulas desde cuentas personales.</p>:null}
+    {checking?<p className="staff-warning">Comprobando tu invitación empresarial…</p>
+    :!invited?<p className="staff-warning">Tu correo debe ser invitado por Dirección antes de crear un expediente. Esto permite configurar ACOS sin comprar todavía el dominio institucional y evita solicitudes no autorizadas.</p>:null}
     <form className="live-form" onSubmit={submit}>
       <label>Nombre completo<input required minLength={3} maxLength={90} value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre y apellidos"/></label>
       <label>Teléfono de contacto<input required type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+505 8888 8888"/></label>
@@ -109,7 +119,38 @@ function ApprovalEntry({item,onProcessed}:{item:StaffApplication;onProcessed:()=
   </article>;
 }
 
-export function StaffApprovalCenter() {
+export function StaffInvitations({user}:{user:User}) {
+  const [email,setEmail]=useState('');
+  const [department,setDepartment]=useState<StaffDepartment>('ventas');
+  const [busy,setBusy]=useState(false);
+  const [error,setError]=useState('');
+  const [notice,setNotice]=useState('');
+  async function submit(e:FormEvent) {
+    e.preventDefault();setBusy(true);setError('');setNotice('');
+    try {
+      await createStaffInvitation(user,email,department);
+      setNotice('Invitación autorizada para '+email.trim().toLowerCase()+'. El colaborador ya puede iniciar sesión con ese correo verificado y enviar su solicitud.');
+      setEmail('');
+    } catch(ex) {setError(friendly(ex));} finally {setBusy(false);}
+  }
+  return <section className="data-card live-list staff-center">
+    <div className="data-card-head"><div><span className="staff-kicker">CONTROL DE INCORPORACIONES</span>
+      <h3>Autorizar correo para crear perfil</h3>
+      <p>Registra primero el correo del colaborador. Puede ser una cuenta de prueba verificada mientras se adquiere el dominio institucional.</p></div></div>
+    <form className="staff-invite-form" onSubmit={submit}>
+      <label>Correo a invitar<input type="email" required autoComplete="off" value={email}
+        onChange={e=>setEmail(e.target.value)} placeholder="colaborador@correo.com"/></label>
+      <label>Área prevista<select value={department} onChange={e=>setDepartment(e.target.value as StaffDepartment)}>
+        {Object.entries(departments).filter(([k])=>k!=='direccion').map(([k,v])=><option key={k} value={k}>{v}</option>)}
+      </select></label>
+      <button className="btn btn-dark" disabled={busy} type="submit">{busy?'Autorizando…':'Crear invitación'}</button>
+      {error&&<p className="live-error">{error}</p>}{notice&&<p className="staff-invite-success">{notice}</p>}
+      <p className="staff-note">No envía correos automáticamente. Dirección debe comunicar al empleado que puede crear su perfil. Las reglas de Firebase impiden solicitar acceso sin invitación.</p>
+    </form>
+  </section>;
+}
+
+export function StaffApprovalCenter({user}:{user:User}) {
   const [applications,setApplications]=useState<StaffApplication[]>([]);
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState('');
@@ -119,14 +160,14 @@ export function StaffApprovalCenter() {
     finally{setLoading(false);}
   },[]);
   useEffect(()=>{void refresh();},[refresh]);
-  return <section className="data-card live-list staff-center">
+  return <><StaffInvitations user={user}/><section className="data-card live-list staff-center">
     <div className="data-card-head"><div><span className="staff-kicker">DIRECCIÓN GENERAL</span><h3>Solicitudes de incorporación</h3><p>Revisa identificación y autoriza exclusivamente los permisos necesarios.</p></div><button className="btn btn-soft" onClick={()=>void refresh()}><RefreshCw size={15}/> Actualizar</button></div>
     {error&&<p className="live-error">{error}</p>}
     {loading?<p className="staff-muted">Consultando solicitudes…</p>
     :applications.length===0?<div className="live-empty"><UserRoundCheck size={28}/><strong>Sin solicitudes pendientes</strong><p>Las nuevas solicitudes se mostrarán aquí.</p></div>
     :<div className="staff-request-grid">{applications.map(a=><ApprovalEntry key={a.id} item={a} onProcessed={refresh}/>)}</div>}
     <p className="staff-note">Avisos por correo: pendientes de integrar un servicio de envío seguro. La aprobación activa el perfil en Firebase, pero todavía no envía correos automáticos.</p>
-  </section>;
+  </section></>;
 }
 
 function MemberEditor({member,onSaved}:{member:StaffMember;onSaved:()=>void}) {
