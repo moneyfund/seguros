@@ -59,10 +59,15 @@ export async function submitStaffApplication(user: User, input: {
   const existing = await getDoc(requestDoc(user.uid));
   if (existing.exists() && existing.data()?.status !== 'draft')
     throw new Error('Ya existe una solicitud. Dirección debe revisarla antes de enviar otra.');
-  await setDoc(requestDoc(user.uid), {
+  const draftFields = {
     email: user.email.toLowerCase(), displayName, phone, requestedDepartment: input.department,
-    requestedRole: input.department, status: 'draft', requestedAt: serverTimestamp()
-  });
+    requestedRole: input.department, status: 'draft'
+  };
+  if (existing.exists()) {
+    await updateDoc(requestDoc(user.uid), draftFields);
+  } else {
+    await setDoc(requestDoc(user.uid), { ...draftFields, requestedAt: serverTimestamp() });
+  }
   const prefix = 'companies/' + companyId + '/onboarding/' + user.uid + '/';
   const photoPath = prefix + 'photo-' + crypto.randomUUID() + '.' + extensionFor(input.photo);
   const identityPath = prefix + 'identity-' + crypto.randomUUID() + '.' + extensionFor(input.identity);
