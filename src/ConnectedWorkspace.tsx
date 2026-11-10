@@ -14,6 +14,8 @@ import {
   uploadDocument, type AccessRequest, type EnterpriseRole, type LiveCollection, type LiveRecord
 } from './backend';
 import { money, navigationByRole, roles, type Section } from './data';
+import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
+import type { StaffMember } from './staff';
 
 const sections: Record<Section, { label: string; icon: LucideIcon }> = {
   resumen: { label: 'Vista general', icon: LayoutDashboard },
@@ -85,7 +87,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
    <button disabled={busy} className="btn btn-dark full" type="submit">{busy?'Procesando…':register?'Crear cuenta':'Iniciar sesión'} <ArrowRight size={16}/></button>
   </form><div className="live-google-divider">o accede con tu cuenta Google</div><button disabled={busy} className="live-google-btn" onClick={googleLogin}><span className="google-g">G</span> Continuar con Google <ArrowRight size={16}/></button><button className="live-switch" onClick={()=>{setRegister(!register);setError('');}}>{register?'¿Ya tienes una cuenta? Inicia sesión':'¿Aún no tienes acceso? Solicitar cuenta'}</button></>}
   {stage==='verify'&&<div className="live-auth-title"><span>VERIFICACIÓN OBLIGATORIA</span><h1>Revisa tu correo.</h1><p>Te enviamos un enlace de verificación a <strong>{user?.email}</strong>. Confírmalo y después actualiza tu acceso.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Ya verifiqué mi correo <RefreshCw size={16}/></button><button className="live-switch" onClick={()=>action(async()=>{if(user)await sendEmailVerification(user);})}>Reenviar correo de verificación</button>{error&&<p className="live-error">{error}</p>}</div>}
-  {stage==='request'&&<div className="live-auth-title"><span>APROBACIÓN PENDIENTE DE SOLICITAR</span><h1>Completa tu solicitud.</h1><p>Tu correo está verificado. Un administrador revisará tu incorporación y asignará los permisos necesarios.</p><form className="live-form" onSubmit={e=>{e.preventDefault();void action(()=>onRequest(name||user?.displayName||'',area));}}><label>Nombre de identificación<input required value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label><label>Área solicitada<select value={area} onChange={e=>setArea(e.target.value as EnterpriseRole)}>{companyRoles.map(r=><option key={r} value={r}>{roles.find(x=>x.id===r)?.label||r}</option>)}</select></label>{error&&<p className="live-error">{error}</p>}<button className="btn btn-dark full" disabled={busy} type="submit">Solicitar autorización <ArrowRight size={16}/></button></form></div>}
+  {stage==='request'&&<StaffApplicationForm user={user} onSubmitted={onRetry}/>}
   {stage==='pending'&&<div className="live-auth-title"><span>ACCESO POR APROBAR</span><h1>Tu solicitud está en revisión.</h1><p>La dirección de la empresa debe autorizar tu perfil. Podrás entrar cuando se apruebe tu cuenta.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Comprobar acceso <RefreshCw size={16}/></button>{error&&<p className="live-error">{error}</p>}</div>}
   {user&&<button className="live-switch" onClick={()=>void signOut(auth)}>Cerrar sesión · {user.email}</button>}
   <div className="live-auth-foot"><LockKeyhole size={14}/> Tus permisos se validan en Firebase, no en la interfaz.</div>
@@ -105,8 +107,8 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
    case 'cliente':return ['policies','tickets','documents'];
   }
 }
-function LivePanel({user,role,admin,onPublic}:{
- user:User;role:EnterpriseRole;admin:boolean;onPublic:()=>void;
+function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
+ user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;
 }) {
  const [section,setSection]=useState<Section>('resumen');
  const [mobile,setMobile]=useState(false);
@@ -120,8 +122,8 @@ function LivePanel({user,role,admin,onPublic}:{
  const [roleSelections,setRoleSelections]=useState<Record<string,EnterpriseRole>>({});
  const fileInput=useRef<HTMLInputElement>(null);
  const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});
- const activeTabs=navigationByRole[role];
- const collections=useMemo(()=>accessibleCollections(role,admin),[role,admin]);
+ const activeTabs=admin?navigationByRole.direccion:(grantedSections?.length?grantedSections:navigationByRole[role]);
+ const collections=useMemo(()=>[...new Set((grantedRoles.length?grantedRoles:[role]).flatMap(r=>accessibleCollections(r,admin)))],[role,admin,grantedRoles]);
  useEffect(()=>{
    const cleanups=collections.map(name=>subscribeRecords(name, data=>{
      setRows(prev=>({...prev,[name]:data}));
@@ -145,9 +147,10 @@ function LivePanel({user,role,admin,onPublic}:{
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const canSales=admin||['direccion','ventas','supervision'].includes(role);
- const canOperate=admin||['direccion','operaciones'].includes(role);
- const canService=admin||['direccion','servicio','operaciones'].includes(role);
+ const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
+ const canSales=hasStaffRole(['direccion','ventas','supervision']);
+ const canOperate=hasStaffRole(['direccion','operaciones']);
+ const canService=hasStaffRole(['direccion','servicio','operaciones']);
  const canUpload=true;
  const canManage=admin;
  const go=(tab:Section)=>{setSection(tab);setMobile(false);setSearch('');setError('');};
@@ -230,8 +233,10 @@ function LivePanel({user,role,admin,onPublic}:{
       })()}
      </>}
      {section==='clientes'&&<div className="data-card live-narrow"><div className="live-empty"><Users size={30}/><strong>Directorio centralizado de clientes</strong><p>La colección de clientes se habilitará tras aprobar los campos, el consentimiento y las reglas de acceso. Por seguridad, todavía no se recopilan cédulas ni datos de salud.</p></div></div>}
-     {section==='equipo'&&<><div className="data-card live-list"><div className="data-card-head"><div><h3>Personal autorizado</h3><p>Solo la dirección puede conceder permisos; los usuarios no pueden asignarse roles.</p></div><span className="table-count">{members.length}</span></div>{members.length===0?<div className="live-empty"><Users size={28}/><strong>Equipo pendiente de incorporación</strong><p>Los colaboradores aparecerán aquí una vez aprobados sus accesos.</p></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>CORREO</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td className="strong-cell">{readable(m.displayName)}</td><td>{readable(m.email)}</td><td>{readable(m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>
-      {canManage&&<div className="data-card live-list"><div className="data-card-head"><div><h3>Solicitudes pendientes de aprobación</h3><p>Selecciona el rol verificado antes de conceder acceso.</p></div><button className="btn btn-soft" onClick={()=>void refreshRequests()}><RefreshCw size={15}/> Actualizar</button></div>{pending.length===0?<div className="live-empty"><CheckCircle2 size={28}/><strong>Todo al día</strong><p>No hay solicitudes de acceso pendientes de revisión.</p></div>:<div className="live-approvals">{pending.map(req=><div className="live-approval" key={req.id}><span className="live-avatar">{req.displayName.slice(0,2).toUpperCase()}</span><div><strong>{req.displayName}</strong><small>{req.email} · Solicitó: {req.requestedRole}</small></div><select value={roleSelections[req.id]||'ventas'} onChange={e=>setRoleSelections(v=>({...v,[req.id]:e.target.value as EnterpriseRole}))}>{companyRoles.map(r=><option key={r} value={r}>{roles.find(x=>x.id===r)?.label}</option>)}</select><button disabled={submitting} className="btn btn-dark" onClick={()=>void approve(req)}>Aprobar <Check size={14}/></button></div>)}</div>}</div>}</>}
+     {section==='equipo'&&<>
+      {canManage?<><StaffApprovalCenter/><StaffMembersCenter members={members as StaffMember[]}/></>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
+      {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
+     </>}
      {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3><p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
     </div><footer className="workspace-footer"><span>ACOS · SISTEMA DE GESTIÓN EMPRESARIAL</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
    </main>
@@ -249,6 +254,8 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'active'>('loading');
  const [role,setRole]=useState<EnterpriseRole>('ventas');
  const [admin,setAdmin]=useState(false);
+ const [grantedRoles,setGrantedRoles]=useState<EnterpriseRole[]>([]);
+ const [grantedSections,setGrantedSections]=useState<Section[]|null>(null);
  const [error,setError]=useState('');
  const sync=useCallback(async(nextUser:User|null)=>{
    setUser(nextUser);setError('');
@@ -256,9 +263,9 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
    if(!nextUser.emailVerified){setStage('verify');return;}
    try{
      const token=await nextUser.getIdTokenResult(true);
-     if(isInitialAdmin(nextUser.email)||token.claims.admin===true){setAdmin(true);setRole('direccion');setStage('active');return;}
+     if(isInitialAdmin(nextUser.email)||token.claims.admin===true){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
      const member=await memberFor(nextUser);
-     if(member){setAdmin(false);setRole(member.role);setStage('active');return;}
+     if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections?.length?member.allowedSections:null);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
      setAdmin(false);setStage(request.exists()?'pending':'request');
    }catch(e){setError(friendlyError(e));setStage('pending');}
@@ -271,6 +278,6 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
    const u=auth.currentUser;if(!u)return;await requestAccess(u,name,requestedRole);await sync(u);
  }
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
- :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} onPublic={onPublic}/>
+ :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic}/>
  :<><AuthBox user={user} stage={stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
