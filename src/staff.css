@@ -38,3 +38,11 @@
   .staff-options label { font-size: .72rem; }
   .staff-actions .btn { flex: 1; justify-content: center; }
 }
+
+/* Invitations: issued by direction before the employee submits documents. */
+.staff-invite-form{display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(175px,1fr) auto;align-items:end;gap:12px;padding:18px 22px}
+.staff-invite-form>label{display:grid;gap:7px;color:#305443;font-size:12px;font-weight:700}
+.staff-invite-form input,.staff-invite-form select{min-height:42px;width:100%;border:1px solid #cfdfd4;border-radius:9px;padding:9px 12px;background:#fff;color:#183f2f}
+.staff-invite-form>.live-error,.staff-invite-form>.staff-note,.staff-invite-form>.staff-invite-success{grid-column:1/-1}
+.staff-invite-success{background:#e9f6ed;color:#24603f;border-radius:8px;padding:10px 12px;font-size:12px}
+@media(max-width:860px){.staff-invite-form{grid-template-columns:1fr}}
