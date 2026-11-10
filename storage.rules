@@ -42,6 +42,38 @@ service firebase.storage {
         ];
     }
 
+    // Applicant files are private. No public downloads or folder listing.
+    // Staff identity domain is configured in Firestore after the domain is purchased.
+    function institutionalApplicant(uid) {
+      return verified() &&
+        request.auth.uid == uid &&
+        firestore.exists(/databases/(default)/documents/companies/main/settings/staffIdentity) &&
+        request.auth.token.email.split('@').size() == 2 &&
+        request.auth.token.email.split('@')[1] ==
+          firestore.get(/databases/(default)/documents/companies/main/settings/staffIdentity).data.domain;
+    }
+    function hasDraft(uid) {
+      return firestore.exists(/databases/(default)/documents/companies/main/accessRequests/$(uid)) &&
+        firestore.get(/databases/(default)/documents/companies/main/accessRequests/$(uid)).data.status == 'draft';
+    }
+
+    match /companies/main/onboarding/{uid}/{fileName} {
+      allow get: if isOwner() || institutionalApplicant(uid);
+      allow list: if false;
+      allow create: if institutionalApplicant(uid) && hasDraft(uid) &&
+        request.resource != null && request.resource.size > 0 &&
+        (
+          (fileName.matches('photo-[0-9a-f-]+[.](jpg|png|webp)') &&
+           request.resource.size <= 3 * 1024 * 1024 &&
+           request.resource.contentType in ['image/jpeg','image/png','image/webp']) ||
+          (fileName.matches('identity-[0-9a-f-]+[.](jpg|png|webp|pdf)') &&
+           request.resource.size <= 8 * 1024 * 1024 &&
+           request.resource.contentType in ['image/jpeg','image/png','image/webp','application/pdf'])
+        );
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
     // Cada usuario autorizado guarda sus archivos en su carpeta UID.
     // Este mismo patrón se usa en src/backend.ts.
     match /companies/main/documents/{ownerUid}/{fileName} {
