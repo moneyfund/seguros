@@ -50,13 +50,11 @@ type RoleView @table(key: ["role", "view"]) {
   view: PortalView!
 }
 
-type CompanyMember @table
-  @unique(fields: ["company", "user"])
-  @unique(fields: ["company", "employeeCode"]) {
+type CompanyMember @table @unique(fields: ["company", "user"]) {
   company: Company!
   user: AppUser!
   department: Department!
-  employeeCode: String!
+  employeeCode: String! @unique
   active: Boolean! @default(value: true)
   joinedAt: Timestamp! @default(expr: "request.time")
   approvedBy: AppUser
