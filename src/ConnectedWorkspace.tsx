@@ -17,6 +17,7 @@ import { money, navigationByRole, roles, type Section } from './data';
 import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
 import type { StaffMember } from './staff';
 import PilotWorkspace from './PilotWorkspace';
+import { AccessFlowGuide, RegistrationPreview, RoleViewPreview } from './AccessRoutes';
 import { FlaskConical } from 'lucide-react';
 
 const sections: Record<Section, { label: string; icon: LucideIcon }> = {
@@ -32,6 +33,7 @@ const sections: Record<Section, { label: string; icon: LucideIcon }> = {
 };
 const companyRoles: EnterpriseRole[] = ['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
 const loadingText = 'Cargando entorno seguro…';
+const readRoute = () => window.location.hash.replace(/^#\/?/, '').toLowerCase();
 const readable = (value: unknown): string =>
   typeof value === 'number' ? new Intl.NumberFormat('es-NI').format(value)
   : typeof value === 'string' ? value : '—';
@@ -46,14 +48,16 @@ function friendlyError(error: unknown) {
   if (message.includes('storage/retry-limit-exceeded')) return 'La carga no pudo completarse. Revisa Storage y la conexión.';
   return message;
 }
-function AuthBox({ user, stage, onRetry, onRequest, onBack }:{
+function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode }:{
  user: User | null;
  stage: 'signed-out'|'verify'|'request'|'pending'|'rejected';
  onRetry:()=>Promise<void>;
  onRequest:(name:string,role:EnterpriseRole)=>Promise<void>;
  onBack:()=>void;
+ registrationMode:boolean;
 }) {
- const [register,setRegister]=useState(false);
+ const [register,setRegister]=useState(registrationMode);
+ useEffect(()=>{setRegister(registrationMode);},[registrationMode]);
  const googleLogin=()=>action(async()=>{ await signInWithPopup(auth,new GoogleAuthProvider()); });
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState('');
@@ -110,10 +114,10 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
    case 'cliente':return ['policies','tickets','documents'];
   }
 }
-function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
- user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;
+function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}:{
+ user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;route:string;
 }) {
- const [section,setSection]=useState<Section|'piloto'>('resumen');
+ const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'>('resumen');
  const [mobile,setMobile]=useState(false);
  const [search,setSearch]=useState('');
  const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
@@ -150,15 +154,33 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const displaySection=section==='piloto'?'Laboratorio operativo':sections[section].label;
+ const displaySection=section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
  const canSales=hasStaffRole(['direccion','ventas','supervision']);
  const canOperate=hasStaffRole(['direccion','operaciones']);
  const canService=hasStaffRole(['direccion','servicio','operaciones']);
  const canUpload=true;
  const canManage=admin;
- const go=(tab:Section)=>{if(!admin&&!activeTabs.includes(tab))return;setSection(tab);setMobile(false);setSearch('');setError('');};
- useEffect(()=>{if(section!=='piloto'&&!activeTabs.includes(section))setSection(activeTabs[0]||'resumen');},[activeTabs,section]);
+ const go=(tab:Section)=>{
+   if(!admin&&!activeTabs.includes(tab))return;
+   setSection(tab);setMobile(false);setSearch('');setError('');
+   window.location.hash='#/modulo/'+tab;
+ };
+ const special=(destination:string)=>{
+   setMobile(false);setError('');setNotice('');
+   window.location.hash='#/'+destination;
+ };
+ useEffect(()=>{
+   if(admin && route==='direccion/solicitudes'){setSection('equipo');return;}
+   if(admin && route==='direccion/vistas'){setSection('roles-preview');return;}
+   if(admin && route==='registro'){setSection('registro-preview');return;}
+   if(admin && route==='laboratorio'){setSection('piloto');return;}
+   if(route.startsWith('modulo/')){
+     const tab=route.slice('modulo/'.length) as Section;
+     setSection(activeTabs.includes(tab)?tab:activeTabs[0]||'resumen');return;
+   }
+   setSection(activeTabs.includes('resumen')?'resumen':activeTabs[0]||'resumen');
+ },[route,admin,activeTabs]);
  function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});setModal(null);}
  async function submit(e:FormEvent) {
    e.preventDefault();setSubmitting(true);setError('');
@@ -188,7 +210,13 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span></div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
-   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{admin&&<button className={'sidebar-item '+(section==='piloto'?'active':'')} onClick={()=>{setSection('piloto');setMobile(false);setError('');setNotice('');}}><FlaskConical size={18}/><span>Laboratorio operativo</span></button>}</nav>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{admin&&<>
+    <div className="sidebar-group-label">CONTROL DE ACCESOS</div>
+    <button className={'sidebar-item '+(route==='direccion/solicitudes'?'active':'')} onClick={()=>special('direccion/solicitudes')}><UserRound size={18}/><span>Solicitudes de personal</span></button>
+    <button className={'sidebar-item '+(route==='direccion/vistas'?'active':'')} onClick={()=>special('direccion/vistas')}><LayoutDashboard size={18}/><span>Vista de colaboradores</span></button>
+    <button className={'sidebar-item '+(route==='registro'?'active':'')} onClick={()=>special('registro')}><ShieldCheck size={18}/><span>Ver proceso de registro</span></button>
+    <button className={'sidebar-item '+(section==='piloto'?'active':'')} onClick={()=>special('laboratorio')}><FlaskConical size={18}/><span>Laboratorio operativo</span></button>
+    </>}</nav>
    <div className="sidebar-spacer"/>
    <div className="live-sidebar-links"><button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
    <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY XARCON</strong><small>Gestión profesional de seguros</small></div></div>
@@ -202,6 +230,8 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
     {notice&&<div className="live-success-banner"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Cerrar aviso"><X size={16}/></button></div>}
     <div className="live-body">
      {section==='piloto'&&admin&&<PilotWorkspace user={user}/>}
+     {section==='roles-preview'&&admin&&<RoleViewPreview/>}
+     {section==='registro-preview'&&admin&&<RegistrationPreview/>}
      {section==='resumen'&&<><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
       <div className="metric-grid live-metric-grid">
        {[
@@ -222,7 +252,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></>}
-     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&<>
+     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='finanzas'||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':section==='finanzas'?'commissions':'documents';
@@ -240,7 +270,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
      </>}
      {section==='clientes'&&<div className="data-card live-narrow"><div className="live-empty"><Users size={30}/><strong>Directorio centralizado de clientes</strong><p>La colección de clientes se habilitará tras aprobar los campos, el consentimiento y las reglas de acceso. Por seguridad, todavía no se recopilan cédulas ni datos de salud.</p></div></div>}
      {section==='equipo'&&<>
-      {canManage?<><StaffApprovalCenter user={user}/><StaffMembersCenter members={members as unknown as StaffMember[]}/></>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
+      {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
      </>}
      {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3><p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
@@ -257,6 +287,13 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
 }
 export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  const [user,setUser]=useState<User|null>(null);
+ const [route,setRoute]=useState(readRoute);
+ useEffect(()=>{
+   const update=()=>setRoute(readRoute());
+   window.addEventListener('hashchange',update);
+   window.addEventListener('popstate',update);
+   return()=>{window.removeEventListener('hashchange',update);window.removeEventListener('popstate',update);};
+ },[]);
  const [stage,setStage]=useState<'loading'|'signed-out'|'verify'|'request'|'pending'|'rejected'|'active'>('loading');
  const [role,setRole]=useState<EnterpriseRole>('ventas');
  const [admin,setAdmin]=useState(false);
@@ -300,7 +337,8 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  async function sendRequest(name:string,requestedRole:EnterpriseRole){
    const u=auth.currentUser;if(!u)return;await requestAccess(u,name,requestedRole);await sync(u);
  }
+ if(route==='accesos')return <AccessFlowGuide onPublic={onPublic}/>;
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
- :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic}/>
- :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
+ :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic} route={route}/>
+ :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
