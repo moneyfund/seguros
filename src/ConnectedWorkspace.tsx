@@ -280,5 +280,5 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  }
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
  :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic}/>
- :<><AuthBox user={user} stage={stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
+ :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
