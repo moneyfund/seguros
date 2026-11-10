@@ -1,6 +1,7 @@
 import { ArrowRight, BadgeCheck, Building2, ExternalLink } from 'lucide-react';
 import { nicaraguanInsurers, regulatorDirectory, insurerFromText } from './insurers';
 import { money } from './data';
+import InsurerLogo from './InsurerLogo';
 import type { LiveRecord } from './backend';
 
 /** Operational Firestore policies, not the isolated pilot collection. */
@@ -23,7 +24,7 @@ export default function CarrierOverview({
         const matching=policies.filter(p=>insurerFromText(String(p.insurer||''))?.id===insurer.id);
         const total=matching.reduce((sum,p)=>sum+Number(p.premium||0),0);
         return <div className="ins-live-carrier" key={insurer.id}>
-          <div className="ins-live-carrier-logo">{insurer.monogram}</div>
+          <InsurerLogo insurer={insurer} size="compact"/>
           <div><strong>{insurer.displayName}</strong><small>{matching.length} expediente(s) · {money(total)}</small></div>
           <BadgeCheck size={15}/>
         </div>;
