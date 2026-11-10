@@ -1,7 +1,7 @@
 import { ACOS_LOGO } from './acos-logo';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User } from 'firebase/auth';
-import { getDoc } from 'firebase/firestore';
+import { getDoc, onSnapshot } from 'firebase/firestore';
 import {
   Activity, ArrowLeft, ArrowRight, Bell, CalendarClock, Camera, Check, CheckCircle2, ChevronRight,
   Clock3, CloudUpload, Database, FileText, Headphones, LayoutDashboard, LockKeyhole,
@@ -10,7 +10,7 @@ import {
 import { auth, isInitialAdmin } from './firebase';
 import {
   addLead, advanceLead, approveRequest, createTicket, memberFor, pendingRequests,
-  registerPolicy, requestAccess, requestRef, resolveTicket, subscribeRecords,
+  memberRef, registerPolicy, requestAccess, requestRef, resolveTicket, subscribeRecords,
   uploadDocument, type AccessRequest, type EnterpriseRole, type LiveCollection, type LiveRecord
 } from './backend';
 import { money, navigationByRole, roles, type Section } from './data';
@@ -125,7 +125,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
  const [roleSelections,setRoleSelections]=useState<Record<string,EnterpriseRole>>({});
  const fileInput=useRef<HTMLInputElement>(null);
  const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});
- const activeTabs=admin?navigationByRole.direccion:(grantedSections?.length?grantedSections:navigationByRole[role]);
+ const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
  const collections=useMemo(()=>[...new Set((grantedRoles.length?grantedRoles:[role]).flatMap(r=>accessibleCollections(r,admin)))],[role,admin,grantedRoles]);
  useEffect(()=>{
    const cleanups=collections.map(name=>subscribeRecords(name, data=>{
@@ -157,7 +157,8 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
  const canService=hasStaffRole(['direccion','servicio','operaciones']);
  const canUpload=true;
  const canManage=admin;
- const go=(tab:Section)=>{setSection(tab);setMobile(false);setSearch('');setError('');};
+ const go=(tab:Section)=>{if(!admin&&!activeTabs.includes(tab))return;setSection(tab);setMobile(false);setSearch('');setError('');};
+ useEffect(()=>{if(section!=='piloto'&&!activeTabs.includes(section))setSection(activeTabs[0]||'resumen');},[activeTabs,section]);
  function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});setModal(null);}
  async function submit(e:FormEvent) {
    e.preventDefault();setSubmitting(true);setError('');
@@ -204,11 +205,11 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic}:{
      {section==='resumen'&&<><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
       <div className="metric-grid live-metric-grid">
        {[
-         {label:role==='cliente'?'Mis pólizas':'Oportunidades',count:role==='cliente'?policies.length:leads.length,sub:role==='cliente'?'Coberturas asociadas':'Prospectos registrados',icon:Activity,tab:'prospectos' as Section},
+         {label:role==='cliente'?'Mis pólizas':'Oportunidades',count:role==='cliente'?policies.length:leads.length,sub:role==='cliente'?'Coberturas asociadas':'Prospectos registrados',icon:Activity,tab:(role==='cliente'?'polizas':'prospectos') as Section},
          {label:'Pólizas en cartera',count:policies.length,sub:'Expedientes visibles',icon:ShieldCheck,tab:'polizas' as Section},
          {label:'Solicitudes abiertas',count:tickets.filter(t=>t.status!=='Resuelto').length,sub:'En seguimiento',icon:Headphones,tab:'solicitudes' as Section},
          {label:'Archivos digitales',count:documents.length,sub:'Documentos disponibles',icon:FileText,tab:'documentos' as Section}
-       ].filter(metric=>role!=='cliente'||metric.tab!=='prospectos').map(metric=><button key={metric.label} className="metric live-metric-button" onClick={()=>go(metric.tab)}><span className="live-metric-label">{metric.label}<metric.icon size={19}/></span><strong>{metric.count}</strong><small>{metric.sub}<ArrowRight size={13}/></small></button>)}
+       ].filter(metric=>activeTabs.includes(metric.tab)).map(metric=><button key={metric.label} className="metric live-metric-button" onClick={()=>go(metric.tab)}><span className="live-metric-label">{metric.label}<metric.icon size={19}/></span><strong>{metric.count}</strong><small>{metric.sub}<ArrowRight size={13}/></small></button>)}
       </div>
       <div className="live-work-panels"><section className="data-card live-workqueue"><div className="data-card-head"><div><span className="live-card-eyebrow">PRIORIDADES</span><h3>Actividad de la operación</h3><p>Seguimiento sobre registros existentes, sin indicadores inventados.</p></div><Clock3 size={18}/></div><div className="live-work-items">
        {([
@@ -270,12 +271,29 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
      const token=await nextUser.getIdTokenResult(true);
      if(isInitialAdmin(nextUser.email)||token.claims.admin===true){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
      const member=await memberFor(nextUser);
-     if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections?.length?member.allowedSections:null);setStage('active');return;}
+     if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections!==undefined?member.allowedSections:null);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
      setAdmin(false);setStage(!request.exists() || request.data()?.status==='draft' ? 'request' : request.data()?.status==='rejected' ? 'rejected' : 'pending');
    }catch(e){setError(friendlyError(e));setStage('pending');}
  },[]);
  useEffect(()=>onAuthStateChanged(auth,u=>{void sync(u);},e=>{setError(friendlyError(e));setStage('signed-out');}),[sync]);
+ // Revocations and role/view changes propagate while employees are online.
+ useEffect(()=>{
+   if(!user||admin||stage!=='active')return;
+   return onSnapshot(memberRef(user.uid),snapshot=>{
+     const current=snapshot.data();
+     if(!current || current.active!==true){setStage('pending');setGrantedRoles([]);setGrantedSections([]);return;}
+     const accepted:EnterpriseRole[]=['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
+     const granted=Array.isArray(current.roles)?current.roles.filter((r:unknown):r is EnterpriseRole=>accepted.includes(r as EnterpriseRole)):[];
+     if(accepted.includes(current.role))setRole(current.role);
+     setGrantedRoles(granted.length?granted:[current.role as EnterpriseRole]);
+     if(Array.isArray(current.allowedSections))setGrantedSections(
+       current.allowedSections.filter((v:unknown):v is Section=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(sections,v))
+     );
+     else setGrantedSections(null);
+   },e=>{setError(friendlyError(e));setStage('pending');});
+ },[user?.uid,admin,stage]);
+
  async function retry(){
    if(auth.currentUser){await reload(auth.currentUser);await auth.currentUser.getIdToken(true);await sync(auth.currentUser);}
  }
