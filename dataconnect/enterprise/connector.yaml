@@ -1,0 +1,6 @@
+connectorId: enterprise
+generate:
+  javascriptSdk:
+    outputDir: ../../src/generated/sqlconnect
+    package: "@acos/sqlconnect"
+    packageJsonDir: ../..
