@@ -1,0 +1,13 @@
+# Firebase SQL Connect service. Provision the Cloud SQL instance before deploying.
+# These identifiers are the intended names, not proof the cloud resources exist.
+serviceId: acos-enterprise
+location: us-central1
+schema:
+  source: ./schema
+  datasource:
+    postgresql:
+      database: acos_enterprise
+      cloudSql:
+        instanceId: acos-enterprise-db
+connectorDirs:
+  - ./enterprise
