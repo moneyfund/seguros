@@ -14,6 +14,8 @@ import {
   uploadDocument, type AccessRequest, type EnterpriseRole, type LiveCollection, type LiveRecord
 } from './backend';
 import { money, navigationByRole, roles, type Section } from './data';
+import { nicaraguanInsurers } from './insurers';
+import CarrierOverview from './CarrierOverview';
 import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
 import type { StaffMember } from './staff';
 import PilotWorkspace from './PilotWorkspace';
@@ -148,7 +150,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  const [error,setError]=useState('');
  const [roleSelections,setRoleSelections]=useState<Record<string,EnterpriseRole>>({});
  const fileInput=useRef<HTMLInputElement>(null);
- const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});
+ const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
  const collections=useMemo(()=>{
    const viewFor:Partial<Record<LiveCollection,Section>>={
@@ -212,7 +214,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
    }
    setSection(activeTabs.includes('resumen')?'resumen':activeTabs[0]||'resumen');
  },[route,admin,activeTabs]);
- function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:''});setModal(null);}
+ function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});setModal(null);}
  async function submit(e:FormEvent) {
    e.preventDefault();setSubmitting(true);setError('');
    try {
@@ -273,6 +275,10 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
          {label:'Archivos digitales',count:documents.length,sub:'Documentos disponibles',icon:FileText,tab:'documentos' as Section}
        ].filter(metric=>activeTabs.includes(metric.tab)).map(metric=><button key={metric.label} className="metric live-metric-button" onClick={()=>go(metric.tab)}><span className="live-metric-label">{metric.label}<metric.icon size={19}/></span><strong>{metric.count}</strong><small>{metric.sub}<ArrowRight size={13}/></small></button>)}
       </div>
+      {admin&&<div className="ins-live-entry">
+        <div><span className="ins-eyebrow"><ShieldCheck size={14}/> ACOS · CARTERA OPERATIVA</span><strong>Explorá el flujo completo de aseguradoras, pólizas, comisiones y renovaciones.</strong><small>Datos ficticios, persistentes y separados de los registros empresariales.</small></div>
+        <button onClick={()=>special('laboratorio')}>Abrir centro operativo <ArrowRight size={16}/></button>
+      </div>}
       <div className="live-work-panels"><section className="data-card live-workqueue"><div className="data-card-head"><div><span className="live-card-eyebrow">PRIORIDADES</span><h3>Actividad de la operación</h3><p>Seguimiento sobre registros existentes, sin indicadores inventados.</p></div><Clock3 size={18}/></div><div className="live-work-items">
        {([
          {key:'polizas' as Section,icon:ShieldCheck,label:'Pólizas en seguimiento',detail:policies.length?policies.length+' expedientes disponibles':'Comienza registrando tus expedientes',count:policies.length},
@@ -284,6 +290,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></>}
+     {section==='polizas'&&<CarrierOverview policies={policies} onOpenCatalogue={admin?()=>special('laboratorio'):undefined}/>}
      {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='finanzas'||section==='documentos')&&(()=>{
@@ -309,9 +316,9 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
     </div><footer className="workspace-footer"><span>ACOS · SISTEMA DE GESTIÓN EMPRESARIAL</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
    </main>
   </div>
-  {modal&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)clearForm();}}><div className="modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow">REGISTRO FIREBASE</span><h2>{modal==='lead'?'Nueva oportunidad':modal==='ticket'?'Nueva solicitud':modal==='policy'?'Expediente preliminar':'Adjuntar documento'}</h2><p>Esta acción afecta los datos reales de la empresa.</p></div><button className="icon-btn" onClick={clearForm} aria-label="Cerrar"><X size={18}/></button></div>{modal==='file'?<div className="live-file-form"><p>Se subirán documentos PDF o imágenes (máximo 8 MB), sujetos a las reglas privadas de Cloud Storage.</p><button className="btn btn-dark full" disabled={submitting} onClick={()=>fileInput.current?.click()}><CloudUpload size={16}/> {submitting?'Subiendo…':'Elegir desde el dispositivo'}</button><input ref={fileInput} hidden type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/><button className="btn btn-soft full" disabled={submitting} onClick={()=>document.getElementById('live-camera-input')?.click()}><Camera size={16}/> Abrir cámara</button><input hidden id="live-camera-input" type="file" accept="image/*" capture="environment" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/></div>:<form className="modal-form" onSubmit={e=>void submit(e)}>
+  {modal&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)clearForm();}}><div className="modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow">REGISTRO FIREBASE</span><h2>{modal==='lead'?'Nueva oportunidad':modal==='ticket'?'Nueva solicitud':modal==='policy'?'Expediente preliminar':'Adjuntar documento'}</h2><p>Registro interno en Firestore. No genera una póliza emitida por una aseguradora.</p></div><button className="icon-btn" onClick={clearForm} aria-label="Cerrar"><X size={18}/></button></div>{modal==='file'?<div className="live-file-form"><p>Se subirán documentos PDF o imágenes (máximo 8 MB), sujetos a las reglas privadas de Cloud Storage.</p><button className="btn btn-dark full" disabled={submitting} onClick={()=>fileInput.current?.click()}><CloudUpload size={16}/> {submitting?'Subiendo…':'Elegir desde el dispositivo'}</button><input ref={fileInput} hidden type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/><button className="btn btn-soft full" disabled={submitting} onClick={()=>document.getElementById('live-camera-input')?.click()}><Camera size={16}/> Abrir cámara</button><input hidden id="live-camera-input" type="file" accept="image/*" capture="environment" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/></div>:<form className="modal-form" onSubmit={e=>void submit(e)}>
       <label>{modal==='lead'?'Nombre del prospecto':modal==='policy'?'Nombre de referencia del cliente':'Asunto de la solicitud'}<input required minLength={2} value={form.name} onChange={e=>setForm(s=>({...s,name:e.target.value}))} placeholder={modal==='ticket'?'Ej. Solicitud de seguimiento':'Nombre de ejemplo'}/></label>
-      {modal==='ticket'?<><label>Tipo<select value={form.type} onChange={e=>setForm(s=>({...s,type:e.target.value}))}><option>Consulta</option><option>Modificación</option><option>Renovación</option><option>Siniestro</option></select></label><label>Detalle<textarea required maxLength={2000} rows={4} value={form.detail} onChange={e=>setForm(s=>({...s,detail:e.target.value}))}/></label></>:<><label>Producto<select value={form.product} onChange={e=>setForm(s=>({...s,product:e.target.value}))}><option>Seguro de vida</option><option>Seguro vehicular</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></label>{modal==='policy'&&<label>Aseguradora<input required value={form.insurer} onChange={e=>setForm(s=>({...s,insurer:e.target.value}))} placeholder="Nombre de aseguradora"/></label>}{modal==='lead'&&<label>Origen<select value={form.channel} onChange={e=>setForm(s=>({...s,channel:e.target.value}))}><option>Web</option><option>WhatsApp</option><option>Referido</option><option>Redes</option></select></label>}<label>{modal==='lead'?'Prima estimada (USD)':'Prima de referencia (USD)'}<input type="number" min={0} required value={form.amount} onChange={e=>setForm(s=>({...s,amount:e.target.value}))}/></label></>}
+      {modal==='ticket'?<><label>Tipo<select value={form.type} onChange={e=>setForm(s=>({...s,type:e.target.value}))}><option>Consulta</option><option>Modificación</option><option>Renovación</option><option>Siniestro</option></select></label><label>Detalle<textarea required maxLength={2000} rows={4} value={form.detail} onChange={e=>setForm(s=>({...s,detail:e.target.value}))}/></label></>:<><label>Producto<select value={form.product} onChange={e=>setForm(s=>({...s,product:e.target.value}))}><option>Seguro de vida</option><option>Seguro vehicular</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></label>{modal==='policy'&&<><label>Aseguradora registrada ante SIBOIF<select required value={form.insurer} onChange={e=>setForm(s=>({...s,insurer:e.target.value}))}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.displayName}>{i.displayName}</option>)}</select></label><p className="ins-policy-ref"><ShieldCheck size={15}/> Registro interno de referencia. No emite pólizas oficiales ni consulta aseguradoras.</p></>}{modal==='lead'&&<label>Origen<select value={form.channel} onChange={e=>setForm(s=>({...s,channel:e.target.value}))}><option>Web</option><option>WhatsApp</option><option>Referido</option><option>Redes</option></select></label>}<label>{modal==='lead'?'Prima estimada (USD)':'Prima de referencia (USD)'}<input type="number" min={0} required value={form.amount} onChange={e=>setForm(s=>({...s,amount:e.target.value}))}/></label></>}
       {error&&<p className="live-error">{error}</p>}
       <button type="submit" className="btn btn-dark full" disabled={submitting}>{submitting?'Guardando…':'Registrar en Firestore'} <ArrowRight size={16}/></button>
     </form>}</div></div>}
