@@ -15,11 +15,18 @@ service cloud.firestore {
     function staffDomainPath() {
       return /databases/$(database)/documents/companies/main/settings/staffIdentity;
     }
-    function isInstitutionalUser() {
+    // Invitation-first onboarding: corporate email domain is NOT required to start.
+    // A verified, preinvited email can request access but cannot assign itself privileges.
+    function staffInvitationPath() {
+      return /databases/$(database)/documents/companies/main/staffInvitations/$(request.auth.token.email);
+    }
+    function isInvitedStaffUser() {
       return verified() &&
-        exists(staffDomainPath()) &&
-        request.auth.token.email.split('@').size() == 2 &&
-        request.auth.token.email.split('@')[1] == get(staffDomainPath()).data.domain;
+        exists(staffInvitationPath()) &&
+        get(staffInvitationPath()).data.status == 'invited';
+    }
+    function isInstitutionalUser() {
+      return isInvitedStaffUser();
     }
 
     function isOwner() {
@@ -87,6 +94,22 @@ service cloud.firestore {
             'resumen','prospectos','polizas','clientes','solicitudes','finanzas','equipo','documentos','configuracion'
           ]);
 
+        allow update, delete: if isOwner();
+      }
+
+      // Invitations are created by direction, not by applicants. Each employee
+      // can only read the invitation for their *verified* Firebase email address.
+      match /staffInvitations/{email} {
+        allow get: if isOwner() ||
+          (verified() && request.auth.token.email == email);
+        allow list: if isOwner();
+        allow create: if isOwner() &&
+          request.resource.data.email == email &&
+          request.resource.data.status == 'invited' &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.requestedDepartment in [
+            'direccion','ventas','operaciones','servicio','finanzas','supervision'
+          ];
         allow update, delete: if isOwner();
       }
 
