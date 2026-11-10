@@ -7,6 +7,7 @@ import './live.css';
 import './marketing.css';
 import './refine.css';
 import './acos.css';
+import './staff.css';
 
 const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 if (iconLink) {
