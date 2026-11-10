@@ -10,6 +10,18 @@ service cloud.firestore {
         request.auth.token.email_verified == true;
     }
 
+    // The corporate domain is configured only after ownership is verified.
+    // Create companies/main/settings/staffIdentity = {domain: 'verified-company-domain'}.
+    function staffDomainPath() {
+      return /databases/$(database)/documents/companies/main/settings/staffIdentity;
+    }
+    function isInstitutionalUser() {
+      return verified() &&
+        exists(staffDomainPath()) &&
+        request.auth.token.email.split('@').size() == 2 &&
+        request.auth.token.email.split('@')[1] == get(staffDomainPath()).data.domain;
+    }
+
     function isOwner() {
       return verified() &&
         request.auth.token.email in [
@@ -30,7 +42,10 @@ service cloud.firestore {
 
     function hasRole(allowed) {
       return isOwner() ||
-        (isActiveMember() && get(memberPath()).data.role in allowed);
+        (isActiveMember() && (
+          get(memberPath()).data.role in allowed ||
+          get(memberPath()).data.get('roles', []).hasAny(allowed)
+        ));
     }
 
     function isClient() {
@@ -62,43 +77,71 @@ service cloud.firestore {
             'direccion','ventas','operaciones','servicio',
             'finanzas','supervision','cliente'
           ] &&
-          request.resource.data.active is bool;
+          request.resource.data.active is bool &&
+          request.resource.data.get('roles', []) is list &&
+          request.resource.data.get('roles', []).hasOnly([
+            'direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'
+          ]) &&
+          request.resource.data.get('allowedSections', []) is list &&
+          request.resource.data.get('allowedSections', []).hasOnly([
+            'resumen','prospectos','polizas','clientes','solicitudes','finanzas','equipo','documentos','configuracion'
+          ]);
 
         allow update, delete: if isOwner();
       }
 
-      // Solicitudes de ingreso creadas por la propia cuenta.
+      // Institutional onboarding. A draft is created before uploading its two private files.
       match /accessRequests/{uid} {
-        allow get: if isOwner() ||
-          (verified() && request.auth.uid == uid);
+        allow get: if isOwner() || (verified() && request.auth.uid == uid);
         allow list: if isOwner();
 
-        allow create: if verified() &&
+        allow create: if isInstitutionalUser() &&
           request.auth.uid == uid &&
-          request.resource.data.keys().hasAll(
-            ['email','displayName','requestedRole','status','requestedAt']
-          ) &&
-          request.resource.data.keys().hasOnly(
-            ['email','displayName','requestedRole','status','requestedAt']
-          ) &&
+          request.resource.data.keys().hasOnly([
+            'email','displayName','phone','requestedDepartment','requestedRole','status','requestedAt'
+          ]) &&
+          request.resource.data.keys().hasAll([
+            'email','displayName','phone','requestedDepartment','requestedRole','status','requestedAt'
+          ]) &&
           request.resource.data.email == request.auth.token.email &&
           request.resource.data.displayName is string &&
-          request.resource.data.displayName.size() >= 2 &&
+          request.resource.data.displayName.size() >= 3 &&
           request.resource.data.displayName.size() <= 90 &&
-          request.resource.data.requestedRole in [
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision','cliente'
+          request.resource.data.phone is string &&
+          request.resource.data.phone.matches('[+]?[0-9 ()-]{8,20}') &&
+          request.resource.data.requestedDepartment in [
+            'direccion','ventas','operaciones','servicio','finanzas','supervision'
           ] &&
-          request.resource.data.status == 'pending' &&
+          request.resource.data.requestedRole == request.resource.data.requestedDepartment &&
+          request.resource.data.status == 'draft' &&
           request.resource.data.requestedAt is timestamp;
 
-        allow update: if isOwner() &&
-          changedOnly(['status','reviewedAt']) &&
-          request.resource.data.status in ['approved','rejected'];
+        allow update: if
+          (isInstitutionalUser() &&
+           request.auth.uid == uid &&
+           resource.data.status == 'draft' &&
+           request.resource.data.status == 'pending' &&
+           changedOnly(['status','profilePhotoPath','identityDocumentPath','submittedAt']) &&
+           request.resource.data.profilePhotoPath.matches(
+             'companies/main/onboarding/' + uid + '/photo-.*[.](jpg|png|webp)'
+           ) &&
+           request.resource.data.identityDocumentPath.matches(
+             'companies/main/onboarding/' + uid + '/identity-.*[.](pdf|jpg|png|webp)'
+           ) &&
+           request.resource.data.submittedAt is timestamp)
+          ||
+          (isOwner() &&
+           resource.data.status == 'pending' &&
+           changedOnly([
+             'status','reviewedAt','approvedDepartment','employeeCode','notificationStatus'
+           ]) &&
+           request.resource.data.status in ['approved','rejected']);
 
         allow delete: if isOwner();
       }
 
+      // Only privileged server-side code may eventually mark notifications as sent.
+      // No client can send arbitrary email from ACOS.
       // Oportunidades comerciales: agentes, supervisores y gerencia.
       match /leads/{leadId} {
         allow read: if isOwner() ||
