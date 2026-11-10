@@ -24,6 +24,26 @@ export const departmentCodes: Record<StaffDepartment, string> = {
   direccion: 'DIR', ventas: 'VEN', operaciones: 'OPE', servicio: 'SAC', finanzas: 'FIN', supervision: 'SUP'
 };
 export const staffEmailDomain = String(import.meta.env.VITE_ACOS_STAFF_DOMAIN || '').trim().toLowerCase();
+const invitationDoc = (email: string) => doc(db,'companies',companyId,'staffInvitations',email.trim().toLowerCase());
+export async function hasStaffInvitation(user: User): Promise<boolean> {
+  if(!user.emailVerified || !user.email) return false;
+  const existing = await getDoc(invitationDoc(user.email));
+  return existing.exists() && existing.data().status === 'invited';
+}
+export async function createStaffInvitation(admin: User, email: string, requestedDepartment: StaffDepartment) {
+  if (!admin.emailVerified) throw new Error('La sesión administrativa debe estar verificada.');
+  const normalized=email.trim().toLowerCase();
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalized) || normalized.length>150)
+    throw new Error('Introduce un correo electrónico válido.');
+  if(!Object.prototype.hasOwnProperty.call(departments,requestedDepartment))
+    throw new Error('Selecciona un departamento válido.');
+  const current=await getDoc(invitationDoc(normalized));
+  if(current.exists() && current.data()?.status==='approved')
+    throw new Error('Esta cuenta ya fue incorporada.');
+  await setDoc(invitationDoc(normalized),{
+    email:normalized,status:'invited',requestedDepartment,createdBy:admin.uid,createdAt:serverTimestamp()
+  });
+}
 export function isInstitutionalEmail(email: string): boolean {
   return !!staffEmailDomain && email.trim().toLowerCase().endsWith('@' + staffEmailDomain);
 }
@@ -47,8 +67,8 @@ function extensionFor(file: File) {
 export async function submitStaffApplication(user: User, input: {
   displayName: string; phone: string; department: StaffDepartment; photo: File; identity: File;
 }) {
-  if (!user.emailVerified || !user.email || !isInstitutionalEmail(user.email))
-    throw new Error('Debes iniciar sesión con una cuenta institucional verificada. El dominio puede estar pendiente de configuración.');
+  if (!user.emailVerified || !user.email || !(await hasStaffInvitation(user)))
+    throw new Error('Tu correo verificado necesita una invitación vigente de dirección antes de enviar documentos.');
   const displayName = input.displayName.trim();
   const phone = input.phone.trim();
   if (displayName.length < 3 || displayName.length > 90) throw new Error('Introduce tu nombre completo.');
@@ -86,8 +106,9 @@ export async function approveStaffApplication(
 ) {
   if (item.status !== 'pending' || !item.profilePhotoPath || !item.identityDocumentPath || !item.phone)
     throw new Error('La solicitud no contiene la documentación obligatoria. No puede aprobarse.');
-  if (!staffEmailDomain || !isInstitutionalEmail(item.email))
-    throw new Error('El dominio institucional no coincide con la solicitud.');
+  const invite = await getDoc(invitationDoc(item.email));
+  if (!invite.exists() || invite.data()?.status !== 'invited')
+    throw new Error('Esta solicitud no tiene una invitación vigente de dirección.');
   if (!roles.length || roles.some(r=>!Object.keys(navigationByRole).includes(r)))
     throw new Error('Elige al menos un rol válido.');
   const validSections = sectionsForRoles(roles);
@@ -105,12 +126,16 @@ export async function approveStaffApplication(
     status:'approved', reviewedAt:serverTimestamp(),
     approvedDepartment:department, employeeCode:code, notificationStatus:'pending_configuration'
   });
+  batch.update(invitationDoc(item.email),{status:'approved',usedAt:serverTimestamp()});
   await batch.commit();
   return code;
 }
 export async function rejectStaffApplication(item: StaffApplication) {
   if (item.status !== 'pending') throw new Error('La solicitud ya fue procesada.');
-  await updateDoc(requestDoc(item.id), { status:'rejected', reviewedAt:serverTimestamp() });
+  const batch=writeBatch(db);
+  batch.update(requestDoc(item.id), { status:'rejected', reviewedAt:serverTimestamp() });
+  batch.update(invitationDoc(item.email),{status:'rejected',reviewedAt:serverTimestamp()});
+  await batch.commit();
 }
 export async function updateStaffMember(
   member: StaffMember, department: StaffDepartment, roles: EnterpriseRole[], sections: Section[]
