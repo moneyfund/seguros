@@ -46,18 +46,20 @@ export function StaffApplicationForm({user,onSubmitted}:{user:User|null;onSubmit
   const [error,setError]=useState('');
   const [invited,setInvited]=useState(false);
   const [checking,setChecking]=useState(true);
+  const [refreshVersion,setRefreshVersion]=useState(0);
   useEffect(()=>{
     let valid=true;
-    setChecking(true);
+    setChecking(true);setError('');
     if (!user) {setChecking(false);setInvited(false);return;}
     void hasStaffInvitation(user).then(allowed=>{if(valid){setInvited(allowed);setChecking(false);}})
-      .catch(ex=>{if(valid){setError(friendly(ex));setInvited(false);setChecking(false);}});
+      .catch(ex=>{if(valid){setError('No pudimos verificar tu invitación: '+friendly(ex));setInvited(false);setChecking(false);}});
     return ()=>{valid=false;};
-  },[user]);
+  },[user?.uid,user?.emailVerified,refreshVersion]);
   const enabled=!!user?.email && user.emailVerified && invited;
   async function submit(e:FormEvent) {
     e.preventDefault();
-    if (!user || !photo || !identity) {setError('Debes adjuntar fotografía e identificación.');return;}
+    if(!enabled){setError('No se puede enviar una solicitud sin una invitación vigente de Dirección.');return;}
+    if (!user || !photo || !identity) {setError('Debes adjuntar una fotografía y un documento de prueba.');return;}
     setBusy(true);setError('');
     try {
       await submitStaffApplication(user,{displayName:name,phone,department,photo,identity});
@@ -69,18 +71,24 @@ export function StaffApplicationForm({user,onSubmitted}:{user:User|null;onSubmit
     <h1>Solicita tu acceso a ACOS.</h1>
     <p>Completa tu perfil. Dirección verificará tu identidad y decidirá tu departamento, código y permisos.</p>
     <div className="staff-email-info"><ShieldCheck size={17}/><span>Correo verificado: <strong>{user?.email||'No disponible'}</strong></span></div>
-    {checking?<p className="staff-warning">Comprobando tu invitación empresarial…</p>
-    :!invited?<p className="staff-warning">Tu correo debe ser invitado por Dirección antes de crear un expediente. Esto permite configurar ACOS sin comprar todavía el dominio institucional y evita solicitudes no autorizadas.</p>:null}
-    <form className="live-form" onSubmit={submit}>
+    {checking?<div className="staff-invite-gate" role="status"><RefreshCw size={21}/><strong>Comprobando invitación empresarial…</strong></div>
+    :!invited?<div className="staff-invite-gate" role="status">
+       <LockKeyhole size={25}/>
+       <strong>Tu correo todavía no tiene una invitación activa.</strong>
+       <p>Para proteger la información de ACOS, Dirección debe autorizar este correo antes de que puedas enviar una solicitud. No hace falta completar el formulario hasta entonces.</p>
+       <button className="btn btn-dark" type="button" onClick={()=>setRefreshVersion(v=>v+1)}><RefreshCw size={15}/> Volver a comprobar invitación</button>
+     </div>:<p className="staff-invite-confirmed"><ShieldCheck size={16}/> Invitación verificada. Podés completar tu expediente con datos de prueba.</p>}
+    {invited&&<form className="live-form" onSubmit={submit}>
       <label>Nombre completo<input required minLength={3} maxLength={90} value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre y apellidos"/></label>
       <label>Teléfono de contacto<input required type="tel" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="+505 8888 8888"/></label>
       <label>Área solicitada<select value={department} onChange={e=>setDepartment(e.target.value as StaffDepartment)}>{Object.entries(departments).filter(([k])=>k!=='direccion').map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
       <label className="staff-file"><ImagePlus size={18}/> Fotografía de perfil (JPG, PNG o WebP; hasta 3 MB)<input type="file" required accept="image/jpeg,image/png,image/webp" onChange={e=>setPhoto(e.target.files?.[0]||null)} /></label>
-      <label className="staff-file"><FileBadge2 size={18}/> Cédula de identidad (PDF o imagen; hasta 8 MB)<input type="file" required accept="application/pdf,image/jpeg,image/png,image/webp" onChange={e=>setIdentity(e.target.files?.[0]||null)} /></label>
-      <p className="staff-note"><LockKeyhole size={14}/> Datos privados. Solo dirección y el solicitante autorizado deben poder consultar los documentos.</p>
+      <label className="staff-file"><FileBadge2 size={18}/> Documento de identidad (PDF o imagen; hasta 8 MB)<input type="file" required accept="application/pdf,image/jpeg,image/png,image/webp" onChange={e=>setIdentity(e.target.files?.[0]||null)} /></label>
+      <p className="staff-warning"><LockKeyhole size={14}/> Estamos validando el sistema. Por ahora utilizá imágenes y documentos ficticios, nunca cédulas auténticas ni datos personales de terceros.</p>
       {error&&<p className="live-error">{error}</p>}
       <button className="btn btn-dark full" disabled={!enabled||busy} type="submit">{busy?'Enviando solicitud…':'Enviar solicitud de incorporación'} <Check size={16}/></button>
-    </form>
+    </form>}
+    {!invited&&error&&<p role="alert" className="live-error">{error}</p>}
   </div>;
 }
 
