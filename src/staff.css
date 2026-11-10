@@ -46,3 +46,27 @@
 .staff-invite-form>.live-error,.staff-invite-form>.staff-note,.staff-invite-form>.staff-invite-success{grid-column:1/-1}
 .staff-invite-success{background:#e9f6ed;color:#24603f;border-radius:8px;padding:10px 12px;font-size:12px}
 @media(max-width:860px){.staff-invite-form{grid-template-columns:1fr}}
+
+
+/* Registration gate: never let a user fill an unsubmitable employee form. */
+.staff-invite-gate{display:grid;gap:12px;justify-items:start;padding:20px;border:1px solid #d5e3d8;background:#f3f8f3;border-radius:13px;color:#2a5840;margin:14px 0 8px}
+.staff-invite-gate>svg{color:#477d60}
+.staff-invite-gate strong{font-size:14px;line-height:1.4;color:#1c5037}
+.staff-invite-gate p{font-size:12px;line-height:1.7;color:#587461;margin:0}
+.staff-invite-gate .btn{min-height:40px;justify-content:center;font-size:11px}
+.staff-invite-confirmed{display:flex;gap:8px;align-items:center;color:#2f7750;font-size:11px;background:#eef8f0;border-radius:8px;padding:10px 12px}
+.acos-auth-escape-bar{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:1000;display:flex;align-items:center;justify-content:center;gap:6px;max-width:calc(100vw - 18px);background:#f7fbf8;border:1px solid #d5e7dc;box-shadow:0 8px 35px #001f1338;border-radius:14px;padding:6px}
+.acos-auth-escape-bar button{border:0;background:transparent;color:#315640;border-radius:9px;padding:9px 12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:800;white-space:nowrap;cursor:pointer}
+.acos-auth-escape-bar button:hover{background:#e7f1e9}
+.acos-auth-escape-bar .acos-auth-switch{color:#135b3b;background:#e5f3e9}
+.live-auth-screen:has(.acos-auth-escape-bar){padding-top:90px}
+.acos-admin-guard{background:#fff6e7;border:1px solid #eedbb8;border-radius:9px;padding:13px;display:flex;align-items:flex-start;gap:10px;margin:0 0 17px;color:#805b2d}
+.acos-admin-guard>svg{flex-shrink:0}
+.acos-admin-guard strong{font-size:12px;color:#6a4d2d}
+.acos-admin-guard p{font-size:11px;line-height:1.6;margin:5px 0 0;overflow-wrap:anywhere}
+@media(max-width:490px){
+ .acos-auth-escape-bar{gap:2px;padding:4px}
+ .acos-auth-escape-bar button{padding:8px 6px;font-size:10px}
+ .acos-auth-escape-bar button svg{width:13px;height:13px}
+ .live-auth-screen:has(.acos-auth-escape-bar){padding-top:88px}
+}
