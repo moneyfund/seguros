@@ -48,13 +48,14 @@ function friendlyError(error: unknown) {
   if (message.includes('storage/retry-limit-exceeded')) return 'La carga no pudo completarse. Revisa Storage y la conexión.';
   return message;
 }
-function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode }:{
+function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode, adminRouteBlocked }:{
  user: User | null;
  stage: 'signed-out'|'verify'|'request'|'pending'|'rejected';
  onRetry:()=>Promise<void>;
  onRequest:(name:string,role:EnterpriseRole)=>Promise<void>;
  onBack:()=>void;
  registrationMode:boolean;
+ adminRouteBlocked:boolean;
 }) {
  const [register,setRegister]=useState(registrationMode);
  useEffect(()=>{setRegister(registrationMode);},[registrationMode]);
@@ -82,9 +83,20 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode }:{
      }
    });
  }
- return <div className="live-auth-screen"><div className="live-auth-decoration"><div className="live-auth-orbit"/><ShieldCheck size={72} strokeWidth={1}/></div><div className="live-auth-card">
+ return <div className="live-auth-screen">
+  <nav className="acos-auth-escape-bar" aria-label="Navegación de acceso">
+    <button type="button" onClick={onBack}><ArrowLeft size={16}/> Sitio público</button>
+    <button type="button" onClick={()=>{window.location.hash='#/accesos';}}><ShieldCheck size={16}/> Guía de accesos</button>
+    {user&&<button type="button" className="acos-auth-switch" onClick={()=>void action(async()=>{await signOut(auth);})}><LogOut size={16}/> Cambiar cuenta</button>}
+  </nav>
+  <div className="live-auth-decoration"><div className="live-auth-orbit"/><ShieldCheck size={72} strokeWidth={1}/></div><div className="live-auth-card">
   <button className="live-back" onClick={onBack}><ArrowLeft size={16}/> Volver a la web</button>
   <div className="live-auth-brand acos-auth-logo"><img src={ACOS_LOGO} alt="ACOS — Logotipo oficial" /><span>ÁREA EMPRESARIAL SEGURA</span></div>
+  {adminRouteBlocked&&<div className="acos-admin-guard" role="status">
+    <LockKeyhole size={19}/>
+    <div><strong>{user?'Esta cuenta no tiene acceso a Dirección.':'Acceso exclusivo de Dirección'}</strong>
+    <p>{user?'Estás usando '+(user.email||'una cuenta sin permisos')+'. Para entrar a la bandeja de aprobaciones, elegí «Cambiar cuenta» e iniciá sesión con el administrador autorizado.':'Ingresá con una cuenta administrativa autorizada para consultar y aprobar solicitudes.'}</p></div>
+  </div>}
   {stage==='signed-out'&&<><div className="live-auth-title"><span>ACCESO EMPRESARIAL</span><h1>{register?'Solicita tu cuenta.':'Bienvenido de nuevo.'}</h1><p>{register?'Crea una cuenta y solicita autorización. Ninguna cuenta obtiene permisos automáticamente.':'Ingresa con tu correo empresarial y credenciales autorizadas.'}</p></div><form className="live-form" onSubmit={authSubmit}>
    {register&&<label>Nombre y apellido<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label>}
    <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@empresa.com"/></label>
@@ -318,7 +330,7 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
    if(!nextUser.emailVerified){setStage('verify');return;}
    try{
      const token=await nextUser.getIdTokenResult(true);
-     if(isInitialAdmin(nextUser.email)||token.claims.admin===true){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
+     if(isInitialAdmin(nextUser.email)){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
      const member=await memberFor(nextUser);
      if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections!==undefined?member.allowedSections:null);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
@@ -352,5 +364,5 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  if(route==='accesos')return <AccessFlowGuide onPublic={onPublic}/>;
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
  :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic} route={route}/>
- :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'}/>{error&&<div className="live-fatal">{error}</div>}</>;
+ :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'} adminRouteBlocked={route.startsWith('direccion/')}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
