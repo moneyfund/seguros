@@ -59,10 +59,13 @@ service firebase.storage {
     function institutionalApplicant(uid) {
       return verified() &&
         request.auth.uid == uid &&
-        firestore.exists(/databases/(default)/documents/companies/main/settings/staffIdentity) &&
-        request.auth.token.email.split('@').size() == 2 &&
-        request.auth.token.email.split('@')[1] ==
-          firestore.get(/databases/(default)/documents/companies/main/settings/staffIdentity).data.domain;
+        firestore.exists(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)) &&
+        firestore.get(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)).data.status
+          in ['invited', 'approved'];
+    }
+    function canUploadApplicant(uid) {
+      return institutionalApplicant(uid) &&
+        firestore.get(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)).data.status == 'invited';
     }
     function hasDraft(uid) {
       return firestore.exists(/databases/(default)/documents/companies/main/accessRequests/$(uid)) &&
@@ -72,7 +75,7 @@ service firebase.storage {
     match /companies/main/onboarding/{uid}/{fileName} {
       allow get: if isOwner() || institutionalApplicant(uid);
       allow list: if false;
-      allow create: if institutionalApplicant(uid) && hasDraft(uid) &&
+      allow create: if canUploadApplicant(uid) && hasDraft(uid) &&
         request.resource != null && request.resource.size > 0 &&
         (
           (fileName.matches('photo-[0-9a-f-]+[.](jpg|png|webp)') &&
