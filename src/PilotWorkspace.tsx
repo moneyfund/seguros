@@ -8,6 +8,7 @@ import { money } from './data';
 import { nicaraguanInsurers, insurerById, insurerFromText } from './insurers';
 import InsuranceDirectory from './InsuranceDirectory';
 import ExecutiveDashboard from './ExecutiveDashboard';
+import CustomerDossier from './CustomerDossier';
 import { seedInsurancePortfolio } from './insuranceSeed';
 import {
   advancePilotLead, createPilotClient, createPilotLead, createPilotPolicy, createPilotTicket,
@@ -53,6 +54,8 @@ function Field({title,children}:{title:string;children:React.ReactNode}) {
 
 export default function PilotWorkspace({user}:{user:User}) {
   const [tab,setTab]=useState<Tab>('resumen');
+  const [selectedClientId,setSelectedClientId]=useState('');
+  const [listQuery,setListQuery]=useState('');
   const [rows,setRows]=useState<PilotRows>(emptyRows);
   const [loaded,setLoaded]=useState<PilotCollection[]>([]);
   const [error,setError]=useState('');
@@ -79,6 +82,8 @@ export default function PilotWorkspace({user}:{user:User}) {
   const docs=rows.pilotDocuments;
   const activities=rows.pilotActivities;
   const clientName=(id:string)=>clients.find(c=>c.id===id)?.fullName||'Cliente sin referencia';
+  const selectedClient=clients.find(c=>c.id===selectedClientId);
+  const matchesQuery=(...fields:unknown[])=>fields.some(value=>String(value||'').toLowerCase().includes(listQuery.trim().toLowerCase()));
   const opportunities=useMemo(()=>leads.filter(l=>l.clientId===form.clientId),[leads,form.clientId]);
   const clientPolicies=useMemo(()=>policies.filter(p=>p.clientId===form.clientId),[policies,form.clientId]);
   const totalPremium=policies.reduce((sum,p)=>sum+Number(p.premium||0),0);
@@ -166,7 +171,7 @@ export default function PilotWorkspace({user}:{user:User}) {
       ].map(m=><div className="pilot-metric" key={m.label}><span>{m.label}<m.icon size={18}/></span><strong>{m.value}</strong></div>)}
     </div>
     <nav className="pilot-tabs" aria-label="Módulos del laboratorio">
-      {nav.map(n=><button key={n.id} className={tab===n.id?'selected':''} onClick={()=>{setTab(n.id);setError('');setNotice('');setForm(makeForm());}}>{n.label}</button>)}
+      {nav.map(n=><button key={n.id} className={tab===n.id?'selected':''} onClick={()=>{setTab(n.id);setListQuery('');setError('');setNotice('');setForm(makeForm());}}>{n.label}</button>)}
     </nav>
     {tab==='resumen'&&<ExecutiveDashboard
       clients={clients} leads={leads} policies={policies} commissions={commissions}
@@ -181,22 +186,27 @@ export default function PilotWorkspace({user}:{user:User}) {
       <section className="pilot-list-panel">
         <div className="pilot-panel-heading"><div><span className="pilot-panel-eyebrow">INFORMACIÓN EN VIVO</span><h3>{listTitle[tab]}</h3></div>
         <span className="pilot-list-count">{tab==='clientes'?clients.length:tab==='oportunidades'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.length:tab==='documentos'?docs.length:activities.length} registros</span></div>
+        <div className="pilot-filter-row">
+          <input type="search" value={listQuery} onChange={e=>setListQuery(e.target.value)}
+            aria-label="Filtrar registros del módulo" placeholder="Buscar por nombre, producto, aseguradora o referencia…" />
+          {listQuery&&<button onClick={()=>setListQuery('')}>Limpiar</button>}
+        </div>
 
-        {tab==='clientes'&&(clients.length?clients.map(c=><div className="pilot-row" key={c.id}>
+        {tab==='clientes'&&(clients.length?clients.filter(c=>matchesQuery(c.fullName,c.city,c.email)).map(c=><div className="pilot-row" key={c.id}>
           <div className="pilot-monogram">{c.fullName.slice(0,2).toUpperCase()}</div>
           <div className="pilot-row-body"><strong>{c.fullName}</strong><small>{c.city} · {c.email||'Sin correo'}</small>
             <small>{leads.filter(l=>l.clientId===c.id).length} oportunidades · {policies.filter(p=>p.clientId===c.id).length} pólizas · {docs.filter(d=>d.clientId===c.id).length} documentos</small>
-          </div><span className="pilot-status positive">Activo</span>
+          </div><button className="ins-dossier-open" onClick={()=>setSelectedClientId(c.id)}>Abrir expediente <ArrowRight size={14}/></button>
         </div>):empty('Aún no hay clientes'))}
 
-        {tab==='oportunidades'&&(leads.length?leads.map(l=><div className="pilot-row" key={l.id}>
+        {tab==='oportunidades'&&(leads.length?leads.filter(l=>matchesQuery(clientName(l.clientId),l.product,l.source,insurerById(l.insurerId||'')?.displayName)).map(l=><div className="pilot-row" key={l.id}>
           <div className="pilot-icon"><Activity size={19}/></div>
           <div className="pilot-row-body"><strong>{clientName(l.clientId)}</strong><small>{l.product} · {l.source} · {insurerById(l.insurerId||'')?.displayName||'Sin aseguradora asignada'}</small><small>{money(l.estimatedPremium)} · Responsable: {l.assignedTo===user.uid?'Dirección':'Colaborador'}</small></div>
           <div className="pilot-row-side"><span className="pilot-status">{l.status}</span>{l.status!=='Ganado'&&<button disabled={busy} className="pilot-inline" onClick={()=>void perform(()=>advancePilotLead(user,l),'Oportunidad actualizada.',false)}>Avanzar <ArrowRight size={13}/></button>}</div>
         </div>):empty('Aún no hay oportunidades'))}
 
         {tab==='polizas'&&<>
-          {policies.length?policies.map(p=><div className="pilot-row" key={p.id}>
+          {policies.length?policies.filter(p=>matchesQuery(p.policyNumber,clientName(p.clientId),p.insurer,p.product)).map(p=><div className="pilot-row" key={p.id}>
             <div className="pilot-icon"><ShieldCheck size={19}/></div>
             <div className="pilot-row-body"><strong>{p.policyNumber}</strong><small>{clientName(p.clientId)} · {p.product}</small><small>{p.insurer} · {p.startDate} — {p.endDate}</small>
               <small>Prima {money(p.premium)} · Comisión {p.commissionRate}% · {insurerFromText(p.insurer)?.shortName||'Referencia anterior'}</small></div><span className="pilot-status positive">{p.endDate<new Date().toISOString().slice(0,10)?'Vencimiento de prueba':p.status}</span>
@@ -206,19 +216,19 @@ export default function PilotWorkspace({user}:{user:User}) {
           </div>}
         </>}
 
-        {tab==='solicitudes'&&(tickets.length?tickets.map(t=><div className="pilot-row" key={t.id}>
+        {tab==='solicitudes'&&(tickets.length?tickets.filter(t=>matchesQuery(t.subject,t.detail,clientName(t.clientId))).map(t=><div className="pilot-row" key={t.id}>
           <div className="pilot-icon"><Inbox size={19}/></div>
           <div className="pilot-row-body"><strong>{t.subject}</strong><small>{clientName(t.clientId)}</small><small>{t.detail}</small></div>
           <div className="pilot-row-side"><span className="pilot-status">{t.status}</span>{t.status!=='Resuelto'&&<button disabled={busy} className="pilot-inline" onClick={()=>void perform(()=>resolvePilotTicket(user,t),'Solicitud resuelta.',false)}>Resolver <CheckCircle2 size={13}/></button>}</div>
         </div>):empty('Aún no hay solicitudes'))}
 
-        {tab==='documentos'&&(docs.length?docs.map((d:PilotDocument)=><div className="pilot-row" key={d.id}>
+        {tab==='documentos'&&(docs.length?docs.filter(d=>matchesQuery(d.fileName,clientName(d.clientId),d.uploaderEmail)).map((d:PilotDocument)=><div className="pilot-row" key={d.id}>
           <div className="pilot-icon"><FileText size={19}/></div>
           <div className="pilot-row-body"><strong>{d.fileName}</strong><small>{clientName(d.clientId)} · {Math.ceil(d.bytes/1024)} KB</small><small>Subido por: {d.uploaderEmail} · {formatDate(d.createdAt)}</small></div>
           <button className="pilot-icon-button" title="Descargar archivo autorizado" onClick={()=>void perform(()=>downloadPilotDocument(d),'Archivo de prueba descargado.',false)}><Download size={18}/></button>
         </div>):empty('Todavía no hay documentos'))}
 
-        {tab==='actividad'&&(activities.length? [...activities].sort((a,b)=>(b.createdAt?.toMillis()||0)-(a.createdAt?.toMillis()||0)).map(a=><div className="pilot-row" key={a.id}>
+        {tab==='actividad'&&(activities.length? [...activities].filter(a=>matchesQuery(a.label,a.category,a.actorEmail,clientName(a.clientId))).sort((a,b)=>(b.createdAt?.toMillis()||0)-(a.createdAt?.toMillis()||0)).map(a=><div className="pilot-row" key={a.id}>
           <div className="pilot-icon"><CalendarDays size={19}/></div>
           <div className="pilot-row-body"><strong>{a.label}</strong><small>{clientName(a.clientId)} · {a.actorEmail}</small><small>{formatDate(a.createdAt)} · {a.category}</small></div><BadgeCheck size={17} className="pilot-audit-mark"/>
         </div>):empty('Sin actividad registrada'))}
@@ -267,5 +277,16 @@ export default function PilotWorkspace({user}:{user:User}) {
         </form>
       </aside>}
     </div>}
+    {selectedClient&&<CustomerDossier client={selectedClient} leads={leads}
+      policies={policies} commissions={commissions} tickets={tickets} documents={docs}
+      onClose={()=>setSelectedClientId('')}
+      onAction={(next,clientId)=>{
+        setSelectedClientId('');
+        setTab(next);
+        setListQuery('');
+        setForm({...makeForm(),clientId});
+        setNotice('Expediente seleccionado: '+clientName(clientId));
+      }}
+    />}
   </div>;
 }
