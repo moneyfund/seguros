@@ -97,6 +97,13 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode, ad
     <div><strong>{user?'Esta cuenta no tiene acceso a Dirección.':'Acceso exclusivo de Dirección'}</strong>
     <p>{user?'Estás usando '+(user.email||'una cuenta sin permisos')+'. Para entrar a la bandeja de aprobaciones, elegí «Cambiar cuenta» e iniciá sesión con el administrador autorizado.':'Ingresá con una cuenta administrativa autorizada para consultar y aprobar solicitudes.'}</p></div>
   </div>}
+  {adminRouteBlocked && user && stage!=='verify' ? <div className="acos-admin-restricted">
+    <LockKeyhole size={33}/>
+    <h2>Tu sesión no está autorizada para Dirección.</h2>
+    <p>Este apartado es exclusivo de las cuentas administrativas. No es necesario llenar un formulario de colaborador para entrar aquí.</p>
+    <button className="btn btn-dark full" disabled={busy} type="button" onClick={()=>void action(async()=>{await signOut(auth);})}><LogOut size={16}/> Cambiar a cuenta administradora</button>
+    <button className="btn btn-soft full" type="button" onClick={onBack}><ArrowLeft size={16}/> Volver al sitio público</button>
+  </div> : <>
   {stage==='signed-out'&&<><div className="live-auth-title"><span>ACCESO EMPRESARIAL</span><h1>{register?'Solicita tu cuenta.':'Bienvenido de nuevo.'}</h1><p>{register?'Crea una cuenta y solicita autorización. Ninguna cuenta obtiene permisos automáticamente.':'Ingresa con tu correo empresarial y credenciales autorizadas.'}</p></div><form className="live-form" onSubmit={authSubmit}>
    {register&&<label>Nombre y apellido<input required autoComplete="name" value={name} onChange={e=>setName(e.target.value)} placeholder="Nombre completo"/></label>}
    <label>Correo electrónico<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} placeholder="nombre@empresa.com"/></label>
@@ -108,6 +115,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode, ad
   {stage==='request'&&<StaffApplicationForm user={user} onSubmitted={onRetry}/>}
   {stage==='rejected'&&<div className="live-auth-title"><span>SOLICITUD RECHAZADA</span><h1>No se habilitó tu acceso.</h1><p>Comunícate con dirección para revisar el resultado de tu solicitud. No adjuntes nuevamente documentos hasta que se autorice otra evaluación.</p></div>}
   {stage==='pending'&&<div className="live-auth-title"><span>ACCESO POR APROBAR</span><h1>Tu solicitud está en revisión.</h1><p>La dirección de la empresa debe autorizar tu perfil. Podrás entrar cuando se apruebe tu cuenta.</p><button disabled={busy} className="btn btn-dark full" onClick={()=>action(onRetry)}>Comprobar acceso <RefreshCw size={16}/></button>{error&&<p className="live-error">{error}</p>}</div>}
+  </>}
   {user&&<button className="live-switch" onClick={()=>void signOut(auth)}>Cerrar sesión · {user.email}</button>}
   <div className="live-auth-foot"><LockKeyhole size={14}/> Tus permisos se validan en Firebase, no en la interfaz.</div>
  </div><p className="live-auth-copyright">ACOS · PLATAFORMA EMPRESARIAL · XARCON 2026</p></div>;
