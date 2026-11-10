@@ -1,0 +1,48 @@
+# Identity-only operations. Firebase SQL Connect authorizes the request on the server.
+# No user may ask for another user's membership by sending a UID in variables.
+
+query MyProfile @auth(level: USER_EMAIL_VERIFIED) {
+  appUser(key: { firebaseUid_expr: "auth.uid" }) {
+    firebaseUid
+    displayName
+    email
+    phone
+    photoStoragePath
+  }
+}
+
+query MyCompanyMemberships @auth(level: USER_EMAIL_VERIFIED) {
+  companyMembers(where: { user: { firebaseUid: { eq_expr: "auth.uid" } } }) {
+    id
+    company { id slug publicName }
+    department { id code name }
+    employeeCode
+    active
+  }
+}
+
+query MyRoleAssignments @auth(level: USER_EMAIL_VERIFIED) {
+  memberRoles(where: { member: { user: { firebaseUid: { eq_expr: "auth.uid" } } } }) {
+    role { key label company { slug } }
+  }
+}
+
+query MyApprovedViews @auth(level: USER_EMAIL_VERIFIED) {
+  memberViewOverrides(where: {
+    member: { user: { firebaseUid: { eq_expr: "auth.uid" } } }
+  }) {
+    view { key label }
+    enabled
+  }
+}
+
+query MyStaffApplications @auth(level: USER_EMAIL_VERIFIED) {
+  staffApplications(where: { firebaseUid: { eq_expr: "auth.uid" } }) {
+    id
+    company { slug publicName }
+    status
+    submittedAt
+    reviewedAt
+    reviewNotes
+  }
+}
