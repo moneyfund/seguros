@@ -70,3 +70,8 @@
  .acos-auth-escape-bar button svg{width:13px;height:13px}
  .live-auth-screen:has(.acos-auth-escape-bar){padding-top:88px}
 }
+
+.acos-admin-restricted{display:grid;justify-items:start;gap:12px;background:#f6faf6;border:1px solid #d7e7dc;border-radius:12px;padding:22px;margin:14px 0;color:#2c6b4e}
+.acos-admin-restricted h2{font-size:21px;letter-spacing:-.035em;line-height:1.2;margin:2px 0 0;color:#1c4832}
+.acos-admin-restricted p{font-size:12px;line-height:1.65;margin:0 0 5px;color:#5e7766}
+.acos-admin-restricted .btn{justify-content:center;min-height:42px;font-size:12px}
