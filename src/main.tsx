@@ -8,6 +8,7 @@ import './marketing.css';
 import './refine.css';
 import './acos.css';
 import './staff.css';
+import './access-routes.css';
 import './pilot.css';
 
 const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
