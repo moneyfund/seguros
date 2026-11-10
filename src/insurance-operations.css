@@ -1,0 +1,71 @@
+/* ACOS — insurance operations: real SIBOIF reference entities, fictional transactions. */
+.ins-executive,.ins-directory{--i-ink:#153b2d;--i-mut:#6c8575;--i-line:#dce9df;display:grid;gap:19px}
+.ins-exec-heading,.ins-catalog-top{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:25px 26px;border-radius:16px;background:linear-gradient(120deg,#eaf3ed,#fff 82%);border:1px solid #d8e8db}
+.ins-eyebrow{display:inline-flex;align-items:center;gap:7px;color:#4b8464;font-size:10px;letter-spacing:.13em;font-weight:850}
+.ins-exec-heading h3,.ins-catalog-top h3{margin:9px 0 7px;color:var(--i-ink);font-size:clamp(20px,2.4vw,30px);line-height:1.18;letter-spacing:-.055em}
+.ins-exec-heading p,.ins-catalog-top p{margin:0;max-width:660px;font-size:12px;line-height:1.65;color:var(--i-mut)}
+.ins-quick-primary{white-space:nowrap;display:flex;align-items:center;gap:9px;border:0;background:#185b3d;color:#fff;border-radius:9px;padding:13px 15px;font-size:11px;font-weight:800;cursor:pointer}
+.ins-quick-primary:hover{background:#0f4a31}
+.ins-exec-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.ins-exec-metric{display:grid;gap:9px;text-align:left;background:#fff;border:1px solid var(--i-line);border-radius:13px;padding:20px;cursor:pointer;min-width:0;transition:transform .18s,box-shadow .18s}
+.ins-exec-metric:hover{transform:translateY(-2px);box-shadow:0 8px 23px #234c2b13}
+.ins-exec-metric>span{display:flex;justify-content:space-between;gap:7px;font-size:11px;color:var(--i-mut);font-weight:700}
+.ins-exec-metric>span svg{color:#75a58c;flex-shrink:0}
+.ins-exec-metric strong{color:#164b34;font-size:clamp(21px,2.5vw,31px);letter-spacing:-.05em;overflow-wrap:anywhere}
+.ins-exec-metric small{font-size:10px;color:#829b8c}
+.ins-exec-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.ins-exec-panel{min-width:0;background:#fff;border:1px solid var(--i-line);border-radius:15px;overflow:hidden}
+.ins-panel-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 22px;border-bottom:1px solid #e9eee9}
+.ins-panel-heading h4{font-size:17px;letter-spacing:-.035em;color:#214e37;margin:7px 0 0}
+.ins-panel-heading>svg{color:#7b9c87}
+.ins-panel-heading>button,.ins-panel-footer>button{border:0;background:transparent;color:#2e8055;font-size:11px;font-weight:800;display:flex;align-items:center;gap:5px;cursor:pointer}
+.ins-funnel-list{display:grid;gap:17px;padding:27px 23px}
+.ins-funnel-row{display:grid;grid-template-columns:105px minmax(0,1fr) 24px;gap:12px;align-items:center}
+.ins-funnel-row>span{font-size:11px;color:#5b7866}.ins-funnel-row>strong{font-size:12px;color:#296044;text-align:right}
+.ins-funnel-row>div{height:10px;background:#edf2ee;border-radius:99px;overflow:hidden}
+.ins-funnel-row>div>i{display:block;height:100%;background:linear-gradient(90deg,#2b7050,#98bca0);border-radius:99px;transition:width .3s}
+.ins-panel-footer{padding:14px 22px;border-top:1px solid #e9eee9;display:flex;justify-content:space-between;gap:13px;align-items:center}
+.ins-panel-footer>span{display:flex;gap:8px;align-items:center;color:#748f7b;font-size:10px;font-weight:650}
+.ins-renewal-list,.ins-case-list,.ins-activity-list{min-height:195px}
+.ins-renewal-list>button,.ins-case-list>button,.ins-activity-list>div{background:#fff;border:0;border-bottom:1px solid #f0f2ef;padding:14px 20px;display:flex;align-items:center;text-align:left;gap:11px;width:100%;cursor:pointer;min-width:0}
+.ins-renewal-list>button:hover,.ins-case-list>button:hover{background:#f7fbf8}
+.ins-renewal-list>button:last-child,.ins-case-list>button:last-child,.ins-activity-list>div:last-child{border-bottom:0}
+.ins-renewal-icon{border-radius:10px;background:#edf7ef;color:#47845f;padding:9px;display:grid;place-items:center;flex-shrink:0}
+.ins-renewal-icon.soon{background:#fff3de;color:#bd863a}.ins-renewal-icon.overdue{background:#fff0ea;color:#bd6148}
+.ins-renewal-copy,.ins-case-list>button>span:nth-child(2),.ins-activity-list>div>span:last-child{display:grid;gap:4px;min-width:0;flex:1}
+.ins-renewal-copy strong,.ins-case-list strong,.ins-activity-list strong{font-size:11px;color:#305c41;overflow-wrap:anywhere}
+.ins-renewal-copy small,.ins-case-list small,.ins-activity-list small{font-size:10px;color:#829486;line-height:1.4;overflow-wrap:anywhere}
+.ins-renewal-days{font-size:10px;font-weight:850;color:#ae8045;white-space:nowrap}.ins-renewal-days.overdue{color:#b15449}
+.ins-case-dot{width:8px;height:8px;min-width:8px;background:#83b899;border-radius:50%}
+.ins-case-list em{font-style:normal;background:#eef4ef;color:#6b8e74;border-radius:12px;padding:5px 7px;font-size:9px;white-space:nowrap}
+.ins-empty-mini{padding:37px 15px;min-height:140px;display:grid;gap:8px;justify-items:center;align-content:center;text-align:center;color:#80a18c}
+.ins-empty-mini strong{font-size:12px;color:#537c5f}.ins-empty-mini small{font-size:10px;max-width:240px;line-height:1.4}
+.ins-exec-actions{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;background:#e9f1ea;padding:16px 20px;border-radius:13px}
+.ins-exec-actions>span{display:flex;gap:9px;align-items:center;color:#4f785a;font-size:11px;font-weight:700}
+.ins-exec-actions>div{display:flex;gap:8px;flex-wrap:wrap}
+.ins-exec-actions button{display:flex;align-items:center;gap:7px;padding:10px 11px;border:1px solid #c9ddcd;background:#fff;color:#2b704c;font-size:10px;font-weight:800;border-radius:8px;cursor:pointer}
+.ins-exec-actions button:hover{border-color:#8bbba0}
+.ins-regulator-link{white-space:nowrap;display:inline-flex;align-items:center;gap:7px;font-size:11px;color:#286d4c;text-decoration:none;font-weight:800;padding:10px 12px;border:1px solid #d6e7dc;border-radius:9px;background:white}
+.ins-partner-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.ins-partner-card{background:#fff;border:1px solid #dbe9dd;border-radius:14px;padding:21px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ins-partner-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ins-monogram{width:48px;height:48px;border-radius:12px;background:linear-gradient(145deg,#dbeae0,#f6faf6);border:1px solid #d4e5d7;color:#2a714c;display:grid;place-items:center;font-size:17px;letter-spacing:-.05em;font-weight:900}
+.ins-registry-tag{display:flex;gap:4px;align-items:center;color:#67957a;background:#f1f6f2;border-radius:20px;padding:5px 8px;font-size:9px;font-weight:750;white-space:nowrap}
+.ins-partner-card>strong{font-size:18px;letter-spacing:-.03em;color:#174b33}
+.ins-partner-card>p{font-size:10px;line-height:1.55;color:#849689;min-height:32px;margin:0;overflow-wrap:anywhere}
+.ins-card-divider{height:1px;background:#e8efe9}
+.ins-mini-stats{display:flex;justify-content:space-between;gap:15px}
+.ins-mini-stats>span{display:grid;gap:6px}
+.ins-mini-stats small{font-size:9px;letter-spacing:.04em;color:#85978a}
+.ins-mini-stats b{font-size:15px;color:#215e3e}
+.ins-portfolio-bar{height:5px;background:#edf3ed;border-radius:20px;overflow:hidden}
+.ins-portfolio-bar>span{height:100%;display:block;background:linear-gradient(90deg,#276d4a,#75b18b);border-radius:20px}
+.ins-partner-card>button{margin-top:3px;border:1px solid #d0e3d5;border-radius:8px;background:#f4f9f4;min-height:39px;color:#2c6b46;display:flex;justify-content:center;align-items:center;gap:9px;font-size:11px;font-weight:800;cursor:pointer}
+.ins-partner-card>button:hover{background:#e5f2e9}
+.ins-catalog-disclaimer{display:flex;align-items:center;gap:10px;font-size:11px;line-height:1.6;color:#557c5e;background:#eef5ed;border:1px solid #d6e6d7;padding:13px 16px;border-radius:10px;margin:0}
+.ins-catalog-disclaimer svg{flex-shrink:0}
+.ins-policy-ref{border:1px solid #d8e8db;background:#f1f8f2;border-radius:9px;display:flex;gap:9px;padding:12px;color:#35684b;font-size:11px;line-height:1.5}
+.ins-policy-ref svg{flex-shrink:0}.ins-policy-ref span{display:grid;gap:3px}.ins-policy-ref small{font-size:10px;color:#7b9682}
+@media(max-width:1150px){.ins-exec-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.ins-partner-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:800px){.ins-exec-grid{grid-template-columns:1fr}.ins-exec-heading,.ins-catalog-top{flex-direction:column;align-items:flex-start;padding:20px}.ins-partner-grid{grid-template-columns:1fr}.ins-exec-actions{align-items:flex-start}}
+@media(max-width:470px){.ins-exec-metrics{gap:8px}.ins-exec-metric{padding:15px}.ins-exec-metric strong{font-size:23px}.ins-renewal-days{font-size:9px}.ins-panel-heading{padding:17px}.ins-funnel-row{grid-template-columns:90px minmax(0,1fr) 20px;gap:8px}.ins-mini-stats b{font-size:13px}}
