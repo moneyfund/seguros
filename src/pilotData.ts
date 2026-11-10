@@ -43,6 +43,7 @@ export interface PilotCommission extends PilotBase {
 }
 export interface PilotTicket extends PilotBase {
   clientId: string; subject: string; detail: string; status: 'Pendiente'|'En proceso'|'Resuelto';
+  policyId?: string; caseType?: string;
 }
 export interface PilotDocument extends PilotBase {
   clientId: string; policyId: string; fileName: string; bytes: number;
