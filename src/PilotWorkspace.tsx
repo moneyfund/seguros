@@ -5,18 +5,24 @@ import {
   Download, FileText, FlaskConical, Inbox, Plus, RefreshCw, ShieldCheck, Users, Wallet
 } from 'lucide-react';
 import { money } from './data';
+import { nicaraguanInsurers, insurerById, insurerFromText } from './insurers';
+import InsuranceDirectory from './InsuranceDirectory';
+import ExecutiveDashboard from './ExecutiveDashboard';
+import { seedInsurancePortfolio } from './insuranceSeed';
 import {
   advancePilotLead, createPilotClient, createPilotLead, createPilotPolicy, createPilotTicket,
-  downloadPilotDocument, pilotCollectionNames, resolvePilotTicket, seedPilotScenario,
+  downloadPilotDocument, pilotCollectionNames, resolvePilotTicket,
   subscribePilot, uploadPilotDocument,
   type PilotRows, type PilotCollection, type PilotDocument, type PilotLead, type PilotTicket
 } from './pilotData';
 
-type Tab='clientes'|'oportunidades'|'polizas'|'solicitudes'|'documentos'|'actividad';
+type Tab='resumen'|'clientes'|'oportunidades'|'polizas'|'aseguradoras'|'solicitudes'|'documentos'|'actividad';
 const nav: {id:Tab;label:string}[]=[
+  {id:'resumen',label:'Vista ejecutiva'},
   {id:'clientes',label:'Clientes'},
   {id:'oportunidades',label:'Oportunidades'},
   {id:'polizas',label:'Pólizas y comisiones'},
+  {id:'aseguradoras',label:'Aseguradoras'},
   {id:'solicitudes',label:'Servicio'},
   {id:'documentos',label:'Documentos'},
   {id:'actividad',label:'Auditoría'}
@@ -28,7 +34,7 @@ const emptyRows:PilotRows={
 const makeForm=()=>({
   fullName:'',email:'',phone:'',city:'Matagalpa',clientId:'',
   product:'Seguro vehicular',estimatedPremium:'',source:'Web',
-  leadId:'',insurer:'Aseguradora Ficticia A',premium:'',
+  leadId:'',insurerId:'assa',premium:'',
   commissionRate:'15',startDate:'',endDate:'',
   subject:'',detail:'',policyId:''
 });
@@ -46,7 +52,7 @@ function Field({title,children}:{title:string;children:React.ReactNode}) {
 }
 
 export default function PilotWorkspace({user}:{user:User}) {
-  const [tab,setTab]=useState<Tab>('clientes');
+  const [tab,setTab]=useState<Tab>('resumen');
   const [rows,setRows]=useState<PilotRows>(emptyRows);
   const [loaded,setLoaded]=useState<PilotCollection[]>([]);
   const [error,setError]=useState('');
@@ -98,10 +104,11 @@ export default function PilotWorkspace({user}:{user:User}) {
     }),'Cliente ficticio guardado en Firestore.');
     if(!form.clientId){setError('Primero selecciona un cliente.');return;}
     if(tab==='oportunidades') return perform(()=>createPilotLead(user,{
-      clientId:form.clientId,product:form.product,estimatedPremium:Number(form.estimatedPremium),source:form.source
+      clientId:form.clientId,product:form.product,estimatedPremium:Number(form.estimatedPremium),source:form.source,
+      insurerId:form.insurerId
     }),'Oportunidad registrada y vinculada al cliente.');
     if(tab==='polizas') return perform(()=>createPilotPolicy(user,{
-      clientId:form.clientId,leadId:form.leadId,insurer:form.insurer,product:form.product,
+      clientId:form.clientId,leadId:form.leadId,insurerId:form.insurerId,product:form.product,
       premium:Number(form.premium),commissionRate:Number(form.commissionRate),
       startDate:form.startDate,endDate:form.endDate
     }),'Póliza creada, comisión calculada y oportunidad actualizada.');
@@ -118,33 +125,33 @@ export default function PilotWorkspace({user}:{user:User}) {
     <option value="">Seleccionar cliente</option>{clients.map(c=><option key={c.id} value={c.id}>{c.fullName}</option>)}
   </select></Field>;
 
-  const formTitle:Record<Exclude<Tab,'actividad'>,string>={
+  const formTitle:Record<string,string>={
     clientes:'Nuevo cliente de prueba',oportunidades:'Nueva oportunidad',
-    polizas:'Emitir expediente de prueba',solicitudes:'Nueva solicitud',
+    polizas:'Registrar póliza de prueba',solicitudes:'Nueva solicitud',
     documentos:'Adjuntar archivo de prueba'
   };
-  const listTitle:Record<Tab,string>={
+  const listTitle:Record<string,string>={
     clientes:'Directorio de clientes',oportunidades:'Embudo comercial',
-    polizas:'Cartera de pólizas',solicitudes:'Casos en atención',
+    polizas:'Cartera de pólizas',aseguradoras:'Directorio de aseguradoras',resumen:'Vista ejecutiva',solicitudes:'Casos en atención',
     documentos:'Centro documental',actividad:'Registro de operaciones'
   };
 
   return <div className="pilot-root">
     <div className="pilot-hero">
       <div><span className="pilot-kicker"><FlaskConical size={15}/> LABORATORIO OPERATIVO · DIRECCIÓN</span>
-        <h2>Una demostración con operaciones reales.</h2>
-        <p>Clientes, prospectos, expedientes, comisiones y documentos conectados entre sí. Se utilizan exclusivamente datos ficticios en colecciones independientes.</p>
+        <h2>Un centro de operaciones, no solo formularios.</h2>
+        <p>Cartera, renovaciones, aseguradoras, comisiones y casos de servicio conectados en tiempo real. Catálogo real de aseguradoras y operaciones exclusivamente ficticias.</p>
       </div>
       <button disabled={busy} className="btn btn-dark pilot-seed-button" onClick={()=>void perform(
-        async()=>{const inserted=await seedPilotScenario(user);if(!inserted)throw new Error('El escenario ya fue cargado. Puedes continuar con sus registros.')},
-        'Escenario ficticio cargado en Firebase. Puedes operar con sus registros.',false
-      )}><Plus size={15}/> Cargar escenario de prueba</button>
+        async()=>{const inserted=await seedInsurancePortfolio(user);if(!inserted)throw new Error('La cartera de ejemplo ya está cargada. Continuá trabajando con sus registros.')},
+        'Cartera de ejemplo cargada: cinco aseguradoras, pólizas, comisiones y renovaciones.',false
+      )}><Plus size={15}/> Cargar cartera operativa ficticia</button>
     </div>
     <div className="pilot-status-row">
       <span><ShieldCheck size={14}/> Acceso exclusivo de dirección</span>
       <span><Database size={14}/> Firestore · Colecciones piloto</span>
       <span><RefreshCw size={14}/> Sincronización en vivo</span>
-      <span className="pilot-test-warning">NO UTILIZAR DATOS PERSONALES REALES</span>
+      <span className="pilot-test-warning">CATÁLOGO REAL · PÓLIZAS FICTICIAS · SIN CONEXIÓN CON ASEGURADORAS</span>
     </div>
     {error&&<div role="alert" className="pilot-alert pilot-error">{error}<button onClick={()=>setError('')} aria-label="Cerrar mensaje">×</button></div>}
     {notice&&<div role="status" className="pilot-alert pilot-success"><CheckCircle2 size={17}/>{notice}<button onClick={()=>setNotice('')} aria-label="Cerrar mensaje">×</button></div>}
@@ -161,7 +168,16 @@ export default function PilotWorkspace({user}:{user:User}) {
     <nav className="pilot-tabs" aria-label="Módulos del laboratorio">
       {nav.map(n=><button key={n.id} className={tab===n.id?'selected':''} onClick={()=>{setTab(n.id);setError('');setNotice('');setForm(makeForm());}}>{n.label}</button>)}
     </nav>
-    <div className={'pilot-layout '+(tab==='actividad'?'pilot-layout-full':'')}>
+    {tab==='resumen'&&<ExecutiveDashboard
+      clients={clients} leads={leads} policies={policies} commissions={commissions}
+      tickets={tickets} documents={docs} activities={activities}
+      onNavigate={setTab}
+    />}
+    {tab==='aseguradoras'&&<InsuranceDirectory policies={policies} onSelect={company=>{
+      setForm({...makeForm(),insurerId:company.id});
+      setTab('polizas');setError('');setNotice('');
+    }}/>}
+    {tab!=='resumen'&&tab!=='aseguradoras'&&<div className={'pilot-layout '+(tab==='actividad'?'pilot-layout-full':'')}>
       <section className="pilot-list-panel">
         <div className="pilot-panel-heading"><div><span className="pilot-panel-eyebrow">INFORMACIÓN EN VIVO</span><h3>{listTitle[tab]}</h3></div>
         <span className="pilot-list-count">{tab==='clientes'?clients.length:tab==='oportunidades'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.length:tab==='documentos'?docs.length:activities.length} registros</span></div>
@@ -175,7 +191,7 @@ export default function PilotWorkspace({user}:{user:User}) {
 
         {tab==='oportunidades'&&(leads.length?leads.map(l=><div className="pilot-row" key={l.id}>
           <div className="pilot-icon"><Activity size={19}/></div>
-          <div className="pilot-row-body"><strong>{clientName(l.clientId)}</strong><small>{l.product} · {l.source}</small><small>{money(l.estimatedPremium)} · Responsable: {l.assignedTo===user.uid?'Dirección':'Colaborador'}</small></div>
+          <div className="pilot-row-body"><strong>{clientName(l.clientId)}</strong><small>{l.product} · {l.source} · {insurerById(l.insurerId||'')?.displayName||'Sin aseguradora asignada'}</small><small>{money(l.estimatedPremium)} · Responsable: {l.assignedTo===user.uid?'Dirección':'Colaborador'}</small></div>
           <div className="pilot-row-side"><span className="pilot-status">{l.status}</span>{l.status!=='Ganado'&&<button disabled={busy} className="pilot-inline" onClick={()=>void perform(()=>advancePilotLead(user,l),'Oportunidad actualizada.',false)}>Avanzar <ArrowRight size={13}/></button>}</div>
         </div>):empty('Aún no hay oportunidades'))}
 
@@ -183,7 +199,7 @@ export default function PilotWorkspace({user}:{user:User}) {
           {policies.length?policies.map(p=><div className="pilot-row" key={p.id}>
             <div className="pilot-icon"><ShieldCheck size={19}/></div>
             <div className="pilot-row-body"><strong>{p.policyNumber}</strong><small>{clientName(p.clientId)} · {p.product}</small><small>{p.insurer} · {p.startDate} — {p.endDate}</small>
-              <small>Prima {money(p.premium)} · Comisión {p.commissionRate}%</small></div><span className="pilot-status positive">{p.status}</span>
+              <small>Prima {money(p.premium)} · Comisión {p.commissionRate}% · {insurerFromText(p.insurer)?.shortName||'Referencia anterior'}</small></div><span className="pilot-status positive">{p.endDate<new Date().toISOString().slice(0,10)?'Vencimiento de prueba':p.status}</span>
           </div>):empty('Aún no hay pólizas')}
           {commissions.length>0&&<div className="pilot-commission-area"><h4>Comisiones vinculadas</h4>
             {commissions.map(c=><div key={c.id} className="pilot-commission-line"><span>{clientName(c.clientId)} · {c.rate}%</span><strong>{money(c.amount)}</strong><span className="pilot-status">{c.status}</span></div>)}
@@ -221,11 +237,13 @@ export default function PilotWorkspace({user}:{user:User}) {
           {tab==='oportunidades'&&<>
             <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><option>Seguro vehicular</option><option>Seguro de vida</option><option>Seguro de salud</option><option>Seguro de hogar</option><option>Seguro empresarial</option></select></Field>
             <Field title="Prima estimada (USD)"><input required type="number" min="0" step=".01" value={form.estimatedPremium} onChange={e=>change('estimatedPremium',e.target.value)}/></Field>
+            <Field title="Aseguradora de interés"><select value={form.insurerId} onChange={e=>change('insurerId',e.target.value)}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.id}>{i.displayName}</option>)}</select></Field>
             <Field title="Origen"><select value={form.source} onChange={e=>change('source',e.target.value)}><option>Web</option><option>Referido</option><option>Teléfono</option><option>WhatsApp</option><option>Redes sociales</option></select></Field>
           </>}
           {tab==='polizas'&&<>
             <Field title="Vincular oportunidad (opcional)"><select value={form.leadId} onChange={e=>change('leadId',e.target.value)}><option value="">Sin oportunidad asociada</option>{opportunities.map(l=><option key={l.id} value={l.id}>{l.product} · {l.status}</option>)}</select></Field>
-            <Field title="Aseguradora"><input required maxLength={120} value={form.insurer} onChange={e=>change('insurer',e.target.value)}/></Field>
+            <Field title="Aseguradora (catálogo oficial)"><select required value={form.insurerId} onChange={e=>change('insurerId',e.target.value)}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.id}>{i.displayName} · SIBOIF {i.registryId}</option>)}</select></Field>
+            <div className="ins-policy-ref"><ShieldCheck size={15}/><span>{insurerById(form.insurerId)?.legalName}<small>Referencia de directorio; no existe conexión de emisión con la aseguradora.</small></span></div>
             <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><option>Seguro vehicular</option><option>Seguro de vida</option><option>Seguro de hogar</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></Field>
             <div className="pilot-form-duo"><Field title="Prima (USD)"><input required type="number" min="0" step=".01" value={form.premium} onChange={e=>change('premium',e.target.value)}/></Field>
             <Field title="Comisión (%)"><input required type="number" min="0" max="100" step=".01" value={form.commissionRate} onChange={e=>change('commissionRate',e.target.value)}/></Field></div>
@@ -245,9 +263,9 @@ export default function PilotWorkspace({user}:{user:User}) {
           <button type="submit" className="btn btn-dark pilot-save" disabled={busy||(tab!=='clientes'&&!clients.length)}>
             {busy?'Procesando…':tab==='documentos'?'Guardar documento':'Guardar en Firebase'} {tab==='documentos'?<CloudUpload size={15}/>:<ArrowRight size={15}/>}
           </button>
-          <p className="pilot-form-footnote">Los cambios se guardan en Firestore y se reflejan en la interfaz mediante suscripciones en vivo. Solo dirección tiene acceso al laboratorio.</p>
+          <p className="pilot-form-footnote">Los registros de prueba se guardan en Firestore. Los nombres de aseguradoras provienen de SIBOIF; ninguna operación genera una póliza auténtica.</p>
         </form>
       </aside>}
-    </div>
+    </div>}
   </div>;
 }
