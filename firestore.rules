@@ -55,6 +55,13 @@ service cloud.firestore {
         ));
     }
 
+    // Menus are not a security boundary: enforce approved views alongside roles.
+    function hasView(viewKey) {
+      return isOwner() ||
+        (isActiveMember() &&
+          get(memberPath()).data.get('allowedSections', []).hasAny([viewKey]));
+    }
+
     function isClient() {
       return isActiveMember() &&
         get(memberPath()).data.role == 'cliente';
@@ -73,8 +80,8 @@ service cloud.firestore {
       match /members/{memberUid} {
         allow get: if isOwner() ||
           (verified() && request.auth.uid == memberUid) ||
-          hasRole(['supervision']);
-        allow list: if isOwner() || hasRole(['supervision']);
+          (hasRole(['supervision']) && hasView('equipo'));
+        allow list: if isOwner() || (hasRole(['supervision']) && hasView('equipo'));
 
         allow create: if isOwner() &&
           request.resource.data.keys().hasAll(
@@ -181,12 +188,13 @@ service cloud.firestore {
       // No client can send arbitrary email from ACOS.
       // Oportunidades comerciales: agentes, supervisores y gerencia.
       match /leads/{leadId} {
-        allow read: if isOwner() ||
+        allow read: if hasView('prospectos') && (isOwner() ||
           hasRole(['direccion','supervision']) ||
           (hasRole(['ventas']) &&
-           resource.data.assignedToUid == request.auth.uid);
+           resource.data.assignedToUid == request.auth.uid));
 
-        allow create: if hasRole(['direccion','supervision','ventas']) &&
+        allow create: if hasView('prospectos') &&
+          hasRole(['direccion','supervision','ventas']) &&
           request.resource.data.keys().hasAll([
             'name','product','estimatedPremium','status','channel',
             'assignedToUid','assignedToName','createdBy','createdAt'
@@ -200,7 +208,7 @@ service cloud.firestore {
           request.resource.data.estimatedPremium >= 0 &&
           request.resource.data.createdAt is timestamp;
 
-        allow update: if (isOwner() ||
+        allow update: if hasView('prospectos') && (isOwner() ||
           hasRole(['direccion','supervision']) ||
           (hasRole(['ventas']) &&
            resource.data.assignedToUid == request.auth.uid)) &&
@@ -215,13 +223,11 @@ service cloud.firestore {
       // Expedientes de polizas: cliente solo sus propias polizas
       // con clientUid = su UID autenticado.
       match /policies/{policyId} {
-        allow read: if hasRole([
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision'
-          ]) ||
-          (isClient() && resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('polizas') && (
+          hasRole(['direccion','ventas','operaciones','servicio','finanzas','supervision']) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole(['direccion','operaciones']) &&
+        allow create: if hasView('polizas') && hasRole(['direccion','operaciones']) &&
           request.resource.data.keys().hasAll([
             'clientName','insurer','product','premium',
             'status','clientUid','createdBy','createdAt'
@@ -234,23 +240,21 @@ service cloud.firestore {
           request.resource.data.premium >= 0 &&
           request.resource.data.createdAt is timestamp;
 
-        allow update: if isOwner() ||
+        allow update: if hasView('polizas') && (isOwner() ||
           (hasRole(['direccion','operaciones']) &&
-           changedOnly(['status','updatedAt']));
+           changedOnly(['status','updatedAt'])));
 
         allow delete: if isOwner();
       }
 
       // Casos de servicio y solicitudes del asegurado.
       match /tickets/{ticketId} {
-        allow read: if hasRole([
-            'direccion','operaciones','servicio','supervision'
-          ]) ||
-          (isClient() && resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('solicitudes') && (
+          hasRole(['direccion','operaciones','servicio','supervision']) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole([
-            'direccion','operaciones','servicio','supervision','cliente'
-          ]) &&
+        allow create: if hasView('solicitudes') &&
+          hasRole(['direccion','operaciones','servicio','supervision','cliente']) &&
           request.resource.data.keys().hasAll([
             'subject','detail','type','status','priority',
             'clientUid','createdBy','createdAt'
@@ -270,7 +274,8 @@ service cloud.firestore {
             (!isClient() && request.resource.data.clientUid == '')
           );
 
-        allow update: if hasRole(['direccion','operaciones','servicio']) &&
+        allow update: if hasView('solicitudes') &&
+          hasRole(['direccion','operaciones','servicio']) &&
           changedOnly(['status','updatedAt']) &&
           request.resource.data.status == 'Resuelto';
 
@@ -280,23 +285,20 @@ service cloud.firestore {
       // Liquidaciones: lectura restringida a finanzas y direccion.
       // Hasta definir conciliacion, solo propietarios pueden escribir.
       match /commissions/{commissionId} {
-        allow read: if hasRole(['direccion','finanzas']);
+        allow read: if hasView('finanzas') && hasRole(['direccion','finanzas']);
         allow create, update, delete: if isOwner();
       }
 
       // Metadatos documentales. El empleado solo ve sus propios
       // archivos; el cliente solo los que estan asociados a su UID.
       match /documents/{documentId} {
-        allow read: if isOwner() ||
-          (isActiveMember() &&
-           resource.data.uploaderUid == request.auth.uid) ||
-          (isClient() &&
-           resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('documentos') && (
+          isOwner() ||
+          (isActiveMember() && resource.data.uploaderUid == request.auth.uid) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole([
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision','cliente'
-          ]) &&
+        allow create: if hasView('documentos') &&
+          hasRole(['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente']) &&
           request.resource.data.keys().hasAll([
             'fileName','contentType','bytes','storagePath',
             'uploaderUid','clientUid','createdAt'
@@ -324,12 +326,12 @@ service cloud.firestore {
 
       // Colecciones en reserva. Solo gerencia, hasta definir alcance.
       match /clients/{clientId} {
-        allow read: if hasRole(['direccion']);
+        allow read: if hasRole(['direccion']) && hasView('clientes');
         allow write: if isOwner();
       }
 
       match /insurers/{insurerId} {
-        allow read: if hasRole([
+        allow read: if hasView('polizas') && hasRole([
           'direccion','ventas','operaciones','servicio','finanzas','supervision'
         ]);
         allow write: if isOwner();
