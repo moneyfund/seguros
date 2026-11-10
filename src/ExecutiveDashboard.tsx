@@ -18,11 +18,12 @@ function daysUntil(value:string) {
   return Math.round((target.getTime()-today.getTime())/86400000);
 }
 export default function ExecutiveDashboard({
-  clients,leads,policies,commissions,tickets,documents,activities,onNavigate
+  clients,leads,policies,commissions,tickets,documents,activities,onNavigate,onStartRenewal,busy=false
 }:{
   clients:PilotClient[];leads:PilotLead[];policies:PilotPolicy[];
   commissions:PilotCommission[];tickets:PilotTicket[];documents:PilotDocument[];
   activities:PilotActivity[];onNavigate:(tab:Destination)=>void;
+  onStartRenewal:(policy:PilotPolicy)=>void;busy?:boolean;
 }) {
   const stages:LeadStage[]=['Nuevo','Contactado','Cotización','Negociación','Ganado'];
   const activeLeads=leads.filter(l=>l.status!=='Ganado');
@@ -76,10 +77,10 @@ export default function ExecutiveDashboard({
           <CalendarClock size={18}/>
         </div>
         <div className="ins-renewal-list">
-          {expirations.slice(0,5).length?expirations.slice(0,5).map(({policy,days})=><button key={policy.id} onClick={()=>onNavigate('polizas')}>
+          {expirations.slice(0,5).length?expirations.slice(0,5).map(({policy,days})=><button key={policy.id} disabled={busy||tickets.some(t=>t.policyId===policy.id&&t.caseType==='Renovación')} title="Registrar caso de renovación ficticio" onClick={()=>onStartRenewal(policy)}>
             <span className={'ins-renewal-icon '+(days<0?'overdue':days<=30?'soon':'normal')}><Clock3 size={17}/></span>
             <span className="ins-renewal-copy"><strong>{byCustomer(policy.clientId)}</strong><small>{insurerFromText(policy.insurer)?.displayName||policy.insurer} · {policy.product}</small></span>
-            <span className={'ins-renewal-days '+(days<0?'overdue':'')}>{days<0?'Vencida hace '+Math.abs(days)+' d':days===0?'Vence hoy':'En '+days+' d'}</span>
+            <span className={'ins-renewal-days '+(days<0?'overdue':'')}>{tickets.some(t=>t.policyId===policy.id&&t.caseType==='Renovación')?'Caso abierto':days<0?'Gestionar · vencida '+Math.abs(days)+' d':days===0?'Gestionar hoy':'Gestionar · '+days+' d'}</span>
           </button>):<div className="ins-empty-mini"><CheckCheck size={23}/><strong>Sin vencimientos próximos</strong><small>Los registros con vigencia de hasta 60 días aparecerán aquí.</small></div>}
         </div>
         <div className="ins-panel-footer"><span><ShieldAlert size={15}/> {expirations.length} expedientes por revisar</span>
