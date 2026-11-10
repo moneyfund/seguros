@@ -119,7 +119,7 @@ export async function updateStaffMember(
   if (!roles.length || !sections.length || sections.some(s=>!valid.includes(s)))
     throw new Error('Selecciona permisos válidos.');
   await updateDoc(memberDoc(member.id), {
-    department, employeeCode:member.employeeCode || employeeCodeFor(department,member.id),
+    department, employeeCode:member.department===department && member.employeeCode ? member.employeeCode : employeeCodeFor(department,member.id),
     role:roles[0], roles, allowedSections:sections, updatedAt:serverTimestamp()
   });
 }
