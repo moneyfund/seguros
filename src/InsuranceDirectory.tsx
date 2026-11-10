@@ -5,6 +5,7 @@ import {
 } from './insurers';
 import type { PilotPolicy } from './pilotData';
 import { money } from './data';
+import InsurerLogo from './InsurerLogo';
 
 export default function InsuranceDirectory({
   policies,onSelect
@@ -30,7 +31,7 @@ export default function InsuranceDirectory({
         const premium=associated.reduce((total,policy)=>total+Number(policy.premium||0),0);
         return <article key={company.id} className="ins-partner-card">
           <div className="ins-partner-head">
-            <span className="ins-monogram" aria-hidden="true">{company.monogram}</span>
+            <InsurerLogo insurer={company} size="featured"/>
             <span className="ins-registry-tag"><ShieldCheck size={13}/> SIBOIF #{company.registryId}</span>
           </div>
           <strong>{company.displayName}</strong>
