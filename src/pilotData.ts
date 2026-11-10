@@ -11,6 +11,7 @@ import {
 import { deleteObject, getBlob, ref, uploadBytes } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { companyId, db, storage } from './firebase';
+import { insurerById } from './insurers';
 
 export type PilotCollection =
   'pilotClients'|'pilotLeads'|'pilotPolicies'|'pilotTickets'|'pilotCommissions'|'pilotDocuments'|'pilotActivities';
@@ -27,10 +28,12 @@ export interface PilotClient extends PilotBase {
 export type LeadStage = 'Nuevo'|'Contactado'|'Cotización'|'Negociación'|'Ganado';
 export interface PilotLead extends PilotBase {
   clientId: string; product: string; estimatedPremium: number; source: string; status: LeadStage;
+  insurerId?: string;
   assignedTo: string;
 }
 export interface PilotPolicy extends PilotBase {
   clientId: string; leadId: string; policyNumber: string; insurer: string; product: string;
+  insurerId?: string; insurerRegistryId?: string;
   premium: number; startDate: string; endDate: string; commissionRate: number;
   status: 'Vigente'|'En emisión';
 }
@@ -111,15 +114,16 @@ export async function createPilotClient(user:User,input:{fullName:string;email:s
 }
 
 export async function createPilotLead(user:User,input:{
-  clientId:string;product:string;estimatedPremium:number;source:string
+  clientId:string;product:string;estimatedPremium:number;source:string;insurerId?:string
 }) {
   requireOwner(user);await checkClient(input.clientId);
   const product=required(input.product,'Producto',100);
+  if(input.insurerId && !insurerById(input.insurerId))throw new Error('Seleccioná una aseguradora del catálogo.');
   const estimatedPremium=amount(input.estimatedPremium,'Prima estimada');
   const newLead=doc(pilotCollection('pilotLeads'));
   const batch=writeBatch(db);
   batch.set(newLead,{isPilot:true,clientId:input.clientId,product,estimatedPremium,
-    source:required(input.source,'Origen',70),status:'Nuevo',assignedTo:user.uid,
+    source:required(input.source,'Origen',70),insurerId:input.insurerId||'',status:'Nuevo',assignedTo:user.uid,
     createdBy:user.uid,createdAt:serverTimestamp()});
   batch.set(doc(pilotCollection('pilotActivities')),activity(user,input.clientId,'Nueva oportunidad: '+product,'comercial'));
   await batch.commit();return newLead.id;
@@ -138,11 +142,12 @@ export async function advancePilotLead(user:User,lead:PilotLead) {
 }
 
 export async function createPilotPolicy(user:User,input:{
-  clientId:string;leadId:string;insurer:string;product:string;
+  clientId:string;leadId:string;insurerId:string;product:string;
   premium:number;commissionRate:number;startDate:string;endDate:string
 }) {
   requireOwner(user);await checkClient(input.clientId);
-  const insurer=required(input.insurer,'Aseguradora',120);
+  const insuranceCompany=insurerById(input.insurerId);
+  if(!insuranceCompany)throw new Error('Seleccioná una de las aseguradoras verificadas ante SIBOIF.');
   const product=required(input.product,'Producto',100);
   const premium=amount(input.premium,'Prima');
   const commissionRate=amount(input.commissionRate,'Porcentaje de comisión');
@@ -160,7 +165,9 @@ export async function createPilotPolicy(user:User,input:{
   batch.set(policyRef,{
     isPilot:true,clientId:input.clientId,leadId:input.leadId,
     policyNumber:'ACOS-PIL-'+policyRef.id.slice(0,7).toUpperCase(),
-    insurer,product,premium,startDate:input.startDate,endDate:input.endDate,
+    insurerId:insuranceCompany.id,insurerRegistryId:insuranceCompany.registryId,
+    insurer:insuranceCompany.displayName,product,premium,
+    startDate:input.startDate,endDate:input.endDate,
     commissionRate,status:'Vigente',createdBy:user.uid,createdAt:serverTimestamp()
   });
   batch.set(commissionRef,{
