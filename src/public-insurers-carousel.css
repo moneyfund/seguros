@@ -67,6 +67,14 @@
   will-change: transform;
 }
 .acos-public .ap-insurers-track-paused { animation-play-state: paused; }
+.acos-public .ap-insurers-viewport:focus-visible {
+  outline: 3px solid #67a75b;
+  outline-offset: -3px;
+  border-radius: 4px;
+}
+.acos-public .ap-insurers-viewport:focus-within .ap-insurers-track {
+  animation-play-state: paused;
+}
 .acos-public .ap-insurers-loop {
   display: flex;
   align-items: stretch;

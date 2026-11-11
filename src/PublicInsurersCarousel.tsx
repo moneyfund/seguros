@@ -34,6 +34,7 @@ export default function PublicInsurersCarousel() {
       <div
         className="ap-insurers-viewport"
         role="group"
+        tabIndex={0}
         aria-label="Logotipos de aseguradoras con las que trabaja ACOS"
       >
         <div className={'ap-insurers-track' + (paused ? ' ap-insurers-track-paused' : '')}>
