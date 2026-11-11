@@ -7,7 +7,7 @@ import {
   Clock3, CloudUpload, Database, FileText, Headphones, LayoutDashboard, LockKeyhole,
   LogOut, Menu, Plus, RefreshCw, Search, ShieldCheck, UserRound, Users, Wallet, X, type LucideIcon,
 } from 'lucide-react';
-import { auth, isInitialAdmin } from './firebase';
+import { auth, isVerifiedInitialAdminToken } from './firebase';
 import {
   addLead, advanceLead, approveRequest, createTicket, memberFor, pendingRequests,
   memberRef, registerPolicy, requestAccess, requestRef, resolveTicket, subscribeRecords,
@@ -204,7 +204,10 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  };
  useEffect(()=>{
    if(admin && route==='direccion/solicitudes'){setSection('equipo');return;}
-   if(admin && (route==='direccion/vistas'||route==='mi-panel')){setSection('roles-preview');return;}
+   // Both founders must land on the actual dashboard through #/mi-panel.
+   // The role simulation is *only* at #/direccion/vistas.
+   if(admin && route==='direccion/vistas'){setSection('roles-preview');return;}
+   if(route==='mi-panel'){setSection(activeTabs.includes('resumen')?'resumen':activeTabs[0]||'resumen');return;}
    if(!admin && route.startsWith('direccion/')){setSection('sin-acceso');return;}
    if(admin && route==='registro'){setSection('registro-preview');return;}
    if(admin && route==='laboratorio'){setSection('piloto');return;}
@@ -241,7 +244,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
   <aside className={'sidebar '+(mobile?'sidebar-open':'')}>
    <div className="sidebar-top"><div className="acos-sidebar-brand"><img src={ACOS_LOGO} alt="ACOS" /><span>GESTIÓN DE SEGUROS</span></div><button className="mobile-close" onClick={()=>setMobile(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
-   <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span></div><ShieldCheck size={15}/></div>
+   <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span>{admin&&<small className="acos-owner-state">ADMINISTRACIÓN GENERAL · ACCESO COMPLETO</small>}</div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
    <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{admin&&<>
     <div className="sidebar-group-label">CONTROL DE ACCESOS</div>
@@ -312,7 +315,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
      </>}
-     {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3><p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
+     {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3>{admin&&<p><ShieldCheck size={16}/> Administración general · Acceso completo</p>}<p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
     </div><footer className="workspace-footer"><span>ACOS · SISTEMA DE GESTIÓN EMPRESARIAL</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
    </main>
   </div>
@@ -341,16 +344,29 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  const [error,setError]=useState('');
  const sync=useCallback(async(nextUser:User|null)=>{
    setUser(nextUser);setError('');
-   if(!nextUser){setStage('signed-out');setAdmin(false);return;}
-   if(!nextUser.emailVerified){setStage('verify');return;}
+   if(!nextUser){
+     setAdmin(false);setGrantedRoles([]);setGrantedSections(null);
+     setStage('signed-out');return;
+   }
+   setStage('loading');
    try{
-     await nextUser.getIdToken(true);
-     if(isInitialAdmin(nextUser.email)){setAdmin(true);setRole('direccion');setGrantedRoles(['direccion']);setGrantedSections(null);setStage('active');return;}
+     // Match Firestore's server-side owner rules: the *verified ID token*
+     // is authoritative, not an old local profile or a member's limited views.
+     const token=await nextUser.getIdTokenResult(true);
+     if(token.claims.email_verified !== true){
+       setAdmin(false);setGrantedRoles([]);setGrantedSections(null);
+       setStage('verify');return;
+     }
+     if(isVerifiedInitialAdminToken(token.claims)){
+       setAdmin(true);setRole('direccion');
+       setGrantedRoles(['direccion']);setGrantedSections(null);
+       setStage('active');return;
+     }
      const member=await memberFor(nextUser);
      if(member){setAdmin(false);setRole(member.role);setGrantedRoles(member.roles?.length?member.roles:[member.role]);setGrantedSections(member.allowedSections!==undefined?member.allowedSections:null);setStage('active');return;}
      const request=await getDoc(requestRef(nextUser.uid));
      setAdmin(false);setStage(!request.exists() || request.data()?.status==='draft' ? 'request' : request.data()?.status==='rejected' ? 'rejected' : 'pending');
-   }catch(e){setError(friendlyError(e));setStage('pending');}
+   }catch(e){setAdmin(false);setGrantedRoles([]);setGrantedSections(null);setError(friendlyError(e));setStage('pending');}
  },[]);
  useEffect(()=>onAuthStateChanged(auth,u=>{void sync(u);},e=>{setError(friendlyError(e));setStage('signed-out');}),[sync]);
  // Revocations and role/view changes propagate while employees are online.
