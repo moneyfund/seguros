@@ -9,6 +9,7 @@ import './refine.css';
 import './acos.css';
 import './staff.css';
 import './access-routes.css';
+import './admin-parity.css';
 import './insurance-operations.css';
 import './pilot.css';
 
