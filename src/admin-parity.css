@@ -2,7 +2,7 @@
 .live-shell .acos-owner-state {
   display:block;
   margin-top:4px;
-  color:#bfe2ce;
+  color:var(--brand-line);
   font-size:8px;
   font-weight:650;
   letter-spacing:.05em;

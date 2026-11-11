@@ -1,4 +1,4 @@
-import { ACOS_LOGO } from './acos-logo';
+import BrandLogo from './BrandLogo';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User } from 'firebase/auth';
 import { getDoc, onSnapshot } from 'firebase/firestore';
@@ -93,7 +93,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode, ad
   </nav>
   <div className="live-auth-decoration"><div className="live-auth-orbit"/><ShieldCheck size={72} strokeWidth={1}/></div><div className="live-auth-card">
   <button className="live-back" onClick={onBack}><ArrowLeft size={16}/> Volver a la web</button>
-  <div className="live-auth-brand acos-auth-logo"><img src={ACOS_LOGO} alt="ACOS — Logotipo oficial" /><span>ÁREA EMPRESARIAL SEGURA</span></div>
+  <div className="live-auth-brand acos-auth-logo"><BrandLogo variant="primary" /><span>ÁREA EMPRESARIAL SEGURA</span></div>
   {adminRouteBlocked&&<div className="acos-admin-guard" role="status">
     <LockKeyhole size={19}/>
     <div><strong>{user?'Esta cuenta no tiene acceso a Dirección.':'Acceso exclusivo de Dirección'}</strong>
@@ -136,7 +136,7 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
    case 'cliente':return ['policies','tickets','documents'];
   }
 }
-function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}:{
+export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}:{
  user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;route:string;
 }) {
  const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'|'sin-acceso'>('resumen');
@@ -242,7 +242,7 @@ function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}
  return <div className="app-shell live-shell">
   {mobile&&<button className="sidebar-scrim" onClick={()=>setMobile(false)} aria-label="Cerrar menú"/>}
   <aside className={'sidebar '+(mobile?'sidebar-open':'')}>
-   <div className="sidebar-top"><div className="acos-sidebar-brand"><img src={ACOS_LOGO} alt="ACOS" /><span>GESTIÓN DE SEGUROS</span></div><button className="mobile-close" onClick={()=>setMobile(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
+   <div className="sidebar-top"><div className="acos-sidebar-brand"><BrandLogo variant="negative" /><span>GESTIÓN DE SEGUROS</span></div><button className="mobile-close" onClick={()=>setMobile(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span>{admin&&<small className="acos-owner-state">ADMINISTRACIÓN GENERAL · ACCESO COMPLETO</small>}</div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>

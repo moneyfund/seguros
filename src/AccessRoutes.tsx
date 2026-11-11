@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import BrandLogo from './BrandLogo';
 import {
   ArrowRight, BadgeCheck, BriefcaseBusiness, Building2, CheckCircle2, ClipboardCheck,
   FileBadge, FileText, Fingerprint, LayoutDashboard, LockKeyhole, MailCheck,
@@ -45,7 +46,7 @@ export function RoleViewPreview() {
     </div>
     <div className="access-preview-app">
       <aside className="access-mini-sidebar">
-        <div className="access-mini-brand"><Building2 size={20}/><div><strong>ACOS</strong><small>PORTAL EMPRESARIAL</small></div></div>
+        <div className="access-mini-brand"><BrandLogo variant="symbol" /><small>PORTAL EMPRESARIAL</small></div>
         <div className="access-mini-person"><span>{selectedRole.slice(0,2).toUpperCase()}</span><div><strong>Empleado de ejemplo</strong><small>{role?.label}</small></div></div>
         <div className="access-mini-label">MÓDULOS DE ESTA ÁREA</div>
         {tabs.map(t=><button key={t} onClick={()=>setSelectedTab(t)} className={t===visibleTab?'selected':''}>{sectionLabels[t]}</button>)}
@@ -115,7 +116,7 @@ export function AccessFlowGuide({onPublic}:{onPublic:()=>void}) {
   ];
   return <main className="access-guide-page">
     <div className="access-guide-shell">
-      <header className="access-guide-header"><div><span className="access-guide-logotype">ACOS<span> / ACCESOS</span></span><small>PLATAFORMA EMPRESARIAL</small></div><button onClick={onPublic}>Ir al sitio corporativo <ArrowRight size={15}/></button></header>
+      <header className="access-guide-header"><div><BrandLogo compact /><small>PLATAFORMA EMPRESARIAL</small></div><button onClick={onPublic}>Ir al sitio corporativo <ArrowRight size={15}/></button></header>
       <div className="access-guide-heading"><span className="access-eyebrow"><ShieldCheck size={15}/> IDENTIDADES · ROLES · PERMISOS</span>
         <h1>Tres accesos. Una sola plataforma.</h1>
         <p>La experiencia del colaborador cambia según su estado de aprobación. Dirección controla quién puede entrar y qué operaciones tendrá disponibles.</p>

@@ -5,7 +5,7 @@ import {
   HeartPulse, House, LockKeyhole, Mail, MapPin, Menu, MessageCircle, Phone,
   ShieldCheck, UsersRound, X,
 } from 'lucide-react';
-import { ACOS_LOGO } from './acos-logo';
+import BrandLogo from './BrandLogo';
 import PublicInsurersCarousel from './PublicInsurersCarousel';
 import { publicContact, publicSolutions, type SolutionId } from './public-site-config';
 import './public-site.css';
@@ -189,8 +189,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
       <header className={'ap-header' + (scrolled ? ' ap-header-scrolled' : '')}>
         <div className="ap-container ap-navbar">
           <a href="#/inicio" className="ap-brand" aria-label="ACOS, inicio" onClick={() => sectionClick('inicio')}>
-            <img src={ACOS_LOGO} alt="ACOS" width="92" height="71" />
-            <span>ASESORÍA Y CORRETAJE<br />DE SEGUROS</span>
+            <BrandLogo variant="negative" compact />
           </a>
           <button className="ap-icon-button ap-menu-toggle" ref={menuButton} aria-label={mobile ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={mobile} aria-controls="ap-navigation" onClick={() => setMobile(!mobile)}>{mobile ? <X /> : <Menu />}</button>
           <nav id="ap-navigation" aria-label="Navegación principal" className={'ap-nav' + (mobile ? ' ap-nav-open' : '')}>
@@ -207,10 +206,10 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
           <div className="ap-hero-shade" />
           <div className="ap-container ap-hero-content">
             <span className="ap-eyebrow ap-light-eyebrow"><span /> TUS PLANES MERECEN PROTECCIÓN</span>
-            <h1 id="ap-hero-title">Protegé lo que<br /><span>más importa.</span></h1>
+            <h1 id="ap-hero-title">Aseguramos<br /><span>tu futuro.</span></h1>
             <p>Tu familia, tu salud, tu vehículo, tu hogar.<br />Seguros para cada parte de tu vida,<br className="ap-desktop-break" /> con ACOS a tu lado.</p>
             <div className="ap-actions">
-              <a className="ap-button ap-button-lime" href={sectionHref('soluciones')} onClick={() => sectionClick('soluciones')}>Encontrá tu seguro <ArrowRight size={19} /></a>
+              <a className="ap-button ap-button-gold" href={sectionHref('soluciones')} onClick={() => sectionClick('soluciones')}>Encontrá tu seguro <ArrowRight size={19} /></a>
               <button className="ap-hero-consult" onClick={() => consult()}>Hablemos <MessageCircle size={18} /></button>
             </div>
             <div className="ap-hero-assurance"><ShieldCheck size={20} /><span>Asesoría personal. Decisiones con confianza.</span></div>
@@ -262,7 +261,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
             <h2 id="ap-business-title">Vos hacés<br />crecer tu negocio.<br /><span>Juntos, lo cuidamos.</span></h2>
             <p>Tu equipo, tus activos y tu operación. Te ayudamos a identificar lo que necesitás proteger para seguir construyendo.</p>
             <div className="ap-business-needs"><span><BriefcaseBusiness size={19} /> Tu operación</span><span><House size={19} /> Tus activos</span><span><UsersRound size={19} /> Tu equipo</span></div>
-            <button className="ap-button ap-button-lime" onClick={() => consult('empresas')}>Asesoría para mi empresa <ArrowUpRight size={18} /></button>
+            <button className="ap-button ap-button-gold" onClick={() => consult('empresas')}>Asesoría para mi empresa <ArrowUpRight size={18} /></button>
           </div>
         </section>
 
@@ -305,7 +304,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
       <footer className="ap-footer" inert={mobile}>
         <div className="ap-container">
           <div className="ap-footer-main">
-            <div className="ap-footer-brand"><a href="#/inicio" aria-label="ACOS, volver al inicio" onClick={() => sectionClick('inicio')}><img src={ACOS_LOGO} alt="ACOS" width="124" height="95" /></a><p>Asesoría y corretaje de seguros.<br />Cerca de vos. Cerca de lo que importa.</p><span><MapPin size={14} /> Nicaragua</span></div>
+            <div className="ap-footer-brand"><a href="#/inicio" aria-label="ACOS, volver al inicio" onClick={() => sectionClick('inicio')}><BrandLogo variant="primary" /></a><p>Correduría de seguros.<br />Aseguramos tu futuro.</p><span><MapPin size={14} /> Nicaragua</span></div>
             <div><h2>Conocé ACOS</h2><a href={sectionHref('nosotros')} onClick={() => sectionClick('nosotros')}>Nosotros</a><a href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Cómo trabajamos</a><a href={sectionHref('contacto')} onClick={() => sectionClick('contacto')}>Contacto</a><button onClick={() => setPrivacy(true)}>Aviso de privacidad</button></div>
             <div><h2>Nuestros seguros</h2>{publicSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
             <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button><button className="ap-footer-access" onClick={openWorkspace}><LockKeyhole size={14} /> Acceso empresarial</button></div>

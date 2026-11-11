@@ -10,7 +10,7 @@ const axePath = require.resolve(process.env.ACOS_QA_MODULES ? resolve(process.en
 const dist = resolve('dist');
 const output = resolve('public-site-qa');
 await mkdir(output, { recursive: true });
-const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.woff2': 'font/woff2' };
+const types = { '.html': 'text/html', '.css': 'text/css', '.js': 'text/javascript', '.webp': 'image/webp', '.png': 'image/png', '.svg': 'image/svg+xml', '.ttf': 'font/ttf', '.woff': 'font/woff', '.woff2': 'font/woff2' };
 const server = createServer(async (req, res) => {
   try {
     const file = resolve(dist, '.' + new URL(req.url, 'http://localhost').pathname.replace(/\/$/, '/index.html'));
@@ -32,15 +32,24 @@ const load = async (hash = '#/inicio') => {
   await page.locator('.acos-public').waitFor();
   await page.evaluate(() => { document.querySelectorAll('img').forEach(img => { img.loading = 'eager'; }); });
   await page.waitForFunction(() => Array.from(document.querySelectorAll('.acos-public img')).every(img => img.complete && img.naturalWidth > 0));
+  await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll('.acos-public img')).map(img => img.decode())));
   await page.evaluate(() => document.fonts.ready);
 };
 try {
   await load();
   await test('Photographs, six products and the commercial heading render', async () => {
-    assert.match(await page.locator('h1').innerText(), /Protegé lo que/);
+    assert.match(await page.locator('h1').innerText(), /Aseguramos/);
     assert.equal(await page.locator('.ap-product').count(), 6);
     assert.equal(await page.locator('.ap-shortcuts>button').count(), 6);
     assert.equal(await page.locator('a[href^="tel:"],a[href^="mailto:"],a[href*="wa.me"]').count(), 0);
+  });
+  await test('Official artwork, local fonts and navy brand identity are present', async () => {
+    assert.match(await page.locator('.ap-brand img').getAttribute('src'), /acos-horizontal-negative\.png$/);
+    assert.match(await page.locator('.ap-footer-brand img').getAttribute('src'), /acos-primary\.png$/);
+    assert.match(await page.locator('link[rel=icon]').getAttribute('href'), /acos-symbol\.png$/);
+    assert.equal(await page.locator('.ap-header').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
+    assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /ACOS Lunaquete/);
+    assert.equal(await page.evaluate(() => document.fonts.check('16px "ACOS Lunaquete"')), true);
   });
   for (const width of [1440, 1024, 768, 390, 320]) {
     await test('Responsive layout and accessibility at ' + width + ' px', async () => {

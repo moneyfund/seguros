@@ -1,5 +1,7 @@
 # ACOS — web pública comercial
 
+**Actualización de identidad:** la aplicación del manual oficial azul/dorado sustituye la paleta verde/plata y el logotipo de la versión inicial descrita abajo. Ver `BRAND_IMPLEMENTATION.md` para el estado actual y la verificación de las superficies públicas y privadas. El carrusel de aseguradoras añadido posteriormente se conserva.
+
 Web pública en #/inicio, sobre feature/acos-public-editorial-20261110 (PR #4), derivada de feature/acos-enterprise-core-sql-20261109.
 
 ## Experiencia implementada
