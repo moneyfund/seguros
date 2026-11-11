@@ -71,7 +71,14 @@ try {
     await check(profile + ': mobile menu opens and closes', async () => {
       await page.getByRole('button',{name:'Abrir menú',exact:true}).click();
       await page.locator('.sidebar-open').waitFor();
-      await page.screenshot({path:resolve(output,profile+'-mobile-menu.png')});
+      await page.waitForFunction(() => {
+        const menu = document.querySelector('.sidebar-open');
+        if (!menu) return false;
+        const rect = menu.getBoundingClientRect();
+        return rect.left >= -1 && rect.right <= innerWidth;
+      });
+      await page.screenshot({path:resolve(output,profile+'-mobile-menu.png'),animations:'disabled'});
+      await audit(profile+'-mobile-menu');
       await page.locator('.sidebar .mobile-close').click();
       assert.equal(await page.locator('.sidebar-open').count(),0);
     });
