@@ -174,14 +174,14 @@
 .acos-public .ap-workspace-preview{background:#fff;border:1px solid #bacbc0;border-radius:9px;box-shadow:0 16px 0 -8px #c9d6cd}
 .acos-public .ap-workspace-top{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid var(--ap-line);color:var(--ap-forest)}
 .acos-public .ap-workspace-top>span{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.5px}
-.acos-public .ap-workspace-top b{font-size:8px;font-weight:500;letter-spacing:1px;color:#758a7e}
+.acos-public .ap-workspace-top b{font-size:8px;font-weight:500;letter-spacing:1px;color:#52695b}
 .acos-public .ap-workspace-body{padding:22px}
 .acos-public .ap-preview-label{font-size:8px;font-weight:500;letter-spacing:1px;color:#5b7566}
 .acos-public .ap-workspace-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
 .acos-public .ap-workspace-items>span{display:flex;flex-direction:column;align-items:flex-start;gap:15px;background:#f1f5f1;border:1px solid #e0e8e0;border-radius:5px;padding:17px 13px;color:#376444}
 .acos-public .ap-workspace-items strong{font-size:9px;font-weight:500}
 .acos-public .ap-workspace-flow{display:flex;align-items:center;justify-content:space-between;margin-top:18px;font-size:9px;color:#597360}
-.acos-public .ap-workspace-body>small{display:block;font-size:7px;letter-spacing:.7px;color:#697c70;margin-top:24px}
+.acos-public .ap-workspace-body>small{display:block;font-size:7px;letter-spacing:.7px;color:#52695b;margin-top:24px}
 .acos-public .ap-faq-layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:85px}
 .acos-public .ap-faq-layout>div>p{font-size:12px;color:var(--ap-muted);margin:20px 0}
 .acos-public .ap-questions{border-top:1px solid var(--ap-line)}
