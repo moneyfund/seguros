@@ -6,6 +6,7 @@ import {
   ShieldCheck, UsersRound, X,
 } from 'lucide-react';
 import { ACOS_LOGO } from './acos-logo';
+import PublicInsurersCarousel from './PublicInsurersCarousel';
 import { publicContact, publicSolutions, type SolutionId } from './public-site-config';
 import './public-site.css';
 
@@ -251,6 +252,8 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
             <div className="ap-product-note"><ShieldCheck size={17} /><p>Te orientamos sobre estas categorías. La disponibilidad y las coberturas se revisan según tu caso y las condiciones de cada aseguradora.</p></div>
           </div>
         </section>
+
+        <PublicInsurersCarousel />
 
         <section className="ap-business" id="empresas" data-nav="empresas" tabIndex={-1} aria-labelledby="ap-business-title">
           <div className="ap-business-image"><img src="/images/negocio.webp" alt="Área de atención de una cafetería, con iluminación cálida y mobiliario de madera." width="1000" height="667" loading="lazy" decoding="async" /><span>DETRÁS DE CADA NEGOCIO,<br /><strong>hay un gran esfuerzo.</strong></span></div>
