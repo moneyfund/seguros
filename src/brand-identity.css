@@ -149,3 +149,5 @@ body{font-family:var(--brand-sans)}
 
 .acos-public section[id]{scroll-margin-top:156px}
 @media(max-width:580px){.acos-public section[id]{scroll-margin-top:112px}}
+
+.acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-champagne)}

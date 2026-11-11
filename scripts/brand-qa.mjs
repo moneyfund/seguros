@@ -58,7 +58,7 @@ try {
     await page.setViewportSize({width:1440,height:1000});
     await check(profile + ': navigation and opportunity form remain usable', async () => {
       await page.locator('.sidebar-nav').getByRole('button',{name:/^Oportunidades/}).click();
-      await page.getByRole('heading',{name:'Oportunidades',exact:true}).waitFor();
+      await page.getByRole('heading',{name:'Oportunidades',level:1,exact:true}).waitFor();
       assert.equal(await page.locator('tbody tr').count(),1);
       await page.getByRole('button',{name:'Nueva oportunidad'}).click();
       await page.getByRole('dialog').waitFor();
