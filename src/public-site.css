@@ -1,265 +1,507 @@
-@font-face{font-family:'ACOS Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url('/fonts/manrope-latin.woff2') format('woff2')}
-@font-face{font-family:'ACOS Editorial';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-latin.woff2') format('woff2')}
-@font-face{font-family:'ACOS Editorial';font-style:italic;font-weight:400;font-display:swap;src:url('/fonts/instrument-serif-italic-latin.woff2') format('woff2')}
+@font-face{font-family:'ACOS Poppins';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/poppins-400.woff2') format('woff2')}
+@font-face{font-family:'ACOS Poppins';font-style:normal;font-weight:500;font-display:swap;src:url('/fonts/poppins-500.woff2') format('woff2')}
+@font-face{font-family:'ACOS Poppins';font-style:normal;font-weight:600;font-display:swap;src:url('/fonts/poppins-600.woff2') format('woff2')}
+@font-face{font-family:'ACOS Poppins';font-style:normal;font-weight:700;font-display:swap;src:url('/fonts/poppins-700.woff2') format('woff2')}
 
-/* All public styles are scoped. Existing workspace styles and tokens stay intact. */
-.acos-public{--ap-forest:#143e30;--ap-ink:#253c30;--ap-paper:#fafbf7;--ap-soft:#f0f2eb;--ap-muted:#5e6d61;--ap-line:#d4dcd1;--ap-sans:'ACOS Sans',Arial,sans-serif;--ap-serif:'ACOS Editorial',Georgia,serif;background:var(--ap-paper);color:var(--ap-ink);font-family:var(--ap-sans);font-size:15px;line-height:1.65;isolation:isolate;overflow:clip}
+/* Deliberately scoped: the private workspace keeps its own styles and tokens. */
+.acos-public{--ap-forest:#143e30;--ap-deep:#082f25;--ap-green:#27674d;--ap-lime:#d1ed8b;--ap-ink:#213c32;--ap-muted:#617269;--ap-silver:#edf1ef;--ap-line:#dbe3df;--ap-sans:'ACOS Poppins',Arial,sans-serif;background:#fff;color:var(--ap-ink);font:400 14px/1.7 var(--ap-sans);isolation:isolate;overflow:clip}
 .acos-public *{box-sizing:border-box}
+.acos-public h1,.acos-public h2,.acos-public h3,.acos-public p{margin:0}
+.acos-public h1,.acos-public h2,.acos-public h3{font-family:var(--ap-sans);font-weight:600;color:inherit}
+.acos-public h2{font-size:clamp(30px,3.1vw,44px);line-height:1.24;letter-spacing:-1.7px}
+.acos-public h2>span{color:var(--ap-green)}
 .acos-public button,.acos-public input,.acos-public select,.acos-public textarea{font-family:var(--ap-sans)}
 .acos-public button,.acos-public a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .acos-public button{color:inherit}
-.acos-public button:focus-visible,.acos-public a:focus-visible,.acos-public select:focus-visible,.acos-public textarea:focus-visible,.acos-public [role=tabpanel]:focus-visible{outline:2px solid #51845c!important;outline-offset:5px}
+.acos-public button:focus-visible,.acos-public a:focus-visible,.acos-public select:focus-visible,.acos-public textarea:focus-visible,.acos-public summary:focus-visible{outline:3px solid #67a75b!important;outline-offset:4px}
 .acos-public section:focus,.acos-public main:focus{outline:none!important}
-.acos-public ::selection{background:#d0ddc7;color:#143e30}
-.acos-public h1,.acos-public h2,.acos-public h3,.acos-public p{margin:0}
-.acos-public h1,.acos-public h2,.acos-public h3{font-family:var(--ap-sans);font-weight:500}
-.acos-public h2{font-size:clamp(34px,3.6vw,54px);line-height:1.15;letter-spacing:-2.1px}
-.acos-public h2 em,.acos-public h1 em{font-family:var(--ap-serif);font-weight:400;letter-spacing:-.02em;font-size:1.19em;line-height:1.04}
-.acos-public img{display:block;max-width:100%;object-fit:contain}
+.acos-public img{display:block;max-width:100%}
 .acos-public svg{flex-shrink:0}
 .acos-public [hidden]{display:none!important}
+.acos-public ::selection{background:var(--ap-lime);color:var(--ap-deep)}
 .acos-public .ap-container{width:min(1280px,calc(100% - 112px));margin-inline:auto}
-.acos-public .ap-section{padding-block:112px}
+.acos-public .ap-section{padding-block:96px}
 .acos-public section[id]{scroll-margin-top:100px}
-.acos-public .ap-eyebrow,.acos-public .ap-section-marker{font-size:10px;letter-spacing:1.6px;line-height:1.5;font-weight:600}
-.acos-public .ap-eyebrow{display:inline-flex;align-items:center;gap:10px}
-.acos-public .ap-dot{width:6px;height:6px;border-radius:50%;background:#56834e;display:inline-block;flex-shrink:0}
-.acos-public .ap-section-marker{display:flex;justify-content:space-between;gap:24px;margin-bottom:48px;color:#526b54}
-.acos-public .ap-section-marker>span:last-child{font-size:9px;color:#667463;font-weight:500;text-align:right}
-.acos-public .ap-section-heading{display:flex;justify-content:space-between;align-items:end;gap:40px;margin-bottom:54px}
-.acos-public .ap-section-heading>p{max-width:325px;font-size:14px;line-height:1.9;color:var(--ap-muted)}
-.acos-public .ap-button{display:inline-flex;align-items:center;justify-content:space-between;gap:30px;min-height:54px;padding:15px 24px;border:1px solid var(--ap-forest);border-radius:2px;background:var(--ap-forest);color:#fafbf7;font-size:12px;font-weight:600;text-align:center;line-height:1.5;transition:background .25s,box-shadow .25s,transform .25s}
-.acos-public .ap-button:hover{background:#27543d;box-shadow:0 6px 16px #173e3012;transform:translateY(-2px)}
-.acos-public .ap-button svg,.acos-public .ap-link svg{transition:transform .25s}
-.acos-public .ap-button:hover svg,.acos-public .ap-link:hover svg{transform:translate(2px,-2px)}
-.acos-public .ap-button-light{background:#e5ebdc;color:#193d2c;border-color:#e5ebdc}
-.acos-public .ap-button-light:hover{background:#f5f7f0;color:#193d2c}
-.acos-public .ap-link{display:inline-flex;align-items:center;justify-content:space-between;gap:26px;min-height:44px;border:0;border-bottom:1px solid #98ab90;padding:6px 0;background:transparent;color:var(--ap-forest);font-size:12px;font-weight:600;text-align:left;line-height:1.5}
-.acos-public .ap-icon-button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--ap-line);background:transparent;color:var(--ap-forest);border-radius:2px;flex-shrink:0}
-.acos-public .ap-skip{position:fixed;top:12px;left:20px;z-index:1000;background:var(--ap-forest);color:#fff;padding:14px 22px;transform:translateY(-160%)}
+.acos-public .ap-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:10px;line-height:1.5;letter-spacing:1.65px;font-weight:600;color:var(--ap-green);margin-bottom:18px}
+.acos-public .ap-light-eyebrow{color:#d3e6da}
+.acos-public .ap-section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:50px;margin-bottom:38px}
+.acos-public .ap-button{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-height:52px;padding:15px 24px;border:1px solid var(--ap-forest);border-radius:6px;background:var(--ap-forest);color:white;font-size:12px;font-weight:600;line-height:1.5;text-align:center;transition:background .2s,transform .2s}
+.acos-public .ap-button:hover{background:#246349;transform:translateY(-2px)}
+.acos-public .ap-button svg,.acos-public .ap-text-link svg{transition:transform .2s}
+.acos-public .ap-button:hover svg,.acos-public .ap-text-link:hover svg{transform:translateX(3px)}
+.acos-public .ap-button-lime{color:var(--ap-deep);background:var(--ap-lime);border-color:var(--ap-lime)}
+.acos-public .ap-button-lime:hover{background:#e0f5af;border-color:#e0f5af}
+.acos-public .ap-text-link{display:inline-flex;align-items:center;gap:15px;min-height:44px;background:transparent;border:0;border-bottom:1px solid #91b09f;padding:7px 0;color:var(--ap-forest);font-size:12px;font-weight:600;text-align:left}
+.acos-public .ap-icon-button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--ap-line);background:white;color:var(--ap-forest);border-radius:6px;flex-shrink:0}
+.acos-public .ap-skip{position:fixed;top:12px;left:20px;z-index:1000;background:var(--ap-forest);color:white;padding:14px 22px;transform:translateY(-180%)}
 .acos-public .ap-skip:focus{transform:translateY(0)}
 
-/* Editorial navigation */
-.acos-public .ap-header{position:fixed;top:0;inset-inline:0;z-index:50;background:#fafbf700;border-bottom:1px solid transparent;transition:background .35s,border-color .35s,box-shadow .35s}
-.acos-public .ap-header-scrolled{background:#fafbf7f5;border-color:#d4dcd1;box-shadow:0 3px 20px #18352704}
-.acos-public .ap-navbar{height:104px;display:flex;align-items:center;justify-content:space-between;gap:20px;transition:height .35s}
-.acos-public .ap-header-scrolled .ap-navbar{height:82px}
-.acos-public .ap-brand{display:flex;align-items:center;gap:17px;flex-shrink:0}
-.acos-public .ap-brand img{width:87px;height:67px}
-.acos-public .ap-brand>span{font-size:8px;letter-spacing:1.2px;color:#546650;line-height:1.7;border-left:1px solid var(--ap-line);padding-left:16px}
-.acos-public .ap-nav{display:flex;align-items:center;gap:23px}
-.acos-public .ap-nav>a{display:flex;align-items:center;min-height:44px;font-size:11px;white-space:nowrap;position:relative;color:#5a685c}
-.acos-public .ap-nav>a::after{content:'';position:absolute;bottom:5px;left:0;right:0;height:1px;background:var(--ap-forest);transform:scaleX(0);transform-origin:left;transition:transform .3s}
-.acos-public .ap-nav>a:hover::after,.acos-public .ap-nav>a[aria-current]::after{transform:scaleX(1)}
+/* A familiar commercial navigation, with a distinct staff entrance. */
+.acos-public .ap-topbar{background:var(--ap-forest);color:#e2ece6;font-size:10px}
+.acos-public .ap-topbar>.ap-container{display:flex;align-items:center;justify-content:space-between;min-height:33px}
+.acos-public .ap-topbar span,.acos-public .ap-topbar button{display:inline-flex;align-items:center;gap:8px}
+.acos-public .ap-topbar button{border:0;background:transparent;color:#e2ece6;font-size:10px;padding:7px 0;min-height:33px}
+.acos-public .ap-topbar button:hover{color:var(--ap-lime)}
+.acos-public .ap-header{position:sticky;top:0;z-index:50;background:#fff;transition:box-shadow .25s}
+.acos-public .ap-header-scrolled{box-shadow:0 2px 16px #133d3012}
+.acos-public .ap-navbar{height:92px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.acos-public .ap-brand{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.acos-public .ap-brand img{width:92px;height:71px;object-fit:contain}
+.acos-public .ap-brand>span{font-size:7.5px;letter-spacing:1px;line-height:1.8;color:#5e7167;border-left:1px solid #d4ddd7;padding-left:14px}
+.acos-public .ap-nav{display:flex;align-items:center;gap:25px}
+.acos-public .ap-nav>a{position:relative;display:flex;align-items:center;min-height:48px;font-size:11px;font-weight:500;color:#445a4f;white-space:nowrap}
+.acos-public .ap-nav>a:after{content:'';position:absolute;bottom:3px;left:0;right:0;height:2px;background:#327951;transform:scaleX(0);transform-origin:left;transition:transform .2s}
+.acos-public .ap-nav>a:hover:after,.acos-public .ap-nav>a[aria-current]:after{transform:scaleX(1)}
 .acos-public .ap-nav>a[aria-current]{color:var(--ap-forest)}
-.acos-public .ap-enterprise{display:flex;align-items:center;gap:8px;font-size:10px;min-height:42px;padding:10px 14px;border:1px solid #b9c6b7;border-radius:2px;background:transparent;color:var(--ap-forest);white-space:nowrap;transition:background .25s}
-.acos-public .ap-enterprise:hover{background:#e8ede2}
-.acos-public .ap-mobile-contact,.acos-public .ap-menu-toggle{display:none}
+.acos-public .ap-nav-cta{font-size:10px;padding:12px 17px;gap:12px;min-height:44px}
+.acos-public .ap-menu-toggle,.acos-public .ap-mobile-enterprise{display:none}
 
-/* A central architectural composition, with readable editorial annotations. */
-.acos-public .ap-hero{padding-top:155px;background:#f3f5ed;position:relative}
-.acos-public .ap-hero-content{text-align:center;position:relative;z-index:2}
-.acos-public .ap-hero-eyebrow{font-size:10px;color:#526c52;letter-spacing:1.8px;margin-bottom:23px}
-.acos-public .ap-hero h1{font-size:clamp(58px,6.35vw,92px);line-height:1.03;font-weight:500;letter-spacing:-5px;color:#233b2b}
-.acos-public .ap-hero h1 em{font-size:1.23em;line-height:1.02;display:inline-block;color:#2f5940;letter-spacing:-3.6px}
-.acos-public .ap-hero-content>p{font-size:13px;line-height:1.85;color:#5a6e5a;margin-top:26px}
-.acos-public .ap-actions{display:flex;align-items:center;justify-content:center;gap:31px;margin-top:26px}
-.acos-public .ap-mobile-break{display:none}
-.acos-public .ap-hero-stage{position:relative;max-width:1120px;margin-top:35px}
-.acos-public .ap-architecture{width:100%;height:auto;display:block;max-height:370px;overflow:visible}
-.acos-public .ap-art-caption{position:absolute;font-size:13px;line-height:1.6;font-weight:500;color:#4b634b;z-index:2}
-.acos-public .ap-art-caption>span{display:block;font-size:8px;letter-spacing:1.4px;margin-bottom:10px;color:#5f735d}
-.acos-public .ap-art-caption-left{left:2%;top:44%}
-.acos-public .ap-art-caption-right{right:0;top:19%;text-align:left}
-.acos-public .ap-hero-foot{display:flex;align-items:center;justify-content:space-between;min-height:74px;border-top:1px solid #ced8c8;font-size:8px;letter-spacing:1.5px;color:#5a7054}
-.acos-public .ap-hero-foot>span:nth-child(2){display:flex;align-items:center;gap:16px}
-.acos-public .ap-hero-foot i{width:3px;height:3px;border-radius:100%;background:#6e8367}
-.acos-public .ap-hero-foot>a{width:44px;height:44px;border:1px solid #becab7;border-radius:50%;display:grid;place-items:center;transition:background .25s}
-.acos-public .ap-hero-foot>a:hover{background:#e1e8d8}
+/* Real photography and a high-contrast, product-first introduction. */
+.acos-public .ap-hero{position:relative;min-height:590px;background:#092e24;color:#fff;overflow:hidden}
+.acos-public .ap-hero-photo{position:absolute;inset:0 0 0 auto;width:78%;height:100%;object-fit:cover;object-position:center 40%}
+.acos-public .ap-hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,#082f25 0%,#082f25f2 23%,#082f25a6 43%,#082f2510 66%,#082f2508 100%)}
+.acos-public .ap-hero-content{position:relative;padding-block:68px 100px}
+.acos-public .ap-hero .ap-eyebrow{font-size:9px;letter-spacing:1.8px;margin-bottom:23px}
+.acos-public .ap-hero .ap-eyebrow>span{width:23px;height:2px;background:var(--ap-lime)}
+.acos-public .ap-hero h1{font-size:clamp(50px,4.75vw,70px);line-height:1.12;font-weight:600;letter-spacing:-3.3px;max-width:650px;color:#fff}
+.acos-public .ap-hero h1>span{color:var(--ap-lime)}
+.acos-public .ap-hero-content>p{font-size:14px;line-height:1.9;margin-top:24px;color:#e4ece7;max-width:440px}
+.acos-public .ap-actions{display:flex;align-items:center;gap:29px;margin-top:30px}
+.acos-public .ap-hero-consult{display:inline-flex;align-items:center;gap:14px;min-height:48px;padding:10px 0;background:transparent;border:0;border-bottom:1px solid #ffffff80;color:#fff;font-size:12px;font-weight:500}
+.acos-public .ap-hero-consult:hover{color:var(--ap-lime);border-color:var(--ap-lime)}
+.acos-public .ap-hero-assurance{display:flex;align-items:center;gap:10px;margin-top:32px;color:#d4e2da;font-size:10px}
+.acos-public .ap-hero-assurance svg{color:var(--ap-lime)}
+.acos-public .ap-hero-caption{position:absolute;right:max(56px,calc((100% - 1280px)/2));bottom:95px;display:flex;flex-direction:column;text-align:right;color:#fff;text-shadow:0 1px 7px #0008}
+.acos-public .ap-hero-caption>span{font-size:9px;letter-spacing:2px}
+.acos-public .ap-hero-caption>strong{font-size:20px;font-weight:500;letter-spacing:-.5px;margin-top:5px}
 
-/* Company introduction */
-.acos-public .ap-about-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:90px}
-.acos-public .ap-about-layout h2{font-size:clamp(34px,3.1vw,46px);line-height:1.3;letter-spacing:-1.7px}
-.acos-public .ap-about-copy>p:first-child{font-size:18px;line-height:1.7;margin-bottom:20px;color:#344e3b}
-.acos-public .ap-about-copy>p+p{color:var(--ap-muted);font-size:13px;line-height:1.95}
-.acos-public .ap-about-copy .ap-link{margin-top:22px}
-.acos-public .ap-principles{display:grid;grid-template-columns:repeat(3,1fr);gap:36px;margin-top:76px}
-.acos-public .ap-principles>div{position:relative;border-top:1px solid var(--ap-line);padding-top:25px}
-.acos-public .ap-principles>div>span{position:absolute;top:32px;right:0;font-size:10px;color:#61735a}
-.acos-public .ap-principles h3{font-family:var(--ap-serif);font-size:36px;line-height:1.2;margin-bottom:10px}
-.acos-public .ap-principles p{font-size:12px;color:#5e6d61}
+/* The service dock makes every category reachable in one click. */
+.acos-public .ap-shortcut-wrap{position:relative;z-index:3;margin-top:-48px}
+.acos-public .ap-shortcuts{display:grid;grid-template-columns:1.5fr repeat(6,1fr);min-height:130px;background:#fff;border:1px solid #e0e6e2;border-radius:10px;box-shadow:0 12px 30px #1d43300a;overflow:hidden}
+.acos-public .ap-shortcut-intro{display:flex;flex-direction:column;justify-content:center;padding:24px 28px;background:#f0f4f0}
+.acos-public .ap-shortcut-intro>span{font-size:8px;font-weight:600;letter-spacing:1px;color:#56715e;margin-bottom:7px}
+.acos-public .ap-shortcut-intro>strong{font-size:20px;line-height:1.25;letter-spacing:-.6px;font-weight:600}
+.acos-public .ap-shortcuts>button{position:relative;background:white;border:0;border-left:1px solid #e6ece8;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:17px 9px;color:var(--ap-forest);transition:background .2s}
+.acos-public .ap-shortcuts>button>span{font-size:11px;font-weight:500}
+.acos-public .ap-shortcuts>button>svg:last-child{position:absolute;right:12px;top:13px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s,transform .2s}
+.acos-public .ap-shortcuts>button:hover,.acos-public .ap-shortcuts>button:focus-visible{background:#f1f7e8}
+.acos-public .ap-shortcuts>button:hover>svg:last-child{opacity:1;transform:translate(0)}
 
-/* Master-detail solutions: six distinct drawings, one accessible selection. */
-.acos-public .ap-solutions{background:var(--ap-soft)}
-.acos-public .ap-solution-layout{display:grid;grid-template-columns:minmax(270px,.72fr) minmax(0,1.28fr);gap:65px}
-.acos-public .ap-solution-tabs{display:flex;flex-direction:column;border-top:1px solid #b9c6b5}
-.acos-public .ap-solution-tabs>button{border:0;border-bottom:1px solid #c8d1c2;min-height:77px;display:flex;align-items:center;gap:20px;padding:17px 16px 17px 0;text-align:left;background:transparent;color:#667661;transition:background .25s,color .25s,padding .25s}
-.acos-public .ap-solution-tabs>button>span{font-size:10px;align-self:center}
-.acos-public .ap-solution-tabs strong{flex:1;font-size:17px;font-weight:500;line-height:1.45}
-.acos-public .ap-solution-tabs>button>svg{opacity:.55;transition:transform .25s}
-.acos-public .ap-solution-tabs>button:hover{color:#143e30;padding-left:12px}
-.acos-public .ap-solution-tabs>button[aria-selected=true]{background:#143e30;color:#fafbf7;padding-left:20px}
-.acos-public .ap-solution-tabs>button[aria-selected=true]>svg{opacity:1;transform:rotate(45deg)}
-.acos-public .ap-solution-panel{display:grid;grid-template-columns:.9fr 1.1fr;min-height:462px;background:#fafbf7;border:1px solid #d4dccf}
-.acos-public .ap-solution-visual{display:flex;flex-direction:column;position:relative;justify-content:space-between;background:#e1e8d9;overflow:hidden;padding:25px 20px;color:#32563a;min-width:0}
-.acos-public .ap-solution-visual>span{font-size:9px;letter-spacing:1.5px}
-.acos-public .ap-solution-drawing{width:150%;margin-left:-25%;align-self:center;margin-block:auto}
-.acos-public .ap-solution-visual>em{font:italic 52px/1 var(--ap-serif);letter-spacing:-1px;padding-bottom:10px}
-.acos-public .ap-solution-content{padding:35px 27px;display:flex;flex-direction:column;align-items:start}
-.acos-public .ap-solution-content h3{font-size:24px;line-height:1.35;letter-spacing:-.8px;margin-bottom:18px}
-.acos-public .ap-solution-content p{font-size:12px;line-height:1.85;color:var(--ap-muted)}
-.acos-public .ap-solution-content ul{padding:0;margin:22px 0 28px;list-style:none}
-.acos-public .ap-solution-content li{display:flex;gap:9px;align-items:center;font-size:10px;margin-block:9px;line-height:1.6;color:#4e624c}
-.acos-public .ap-solution-content .ap-link{margin-top:auto;font-size:11px;width:100%;gap:8px}
-.acos-public .ap-disclosure{margin-top:30px;font-size:10px;line-height:1.8;color:#5d6e56;max-width:920px}
-.acos-public .ap-disclosure>span{font-size:8px;font-weight:700;letter-spacing:1px;margin-right:12px}
+/* An asymmetric catalogue. */
+.acos-public .ap-products{padding-top:73px}
+.acos-public .ap-products-intro{max-width:368px;flex-shrink:0}
+.acos-public .ap-products-intro>p{font-size:12px;line-height:1.9;color:var(--ap-muted);margin-bottom:21px}
+.acos-public .ap-filters{display:inline-flex;gap:4px;padding:4px;background:#eff3f0;border-radius:6px}
+.acos-public .ap-filters>button{border:0;background:transparent;padding:10px 15px;min-height:41px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;color:#52665a;transition:background .2s}
+.acos-public .ap-filters>button[aria-pressed=true]{background:var(--ap-forest);color:white}
+.acos-public .ap-filters>button:hover:not([aria-pressed=true]){background:#e0e9e2}
+.acos-public .ap-product-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+.acos-public .ap-product{grid-column:span 3;position:relative;min-height:345px;border-radius:10px;overflow:hidden;background:var(--ap-forest);color:white;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;padding:27px}
+.acos-public .ap-product-vida{grid-column:span 6}
+.acos-public .ap-product-hogar{grid-column:span 4}
+.acos-public .ap-product-empresas{grid-column:span 5}
+.acos-public .ap-product-asesoria{grid-column:span 3;background:#e2edcf;color:var(--ap-forest)}
+.acos-public .ap-product>img{position:absolute;z-index:-2;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.acos-public .ap-product:hover>img{transform:scale(1.035)}
+.acos-public .ap-product-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,#071d1855 0%,#071d1812 24%,#071d18a3 62%,#071d18f2 100%)}
+.acos-public .ap-product-asesoria .ap-product-shade{display:none}
+.acos-public .ap-product-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.acos-public .ap-product-top>span:last-child{font-size:8px;letter-spacing:1.2px;font-weight:500}
+.acos-public .ap-product-icon{display:grid;place-items:center;width:43px;height:43px;background:#ffffffed;color:var(--ap-forest);border-radius:50%}
+.acos-public .ap-product-asesoria .ap-product-icon{background:var(--ap-forest);color:#e3efce;width:55px;height:55px}
+.acos-public .ap-product h3{font-size:25px;line-height:1.25;letter-spacing:-.8px;font-weight:600;max-width:400px}
+.acos-public .ap-product-vida h3{font-size:34px}
+.acos-public .ap-product p{font-size:11px;line-height:1.7;color:#ecf2ed;margin-top:10px;max-width:320px}
+.acos-public .ap-product-asesoria p{color:#3d593b}
+.acos-public .ap-product button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:9px;min-height:43px;padding:14px 0 0;border:0;border-top:1px solid #ffffff50;background:transparent;color:#fff;font-size:10px;font-weight:500;text-align:left;margin-top:20px}
+.acos-public .ap-product button:hover{color:var(--ap-lime)}
+.acos-public .ap-product-asesoria button{color:var(--ap-forest);border-color:#41664140}
+.acos-public .ap-product-asesoria button:hover{color:#426125}
+.acos-public .ap-product-hogar,.acos-public .ap-product-empresas,.acos-public .ap-product-asesoria{min-height:290px}
+.acos-public .ap-product-vehiculos>img{object-position:61% center}
+.acos-public .ap-product-salud>img{object-position:52% center}
+.acos-public .ap-grid-filtered .ap-product{grid-column:span 4;min-height:310px}
+.acos-public .ap-grid-filtered .ap-product-vida{grid-column:span 8}
+.acos-public .ap-grid-filtered .ap-product-empresas{grid-column:span 8}
+.acos-public .ap-product-note{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:26px;color:#627267}
+.acos-public .ap-product-note p{font-size:10px;line-height:1.8}
 
-/* Enterprise interlude */
-.acos-public .ap-business{background:#163e2e;color:#f3f5ed;padding-block:90px;position:relative}
-.acos-public .ap-business-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:100px;align-items:center}
-.acos-public .ap-business-copy>.ap-eyebrow{color:#c2cdb6;font-size:9px}
-.acos-public .ap-business h2{margin-top:29px;font-size:clamp(36px,3.5vw,51px);line-height:1.2}
-.acos-public .ap-business h2 em{color:#c2cfaf}
-.acos-public .ap-business-copy>p{color:#c1cdbd;font-size:13px;line-height:1.95;max-width:420px;margin:26px 0 32px}
-.acos-public .ap-business-map{position:relative;align-self:stretch;min-height:370px;border-left:1px solid #6e8e6845;padding-left:55px;text-align:center}
-.acos-public .ap-map-label{font-size:9px;letter-spacing:1.5px;display:block;color:#c0cbb3}
-.acos-public .ap-business-orbits{position:relative;height:235px;margin-top:20px}
-.acos-public .ap-business-orbits i{display:block;position:absolute;left:50%;top:50%;border:1px solid #a4b79466;border-radius:50%;width:172px;height:172px;transform:translate(-50%,-50%)}
-.acos-public .ap-business-orbits i:nth-child(1){transform:translate(-67%,-60%)}
-.acos-public .ap-business-orbits i:nth-child(2){transform:translate(-33%,-60%)}
-.acos-public .ap-business-orbits i:nth-child(3){transform:translate(-50%,-32%)}
-.acos-public .ap-business-orbits span{position:absolute;inset:0;display:grid;place-items:center;font:26px var(--ap-serif);letter-spacing:3px;color:#d7dfcd}
-.acos-public .ap-business-axis{display:flex;justify-content:space-between;border-top:1px solid #a4b79444;padding-top:16px;color:#d0d9c7;font-size:11px;gap:10px}
-.acos-public .ap-business-map>p{font-size:11px;color:#b8c7af;line-height:1.9;margin-top:26px}
-.acos-public .ap-business-map>p strong{font-weight:500;color:#e0e6d7}
+/* A full-bleed business feature, with warm photography. */
+.acos-public .ap-business{display:grid;grid-template-columns:1fr 1fr;background:var(--ap-forest);color:#fff;min-height:570px}
+.acos-public .ap-business-image{position:relative;min-height:100%;overflow:hidden}
+.acos-public .ap-business-image>img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center 52%}
+.acos-public .ap-business-image:after{content:'';position:absolute;inset:50% 0 0;background:linear-gradient(0deg,#1b241dc9,transparent)}
+.acos-public .ap-business-image>span{position:absolute;bottom:55px;left:max(56px,calc((200% - 1280px)/2));z-index:1;font-size:9px;letter-spacing:1.5px;color:#fff}
+.acos-public .ap-business-image strong{font-size:25px;letter-spacing:-.7px;font-weight:500}
+.acos-public .ap-business-copy{padding:65px max(56px,calc((200% - 1280px)/2)) 65px 65px}
+.acos-public .ap-business h2{font-size:clamp(32px,3.05vw,44px);line-height:1.24;color:#fff}
+.acos-public .ap-business h2>span{color:var(--ap-lime)}
+.acos-public .ap-business-copy>p{font-size:12px;line-height:1.9;color:#d4e2d9;max-width:400px;margin-top:24px}
+.acos-public .ap-business-needs{display:flex;gap:22px;margin-block:28px 32px;padding-block:20px;border-top:1px solid #ffffff2b;border-bottom:1px solid #ffffff2b}
+.acos-public .ap-business-needs>span{display:flex;align-items:center;gap:8px;font-size:10px;white-space:nowrap;color:#e1eae3}
+.acos-public .ap-business-needs svg{color:#c5dda9}
 
-/* Continuous five-stage journey */
-.acos-public .ap-journey{padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,1fr);margin:62px 0 0}
-.acos-public .ap-journey li{border-top:1px solid #a7b79d;padding:0 25px 0 0;position:relative}
-.acos-public .ap-journey li+li{padding-left:22px}
-.acos-public .ap-journey-top{display:flex;justify-content:space-between;align-items:center;margin-top:-17px;margin-bottom:28px}
-.acos-public .ap-journey-top>span{background:var(--ap-paper);padding:0 10px 0 0;font:31px var(--ap-serif);color:#486541}
-.acos-public .ap-journey-top>svg{background:var(--ap-paper);color:#637d5b;margin-top:1px;width:27px;padding-left:10px}
-.acos-public .ap-journey li:last-child svg{visibility:hidden}
-.acos-public .ap-journey h3{font-size:17px;line-height:1.6;letter-spacing:-.4px}
-.acos-public .ap-journey h3>span{color:#66775e}
-.acos-public .ap-journey li>p{font-size:11px;line-height:1.9;color:#60705b;margin-top:15px}
-.acos-public .ap-care-note{border-top:1px solid var(--ap-line);margin-top:55px;padding-top:25px;display:flex;align-items:center;gap:18px;color:#5c7254}
-.acos-public .ap-care-note p{font-size:11px;line-height:1.8}.acos-public .ap-care-note strong{font-weight:500;color:#314e35}
+/* People, service and a practical next step. */
+.acos-public .ap-about-layout{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
+.acos-public .ap-about-visual{position:relative;height:510px;margin-right:20px}
+.acos-public .ap-about-visual>img{width:100%;height:100%;object-fit:cover;object-position:53% center;border-radius:10px}
+.acos-public .ap-about-label{position:absolute;bottom:28px;right:-35px;left:35px;background:#e6eddf;border:7px solid white;padding:23px 20px;display:flex;align-items:center;gap:17px;border-radius:8px}
+.acos-public .ap-about-label strong{display:block;font-size:16px;letter-spacing:-.4px;font-weight:600}
+.acos-public .ap-about-label span{display:block;font-size:10px;margin-top:3px;color:#53664f}
+.acos-public .ap-about-copy>p{font-size:12px;line-height:1.95;color:var(--ap-muted);margin-top:22px;max-width:440px}
+.acos-public .ap-about-benefits{padding:0;list-style:none;margin:26px 0 15px;display:grid;gap:18px}
+.acos-public .ap-about-benefits>li{display:flex;align-items:flex-start;gap:12px}
+.acos-public .ap-about-benefits>li>svg{box-sizing:content-box;padding:6px;background:#eaf2df;border-radius:50%;color:#426d35}
+.acos-public .ap-about-benefits strong{font-size:12px;font-weight:600;display:block}
+.acos-public .ap-about-benefits span{font-size:11px;color:var(--ap-muted);display:block;margin-top:2px}
+.acos-public .ap-process{background:#f1f4f1}
+.acos-public .ap-journey{padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:28px;margin:50px 0 0}
+.acos-public .ap-step-number{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;position:relative}
+.acos-public .ap-step-number:after{content:'';height:1px;position:absolute;left:65px;right:27px;background:#c7d7c9}
+.acos-public .ap-step-number>span{width:47px;height:47px;display:grid;place-items:center;border:1px solid #b8cdbb;border-radius:50%;font-size:15px;color:var(--ap-forest)}
+.acos-public .ap-step-number>svg{color:#80987d}
+.acos-public .ap-journey li:first-child .ap-step-number>span{background:var(--ap-forest);color:var(--ap-lime);border-color:var(--ap-forest)}
+.acos-public .ap-journey li:last-child .ap-step-number>svg,.acos-public .ap-journey li:last-child .ap-step-number:after{visibility:hidden}
+.acos-public .ap-journey h3{font-size:14px;line-height:1.5;margin-bottom:10px;letter-spacing:-.4px}
+.acos-public .ap-journey p{font-size:11px;line-height:1.85;color:var(--ap-muted);max-width:195px}
+.acos-public .ap-digital{padding-block:70px;background:#e5ebe8}
+.acos-public .ap-digital-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:80px;align-items:center}
+.acos-public .ap-digital .ap-eyebrow{font-size:9px;gap:14px}
+.acos-public .ap-development{font-size:8px;color:#52665b;background:#f8faf9;padding:4px 8px;border:1px solid #bccbc1;border-radius:3px;letter-spacing:.4px}
+.acos-public .ap-digital h2{font-size:30px;letter-spacing:-1px}
+.acos-public .ap-digital p{font-size:12px;line-height:1.9;color:#586e61;max-width:450px;margin-top:20px}
+.acos-public .ap-digital-copy>small{display:block;font-size:10px;color:#52665b;margin-top:16px}
+.acos-public .ap-workspace-preview{background:#fff;border:1px solid #bacbc0;border-radius:9px;box-shadow:0 16px 0 -8px #c9d6cd}
+.acos-public .ap-workspace-top{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid var(--ap-line);color:var(--ap-forest)}
+.acos-public .ap-workspace-top>span{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.acos-public .ap-workspace-top b{font-size:8px;font-weight:500;letter-spacing:1px;color:#758a7e}
+.acos-public .ap-workspace-body{padding:22px}
+.acos-public .ap-preview-label{font-size:8px;font-weight:500;letter-spacing:1px;color:#5b7566}
+.acos-public .ap-workspace-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
+.acos-public .ap-workspace-items>span{display:flex;flex-direction:column;align-items:flex-start;gap:15px;background:#f1f5f1;border:1px solid #e0e8e0;border-radius:5px;padding:17px 13px;color:#376444}
+.acos-public .ap-workspace-items strong{font-size:9px;font-weight:500}
+.acos-public .ap-workspace-flow{display:flex;align-items:center;justify-content:space-between;margin-top:18px;font-size:9px;color:#597360}
+.acos-public .ap-workspace-body>small{display:block;font-size:7px;letter-spacing:.7px;color:#697c70;margin-top:24px}
+.acos-public .ap-faq-layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:85px}
+.acos-public .ap-faq-layout>div>p{font-size:12px;color:var(--ap-muted);margin:20px 0}
+.acos-public .ap-questions{border-top:1px solid var(--ap-line)}
+.acos-public .ap-questions details{border-bottom:1px solid var(--ap-line)}
+.acos-public .ap-questions summary{display:flex;align-items:center;justify-content:space-between;gap:24px;cursor:pointer;list-style:none;padding:24px 0;font-size:13px;font-weight:500;min-height:70px}
+.acos-public .ap-questions summary::-webkit-details-marker{display:none}
+.acos-public .ap-questions summary svg{transition:transform .2s}
+.acos-public .ap-questions details[open] summary svg{transform:rotate(180deg)}
+.acos-public .ap-questions details[open] summary{color:var(--ap-green)}
+.acos-public .ap-questions details>p{font-size:12px;line-height:1.95;color:var(--ap-muted);padding:0 34px 24px 0}
+.acos-public .ap-contact{background:var(--ap-lime);padding-block:66px;border-bottom:1px solid #a8c36f}
+.acos-public .ap-contact-layout{display:flex;align-items:center;justify-content:space-between;gap:50px}
+.acos-public .ap-contact .ap-eyebrow{font-size:9px;letter-spacing:1.3px;color:#405e30}
+.acos-public .ap-contact h2{font-size:38px}
+.acos-public .ap-contact h2>span{color:#34603d}
+.acos-public .ap-contact-layout>div:last-child{flex-shrink:0}
+.acos-public .ap-contact-layout>div:last-child>p{font-size:10px;margin-top:13px;color:#3d5930}
+.acos-public address{display:grid;gap:9px;margin-top:16px;font-style:normal;font-size:11px}
+.acos-public address a{display:flex;align-items:center;gap:9px}
 
-/* Clearly labelled conceptual UI, never customer records. */
-.acos-public .ap-digital{background:#e9eee3}
-.acos-public .ap-digital-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:90px;align-items:center}
-.acos-public .ap-digital h2{font-size:clamp(34px,3.2vw,48px);margin-top:25px}
-.acos-public .ap-digital-copy>p{color:#5c6e55;font-size:12px;line-height:1.95;max-width:390px;margin-top:25px}
-.acos-public .ap-digital-copy>p+p{margin-top:13px}
-.acos-public .ap-development{display:inline-flex;align-items:center;gap:8px;border:1px solid #aebe9f;color:#375a35;padding:7px 11px;font-size:8px;letter-spacing:1.1px;margin-top:28px}
-.acos-public .ap-digital-copy>small{display:block;color:#5d6f55;font-size:10px;margin-top:12px}
-.acos-public .ap-workspace-scene{transform:perspective(1200px) rotateY(-5deg) rotateX(2deg);position:relative;padding:24px 0}
-.acos-public .ap-workspace-scene::before{content:'';position:absolute;inset:50px -17px 10px 17px;border:1px solid #afbea2;z-index:-1}
-.acos-public .ap-workspace-caption{display:flex;justify-content:space-between;font-size:8px;letter-spacing:1px;color:#4f6747;margin-bottom:13px;gap:12px}
-.acos-public .ap-workspace-preview{display:flex;background:#f8faf5;border:1px solid #bdcbb3;box-shadow:0 25px 50px -35px #27452a66;min-height:340px}
-.acos-public .ap-workspace-rail{display:flex;flex-direction:column;align-items:center;gap:25px;background:#eff3e9;border-right:1px solid #dde5d4;padding:17px 14px;color:#5d7754}
-.acos-public .ap-workspace-rail img{margin-bottom:8px}
-.acos-public .ap-workspace-rail svg:last-child{margin-top:auto;margin-bottom:10px}
-.acos-public .ap-workspace-content{flex:1;min-width:0;padding:24px}
-.acos-public .ap-workspace-toolbar{display:flex;justify-content:space-between;color:#607c55;font-size:7px;letter-spacing:1.1px;border-bottom:1px solid #dae2d2;padding-bottom:16px}
-.acos-public .ap-workspace-content h3{font-size:24px;letter-spacing:-1px;margin-top:22px}
-.acos-public .ap-workspace-content>p{font-size:9px;color:#607356;margin-top:6px}
-.acos-public .ap-workspace-folders{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-top:24px}
-.acos-public .ap-workspace-folders>div{border:1px solid #dde5d7;padding:16px;color:#57734c;display:flex;flex-direction:column;gap:8px}
-.acos-public .ap-workspace-folders strong{font-size:11px;font-weight:600;color:#36532f}
-.acos-public .ap-workspace-folders span{font-size:8px;color:#627956}
-.acos-public .ap-workspace-flow{display:flex;align-items:center;justify-content:space-between;gap:6px;background:#e8eedf;padding:12px 9px;color:#526d45;font-size:8px;margin-top:18px}
-.acos-public .ap-workspace-empty{display:flex;gap:7px;margin-block:14px}
-.acos-public .ap-workspace-empty>span{height:3px;background:#dbe4d1;width:32%}
-.acos-public .ap-workspace-empty>span:last-child{width:16%}
-.acos-public .ap-workspace-note{font-size:6px;letter-spacing:.9px;color:#5d7450}
+/* Brand artwork always keeps its original colors and proportions. */
+.acos-public .ap-footer{background:#f7f9f6;color:#3e5547}
+.acos-public .ap-footer-main{display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1.1fr;gap:45px;padding-block:55px 42px}
+.acos-public .ap-footer-brand img{width:124px;height:95px;object-fit:contain;margin-top:-16px;margin-bottom:11px}
+.acos-public .ap-footer-brand p,.acos-public .ap-footer-help p{font-size:10px;line-height:1.9;color:#617166}
+.acos-public .ap-footer-brand>span{display:flex;align-items:center;gap:6px;font-size:10px;margin-top:15px}
+.acos-public .ap-footer-main h2{font-size:11px;line-height:1.6;letter-spacing:0;font-weight:600;margin-bottom:17px;color:#304b39}
+.acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{display:flex;align-items:center;gap:8px;width:fit-content;border:0;background:transparent;padding:5px 0;min-height:32px;font-size:10px;color:#617166;text-align:left}
+.acos-public .ap-footer-main>div>a:hover,.acos-public .ap-footer-main>div>button:hover{color:var(--ap-forest);text-decoration:underline}
+.acos-public .ap-footer-help .ap-text-link{font-weight:600;color:var(--ap-forest);margin-top:10px}
+.acos-public .ap-footer-help .ap-footer-access{border:1px solid #d2ddd3;border-radius:4px;padding:10px 13px;margin-top:18px;font-size:9px}
+.acos-public .ap-footer-bottom{padding-block:20px;display:flex;justify-content:space-between;align-items:center;gap:25px;border-top:1px solid #d9e1d9;font-size:9px;color:#66766a}
+.acos-public .ap-footer-bottom strong{font-size:10px;font-weight:600;letter-spacing:1px;color:#3e5847}
+.acos-public .ap-footer-bottom a{display:flex;align-items:center;gap:8px;min-height:32px}
+.acos-public .ap-footer-bottom a svg{transform:rotate(180deg)}
 
-/* Conversion and footer */
-.acos-public .ap-contact{background:#f2f4eb;position:relative;border-bottom:1px solid #d4dccd}
-.acos-public .ap-contact-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:90px;align-items:center}
-.acos-public .ap-contact h2{font-size:clamp(55px,6vw,88px);letter-spacing:-4px;margin-top:25px;line-height:1.08}
-.acos-public .ap-contact-copy{max-width:335px;justify-self:end}
-.acos-public .ap-contact-copy>p{font-size:17px;line-height:1.8;color:#4d6748;margin-bottom:28px}
-.acos-public .ap-contact-copy>span{display:block;font-size:8px;letter-spacing:1.5px;color:#607354;margin-top:24px}
-.acos-public .ap-contact-copy address{font-style:normal;display:grid;gap:10px;font-size:12px;margin-top:25px;overflow-wrap:anywhere}
-.acos-public .ap-contact-copy address a{display:flex;align-items:center;gap:9px;min-height:44px}
-.acos-public .ap-footer{background:#fafbf7;padding-top:65px}
-.acos-public .ap-footer-main{display:grid;grid-template-columns:1.25fr 1fr 1.1fr 1.05fr;gap:50px;padding-bottom:54px}
-.acos-public .ap-footer-brand img{width:111px;height:auto}
-.acos-public .ap-footer-brand p{font-size:10px;line-height:1.9;color:#607056;margin-top:19px}
-.acos-public .ap-footer-main h2{font:600 11px/1.6 var(--ap-sans);letter-spacing:0;margin:3px 0 20px;color:#365134}
-.acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{display:block;background:transparent;border:0;padding:5px 0;min-height:34px;color:#5f7057;font-size:11px;text-align:left;transition:color .2s}
-.acos-public .ap-footer-main>div>a:hover,.acos-public .ap-footer-main>div>button:hover{color:#133b2b;text-decoration:underline;text-underline-offset:4px}
-.acos-public .ap-footer-enterprise p{font-size:11px;line-height:1.9;color:#607056;margin-bottom:17px}
-.acos-public .ap-footer-main .ap-footer-enterprise>button{display:inline-flex;align-items:center;gap:30px;border-bottom:1px solid #9eaf94;min-height:42px;color:#24452a}
-.acos-public .ap-footer-bottom{border-top:1px solid var(--ap-line);min-height:77px;display:flex;justify-content:space-between;align-items:center;gap:20px;color:#5f7158;font-size:9px}
-.acos-public .ap-footer-bottom button{background:transparent;border:0;font-size:9px;padding:10px 0;min-height:44px}
-.acos-public .ap-footer-bottom strong{font-size:10px;color:#294c30;margin-left:5px;font-weight:600;letter-spacing:1.5px}
-
-/* Native dialogs preserve focus, keyboard trapping and Escape. */
-.acos-public .ap-dialog{background:#fafbf7;color:#253c30;border:1px solid #d4dcd1;border-radius:3px;padding:0;width:min(590px,calc(100% - 32px));max-height:calc(100dvh - 48px);margin:auto;box-shadow:0 28px 90px #05211633;font-family:var(--ap-sans);overflow:auto}
-.acos-public .ap-dialog::backdrop{background:#0c241bc4;backdrop-filter:blur(3px)}
-.acos-public .ap-dialog-inner{padding:42px;position:relative}
-.acos-public .ap-dialog-close{position:absolute;top:16px;right:16px;border:0}
-.acos-public .ap-dialog .ap-eyebrow{font-size:8px;padding-right:25px}
-.acos-public .ap-dialog h2{font:400 46px/1.2 var(--ap-serif);letter-spacing:-1px;margin-top:17px}
-.acos-public .ap-dialog #ap-dialog-description{font-size:12px;line-height:1.9;color:#5e6d61;margin-top:14px}
-.acos-public .ap-consultation{margin-top:26px}
-.acos-public .ap-consultation label{font-size:11px;font-weight:600;display:block;margin:18px 0 9px}
-.acos-public .ap-consultation select,.acos-public .ap-consultation textarea{width:100%;background:#f0f3ea;border:1px solid #bbc8b5;border-radius:2px;min-height:48px;color:#25462d;padding:12px;font-size:12px;line-height:1.8}
-.acos-public .ap-consultation textarea{resize:vertical}
-.acos-public .ap-consultation-actions{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:18px}
-.acos-public .ap-copy-status{min-height:22px;font-size:11px;line-height:1.6;color:#3b6139;margin-top:10px}
-.acos-public .ap-dialog-note{display:flex;align-items:start;gap:8px;font-size:10px;line-height:1.8;color:#5f7255;border-top:1px solid var(--ap-line);padding-top:15px;margin-top:14px}
+/* Accessible native dialogs; no false delivery confirmations or invented contacts. */
+.acos-public .ap-dialog{width:min(590px,calc(100% - 32px));max-height:calc(100dvh - 40px);margin:auto;padding:0;border:1px solid #cfdbd1;border-radius:12px;background:white;color:var(--ap-ink);font:400 13px/1.7 var(--ap-sans);box-shadow:0 24px 80px #001d283d}
+.acos-public .ap-dialog::backdrop{background:#082a23a8;backdrop-filter:blur(3px)}
+.acos-public .ap-dialog-inner{position:relative;padding:42px}
+.acos-public .ap-dialog-close{position:absolute;right:15px;top:15px;background:#f4f7f3}
+.acos-public .ap-dialog .ap-eyebrow{font-size:8px;margin-right:20px}
+.acos-public .ap-dialog h2{font-size:29px;letter-spacing:-1px;line-height:1.2;margin:3px 0 17px;padding-right:10px}
+.acos-public .ap-dialog-inner>p{font-size:12px;line-height:1.85;color:var(--ap-muted)}
+.acos-public .ap-consultation{margin-top:23px}
+.acos-public .ap-consultation label{display:block;font-size:11px;font-weight:500;margin:18px 0 8px}
+.acos-public .ap-consultation select,.acos-public .ap-consultation textarea{display:block;width:100%;border:1px solid #bccbc0;border-radius:5px;background:#f8faf7;color:var(--ap-ink);font-size:12px;padding:13px;line-height:1.8}
+.acos-public .ap-consultation textarea{resize:vertical;min-height:130px}
+.acos-public .ap-consultation-actions{display:flex;flex-wrap:wrap;align-items:center;gap:15px;margin-top:20px}
+.acos-public .ap-copy-status{min-height:20px;margin-top:12px;font-size:11px;color:#35634b}
+.acos-public .ap-dialog-note{display:flex;align-items:flex-start;gap:8px;font-size:10px!important;color:#66766b!important;line-height:1.8;margin-top:21px!important;border-top:1px solid var(--ap-line);padding-top:16px}
 .acos-public .ap-dialog-note svg{margin-top:2px}
-.acos-public .ap-privacy h3{font-size:13px;font-weight:600;margin:24px 0 8px}
-.acos-public .ap-privacy p{font-size:12px;line-height:1.9;color:#5e6d61}
+.acos-public .ap-dialog-wide{width:min(850px,calc(100% - 32px))}
+.acos-public .ap-detail-layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:28px;margin-top:25px}
+.acos-public .ap-detail-layout>img{width:100%;height:100%;max-height:340px;min-height:240px;object-fit:cover;border-radius:7px}
+.acos-public .ap-detail-layout p{font-size:12px;line-height:1.85;color:#52685a}
+.acos-public .ap-detail-layout h3{font-size:12px;margin-top:20px;font-weight:600}
+.acos-public .ap-detail-layout ul{padding:0;margin:13px 0 23px;list-style:none;display:grid;gap:10px}
+.acos-public .ap-detail-layout li{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:#536c5b}
+.acos-public .ap-detail-layout li svg{color:#37754d;margin-top:2px}
+.acos-public .ap-privacy h3{font-size:13px;margin:22px 0 7px}
+.acos-public .ap-privacy p{font-size:12px;line-height:1.9;color:#5b7062}
 
-/* Short, one-time entrances. Content stays visible when JS/motion is unavailable. */
-@keyframes ap-enter{from{opacity:.35;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
-@keyframes ap-architecture-enter{from{opacity:.4;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-@media(prefers-reduced-motion:no-preference){
-  .acos-public .ap-hero-content{animation:ap-enter 1s ease-out both}
-  .acos-public .ap-hero-stage{animation:ap-architecture-enter 1.5s ease-out both}
-  .acos-public .ap-in-view{animation:ap-enter .75s ease-out both}
-  .acos-public .ap-solution-panel:not([hidden]){animation:ap-enter .35s ease-out}
-}
-@media(prefers-reduced-motion:reduce){.acos-public *,.acos-public *::before,.acos-public *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.acos-public .ap-workspace-scene{transform:none}}
+@keyframes ap-enter{from{opacity:.65;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference){.acos-public .ap-in-view{animation:ap-enter .6s ease-out both}}
 
-@media(min-width:1600px){.acos-public .ap-hero{padding-top:168px}.acos-public .ap-architecture{max-height:410px}}
-@media(max-width:1280px){.acos-public .ap-container{width:calc(100% - 80px)}.acos-public .ap-nav{gap:17px}.acos-public .ap-brand>span{display:none}.acos-public .ap-solution-layout{gap:38px}.acos-public .ap-digital-layout{gap:58px}.acos-public .ap-business-layout{gap:70px}.acos-public .ap-about-layout{gap:65px}}
-@media(max-width:1160px){
- .acos-public .ap-navbar{height:92px}.acos-public .ap-header-scrolled .ap-navbar{height:78px}.acos-public .ap-brand>span{display:block}.acos-public .ap-menu-toggle{display:grid;margin-left:auto}
- .acos-public .ap-nav{display:none;position:absolute;top:100%;inset-inline:0;background:#fafbf7;border-bottom:1px solid #c5d0bf;padding:18px 40px 28px;max-height:calc(100dvh - 92px);overflow:auto;box-shadow:0 22px 30px #132e2214}
- .acos-public .ap-nav-open{display:flex;flex-direction:column;align-items:stretch;gap:0}.acos-public .ap-nav>a{font-size:15px;min-height:48px;border-bottom:1px solid #d9e1d4;padding:8px 0}.acos-public .ap-nav>a::after{display:none}.acos-public .ap-nav>a[aria-current]{font-weight:700}.acos-public .ap-enterprise{margin-top:18px;justify-content:center;min-height:48px;font-size:12px}.acos-public .ap-mobile-contact{display:flex;margin-top:12px}.acos-public .ap-menu-scrim{position:fixed;inset:92px 0 0;z-index:40;border:0;background:#0c241b80;cursor:default}
- .acos-public .ap-hero{padding-top:145px}.acos-public .ap-hero h1{font-size:78px}.acos-public .ap-art-caption{font-size:11px}.acos-public .ap-art-caption>span{font-size:7px}.acos-public .ap-architecture{max-height:330px}.acos-public .ap-hero-stage{margin-top:35px}
- .acos-public .ap-solution-layout{grid-template-columns:.75fr 1.25fr;gap:30px}.acos-public .ap-solution-panel{grid-template-columns:1fr;min-height:460px}.acos-public .ap-solution-visual{height:165px;flex-direction:row;align-items:center;padding:24px}.acos-public .ap-solution-visual>span{position:absolute;top:18px;left:24px;font-size:8px}.acos-public .ap-solution-drawing{width:60%;height:160px;margin:0 0 0 auto;order:2}.acos-public .ap-solution-visual>em{font-size:48px;align-self:end}.acos-public .ap-solution-content{padding:25px}.acos-public .ap-solution-content h3{font-size:24px}.acos-public .ap-solution-content ul{margin:14px 0}.acos-public .ap-solution-tabs>button{flex:1}.acos-public .ap-solution-tabs strong{font-size:16px}
- .acos-public .ap-workspace-content{padding:18px}.acos-public .ap-workspace-rail{padding:16px 10px}.acos-public .ap-workspace-folders>div{padding:10px}.acos-public .ap-digital-layout{gap:42px}.acos-public .ap-workspace-content h3{font-size:22px}.acos-public .ap-workspace-folders span{font-size:7px}.acos-public .ap-workspace-flow{font-size:7px}
- .acos-public .ap-footer-main{gap:28px}.acos-public .ap-journey li{padding-right:15px}.acos-public .ap-journey li+li{padding-left:15px}
+@media(min-width:1600px){
+  .acos-public .ap-hero{min-height:650px}
+  .acos-public .ap-hero-content{padding-top:90px}
+  .acos-public .ap-hero-photo{object-position:center 38%}
 }
-@media(max-width:800px){
- .acos-public .ap-container{width:calc(100% - 48px)}.acos-public .ap-section{padding-block:78px}.acos-public .ap-section-marker{margin-bottom:35px;font-size:9px}.acos-public .ap-section-marker>span:last-child{max-width:180px;font-size:8px}.acos-public h2{letter-spacing:-1.5px}.acos-public .ap-section-heading{gap:32px}.acos-public .ap-section-heading>p{max-width:240px;font-size:12px}
- .acos-public .ap-hero h1{font-size:68px;letter-spacing:-3.7px}.acos-public .ap-hero h1 em{letter-spacing:-2.7px}.acos-public .ap-hero-stage{width:calc(100% - 20px);margin-top:30px}.acos-public .ap-art-caption-left{left:1%;top:55%;font-size:9px}.acos-public .ap-art-caption-right{right:0;top:10%;font-size:9px}.acos-public .ap-art-caption>span{font-size:6px;max-width:100px}.acos-public .ap-hero-foot{font-size:7px;letter-spacing:1px}.acos-public .ap-hero-foot>span:nth-child(2){gap:10px}
- .acos-public .ap-about-layout{grid-template-columns:1fr;gap:30px}.acos-public .ap-about-layout h2{font-size:43px}.acos-public .ap-about-copy{max-width:560px}.acos-public .ap-about-copy>p:first-child{font-size:17px}.acos-public .ap-principles{margin-top:48px;gap:22px}.acos-public .ap-principles h3{font-size:31px}.acos-public .ap-principles p{font-size:11px;padding-right:12px}
- .acos-public .ap-solution-layout{grid-template-columns:.8fr 1.2fr;gap:24px}.acos-public .ap-solution-tabs>button{gap:12px;padding-right:9px}.acos-public .ap-solution-tabs strong{font-size:14px}.acos-public .ap-solution-tabs>button[aria-selected=true]{padding-left:13px}.acos-public .ap-solution-content{padding:24px 20px}.acos-public .ap-solution-content h3{font-size:22px}.acos-public .ap-solution-visual>em{font-size:40px}
- .acos-public .ap-business{padding-block:72px}.acos-public .ap-business-layout{gap:45px;grid-template-columns:1.2fr 1fr}.acos-public .ap-business-map{padding-left:25px;min-height:320px}.acos-public .ap-business-orbits i{width:125px;height:125px}.acos-public .ap-business-orbits{height:200px}.acos-public .ap-map-label{font-size:7px}.acos-public .ap-business-axis{font-size:8px;gap:6px}.acos-public .ap-business-copy .ap-button{font-size:10px;padding:14px 15px;gap:15px}.acos-public .ap-business h2{font-size:33px}
- .acos-public .ap-journey{grid-template-columns:repeat(3,1fr);gap:48px 0}.acos-public .ap-journey li:nth-child(4){padding-left:0}.acos-public .ap-journey li:nth-child(3){padding-right:0}.acos-public .ap-journey h3{font-size:17px}
- .acos-public .ap-digital-layout{grid-template-columns:1fr;gap:35px}.acos-public .ap-digital-copy{max-width:560px}.acos-public .ap-digital-copy>p{max-width:100%}.acos-public .ap-workspace-scene{max-width:550px;width:95%;justify-self:center}.acos-public .ap-workspace-content{padding:24px}.acos-public .ap-workspace-folders>div{padding:18px}.acos-public .ap-workspace-folders span{font-size:9px}.acos-public .ap-workspace-flow{font-size:9px}.acos-public .ap-workspace-content h3{font-size:28px}
- .acos-public .ap-contact-layout{gap:40px}.acos-public .ap-contact h2{font-size:56px;letter-spacing:-2.8px}.acos-public .ap-contact-copy>p{font-size:14px}.acos-public .ap-contact .ap-eyebrow{font-size:8px}
- .acos-public .ap-footer-main{grid-template-columns:1.1fr 1fr;gap:40px 50px}.acos-public .ap-footer-main h2{font-size:12px;margin-bottom:14px}.acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{min-height:40px;font-size:12px}.acos-public .ap-footer-bottom{flex-wrap:wrap;gap:5px 25px;padding-block:20px}.acos-public .ap-footer-bottom>span:first-child{width:100%}
+@media(max-width:1330px){
+  .acos-public .ap-container{width:calc(100% - 80px)}
+  .acos-public .ap-brand>span{display:none}
+  .acos-public .ap-nav{gap:23px}
+  .acos-public .ap-product{padding:24px}
+  .acos-public .ap-product h3{font-size:23px}
+  .acos-public .ap-product-vida h3{font-size:32px}
+  .acos-public .ap-business-copy{padding:60px 40px}
+  .acos-public .ap-business-image>span{left:40px}
+  .acos-public .ap-business-needs{gap:17px}
+  .acos-public .ap-about-layout{gap:65px}
 }
-@media(max-width:540px){
- .acos-public .ap-container{width:calc(100% - 40px)}.acos-public .ap-section{padding-block:65px}.acos-public .ap-navbar{height:82px}.acos-public .ap-header-scrolled .ap-navbar{height:74px}.acos-public .ap-brand img{width:73px;height:57px}.acos-public .ap-brand{gap:12px}.acos-public .ap-brand>span{font-size:7px;padding-left:12px;letter-spacing:.8px}.acos-public .ap-nav{padding:10px 20px 22px;max-height:calc(100dvh - 82px)}.acos-public .ap-menu-scrim{top:82px}
- .acos-public .ap-hero{padding-top:124px}.acos-public .ap-hero-eyebrow{font-size:8px;letter-spacing:1.2px;margin-bottom:24px;gap:8px}.acos-public .ap-hero h1{font-size:clamp(40px,10.6vw,57px);line-height:1.08;letter-spacing:-2.6px}.acos-public .ap-hero h1 em{font-size:1.24em;letter-spacing:-1.8px}.acos-public .ap-hero-content>p{font-size:11px;line-height:1.9;max-width:345px;margin:23px auto 0}.acos-public .ap-mobile-break{display:block}.acos-public .ap-desktop-break{display:none}.acos-public .ap-actions{gap:20px;margin-top:24px}.acos-public .ap-actions .ap-button{font-size:10px;min-height:48px;padding:12px 16px;gap:17px}.acos-public .ap-actions .ap-link{font-size:10px;gap:10px;min-height:44px}
- .acos-public .ap-hero-stage{width:135%;margin-left:-17.5%;margin-top:35px;padding-bottom:22px}.acos-public .ap-architecture{max-height:none;width:100%}.acos-public .ap-art-caption{display:none}.acos-public .ap-hero-foot{min-height:66px;gap:15px;font-size:7px;letter-spacing:1.1px}.acos-public .ap-hero-foot>span:nth-child(2){display:none}.acos-public .ap-hero-foot>a{width:36px;height:36px}
- .acos-public .ap-section-marker>span:last-child{display:none}.acos-public .ap-section-marker{margin-bottom:28px;font-size:8px;letter-spacing:1.4px}.acos-public h2{font-size:34px;line-height:1.2;letter-spacing:-1.3px}.acos-public .ap-section-heading{display:block;margin-bottom:32px}.acos-public .ap-section-heading>p{max-width:100%;font-size:12px;line-height:1.9;margin-top:24px}.acos-public .ap-about-layout h2{font-size:32px;letter-spacing:-1.1px}.acos-public .ap-about-copy>p:first-child{font-size:16px}.acos-public .ap-about-copy>p+p{font-size:12px}.acos-public .ap-principles{gap:13px}.acos-public .ap-principles>div{padding-top:32px}.acos-public .ap-principles>div>span{top:8px;font-size:8px;left:0;right:auto}.acos-public .ap-principles h3{font-size:26px}.acos-public .ap-principles p{font-size:9px;line-height:1.8;padding-right:0}
- .acos-public .ap-solution-layout{grid-template-columns:1fr;gap:25px}.acos-public .ap-solution-tabs>button{min-height:56px;padding:14px 12px 14px 0;gap:15px}.acos-public .ap-solution-tabs strong{font-size:14px}.acos-public .ap-solution-tabs>button[aria-selected=true]{padding-left:16px}.acos-public .ap-solution-panel{min-height:0}.acos-public .ap-solution-visual{height:190px;padding:25px}.acos-public .ap-solution-visual>em{font-size:52px}.acos-public .ap-solution-drawing{height:185px;width:66%}.acos-public .ap-solution-content{padding:28px}.acos-public .ap-solution-content h3{font-size:24px}.acos-public .ap-solution-content p{font-size:12px}.acos-public .ap-solution-content ul{margin:18px 0}.acos-public .ap-solution-content li{font-size:11px}.acos-public .ap-solution-content .ap-link{margin-top:7px;font-size:12px}.acos-public .ap-disclosure{font-size:10px;line-height:1.8}.acos-public .ap-disclosure>span{display:block;margin-bottom:6px}
- .acos-public .ap-business-layout{grid-template-columns:1fr;gap:40px}.acos-public .ap-business h2{font-size:36px}.acos-public .ap-business-copy>p{font-size:12px}.acos-public .ap-business-copy .ap-button{font-size:11px;gap:25px;padding:14px 20px}.acos-public .ap-business-map{border-left:0;border-top:1px solid #6e8e6845;padding:25px 0 0;min-height:320px;max-width:350px;width:100%;justify-self:center}.acos-public .ap-map-label{font-size:8px}.acos-public .ap-business-orbits{height:210px}.acos-public .ap-business-orbits i{width:158px;height:158px}.acos-public .ap-business-axis{font-size:11px}.acos-public .ap-business-map>p{margin-top:22px}
- .acos-public .ap-journey{grid-template-columns:1fr 1fr;gap:47px 0;margin-top:45px}.acos-public .ap-journey li{padding:0 18px 0 0!important}.acos-public .ap-journey li:nth-child(2n){padding:0 0 0 16px!important}.acos-public .ap-journey h3{font-size:17px}.acos-public .ap-journey li>p{font-size:11px}.acos-public .ap-journey-top{margin-bottom:18px}.acos-public .ap-journey li:last-child{grid-column:1/-1;max-width:100%}.acos-public .ap-journey li:last-child h3 br{display:none}.acos-public .ap-journey li:last-child h3>span::before{content:' '}.acos-public .ap-journey li:last-child p{max-width:300px}.acos-public .ap-care-note{align-items:start;margin-top:32px}.acos-public .ap-care-note p{font-size:10px}.acos-public .ap-care-note>svg{margin-top:3px}
- .acos-public .ap-digital h2{font-size:34px}.acos-public .ap-workspace-scene{width:100%;transform:none;padding-top:8px}.acos-public .ap-workspace-scene::before{inset:40px -7px 10px 7px}.acos-public .ap-workspace-caption{font-size:6px}.acos-public .ap-workspace-rail{padding:13px 9px;gap:26px}.acos-public .ap-workspace-rail img{width:34px;height:auto}.acos-public .ap-workspace-rail svg{width:16px}.acos-public .ap-workspace-content{padding:16px}.acos-public .ap-workspace-content h3{font-size:22px}.acos-public .ap-workspace-content>p{font-size:8px}.acos-public .ap-workspace-folders{gap:8px}.acos-public .ap-workspace-folders>div{padding:12px 8px}.acos-public .ap-workspace-folders strong{font-size:10px}.acos-public .ap-workspace-folders span{font-size:7px}.acos-public .ap-workspace-flow{font-size:7px;padding:12px 6px}.acos-public .ap-workspace-note{font-size:5.5px}.acos-public .ap-workspace-toolbar{font-size:6px}
- .acos-public .ap-contact-layout{grid-template-columns:1fr;gap:35px}.acos-public .ap-contact h2{font-size:64px;letter-spacing:-2.5px}.acos-public .ap-contact-copy{justify-self:start;max-width:320px}.acos-public .ap-contact-copy>p{font-size:15px}.acos-public .ap-contact-copy>span{font-size:7px}.acos-public .ap-footer{padding-top:44px}.acos-public .ap-footer-main{gap:32px 20px}.acos-public .ap-footer-brand img{width:95px}.acos-public .ap-footer-main h2{font-size:11px}.acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{font-size:10px;min-height:39px}.acos-public .ap-footer-enterprise p{font-size:10px}.acos-public .ap-footer-bottom{font-size:8px;column-gap:15px}.acos-public .ap-footer-bottom button{font-size:8px}.acos-public .ap-footer-bottom strong{font-size:9px}
- .acos-public .ap-dialog-inner{padding:35px 24px 24px}.acos-public .ap-dialog h2{font-size:39px}.acos-public .ap-dialog #ap-dialog-description{font-size:11px}.acos-public .ap-consultation select,.acos-public .ap-consultation textarea{font-size:16px}.acos-public .ap-dialog-close{top:8px;right:8px}
+@media(max-width:1180px){
+  .acos-public .ap-navbar{height:82px}
+  .acos-public .ap-brand img{width:85px;height:65px}
+  .acos-public .ap-brand>span{display:block}
+  .acos-public .ap-menu-toggle{display:grid}
+  .acos-public .ap-nav{display:none;position:absolute;top:100%;left:0;right:0;background:white;padding:20px 40px 28px;max-height:calc(100dvh - 115px);overflow:auto;box-shadow:0 12px 20px #193f3014;flex-direction:column;align-items:stretch;gap:0}
+  .acos-public .ap-nav-open{display:flex}
+  .acos-public .ap-nav>a{font-size:14px;padding:12px 0;min-height:48px;border-bottom:1px solid #e5eae6}
+  .acos-public .ap-nav>a:after{display:none}
+  .acos-public .ap-nav>a[aria-current]{font-weight:600;color:#286b43}
+  .acos-public .ap-nav-cta{margin-top:20px;font-size:12px;min-height:48px}
+  .acos-public .ap-mobile-enterprise{display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:0;font-size:11px;padding:17px 10px 0}
+  .acos-public .ap-menu-scrim{position:fixed;inset:0;background:#092e2559;z-index:40;border:0}
+  .acos-public .ap-hero{min-height:560px}
+  .acos-public .ap-hero-content{padding-block:65px 95px}
+  .acos-public .ap-hero h1{font-size:57px}
+  .acos-public .ap-hero-photo{width:83%;object-position:55% 40%}
+  .acos-public .ap-hero-caption{right:40px;font-size:17px}
+  .acos-public .ap-shortcut-intro{padding:22px 18px}
+  .acos-public .ap-shortcut-intro>strong{font-size:18px}
+  .acos-public .ap-shortcuts>button>span{font-size:10px}
+  .acos-public .ap-product{grid-column:span 4;min-height:320px}
+  .acos-public .ap-product-vida{grid-column:span 4}
+  .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:25px}
+  .acos-public .ap-product-asesoria .ap-product-top>span:last-child{font-size:7px}
+  .acos-public .ap-business h2{font-size:34px}
+  .acos-public .ap-business-needs{gap:12px;flex-wrap:wrap}
+  .acos-public .ap-about-layout{gap:50px}
+  .acos-public .ap-about-visual{height:485px;margin-right:10px}
+  .acos-public .ap-about-label{left:20px;right:-20px;padding:20px 15px;gap:13px}
+  .acos-public .ap-about-label strong{font-size:14px}
+  .acos-public .ap-journey{gap:22px}
+  .acos-public .ap-journey h3{font-size:12px}
+  .acos-public .ap-digital-layout{gap:40px}
+  .acos-public .ap-faq-layout{gap:50px}
+  .acos-public .ap-footer-main{gap:30px}
 }
-@media(max-width:360px){.acos-public .ap-container{width:calc(100% - 32px)}.acos-public .ap-actions{gap:13px}.acos-public .ap-actions .ap-button{padding-inline:12px;gap:10px}.acos-public .ap-actions .ap-link{font-size:9px;gap:7px}.acos-public .ap-hero h1{font-size:38px}.acos-public .ap-about-layout h2{font-size:29px}.acos-public .ap-workspace-rail{display:none}.acos-public .ap-footer-bottom{font-size:7px}}
+@media(max-width:900px){
+  .acos-public .ap-container{width:calc(100% - 48px)}
+  .acos-public .ap-section{padding-block:70px}
+  .acos-public h2{font-size:34px}
+  .acos-public .ap-hero h1{font-size:51px;letter-spacing:-2.5px}
+  .acos-public .ap-hero-photo{width:100%;object-position:65% 40%}
+  .acos-public .ap-hero-shade{background:linear-gradient(90deg,#082f25ed 0%,#082f25c9 29%,#082f2555 65%,#082f251a 100%)}
+  .acos-public .ap-hero-caption{display:none}
+  .acos-public .ap-shortcuts{grid-template-columns:repeat(6,1fr)}
+  .acos-public .ap-shortcut-intro{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;padding:14px 20px;gap:20px}
+  .acos-public .ap-shortcut-intro>strong{font-size:16px}
+  .acos-public .ap-shortcut-intro>strong>br{display:none}
+  .acos-public .ap-shortcut-intro>span{margin:0;font-size:8px}
+  .acos-public .ap-shortcuts>button{padding:20px 4px;gap:10px}
+  .acos-public .ap-shortcuts>button>svg:first-child{width:25px;height:25px}
+  .acos-public .ap-section-heading{gap:30px}
+  .acos-public .ap-products-intro{max-width:310px}
+  .acos-public .ap-products-intro>p{font-size:11px}
+  .acos-public .ap-filters>button{padding:10px 13px;font-size:9px}
+  .acos-public .ap-product-grid{gap:14px}
+  .acos-public .ap-product,.acos-public .ap-product-vida{grid-column:span 6;min-height:310px}
+  .acos-public .ap-product h3{font-size:26px}
+  .acos-public .ap-product-vida h3{font-size:29px}
+  .acos-public .ap-grid-filtered .ap-product{grid-column:span 6}
+  .acos-public .ap-grid-filtered .ap-product-vida{grid-column:span 12}
+  .acos-public .ap-product-note{align-items:flex-start;text-align:left}
+  .acos-public .ap-product-note svg{margin-top:2px}
+  .acos-public .ap-business{min-height:530px;grid-template-columns:.9fr 1.1fr}
+  .acos-public .ap-business-copy{padding:45px 30px}
+  .acos-public .ap-business h2{font-size:30px}
+  .acos-public .ap-business-copy>p{font-size:11px}
+  .acos-public .ap-business-image>span{left:25px;bottom:30px;font-size:8px}
+  .acos-public .ap-business-image strong{font-size:20px}
+  .acos-public .ap-business-needs{gap:12px}
+  .acos-public .ap-business-needs>span{font-size:9px}
+  .acos-public .ap-business .ap-button{font-size:10px;padding:14px 17px;gap:17px}
+  .acos-public .ap-about-layout{gap:36px}
+  .acos-public .ap-about-visual{height:510px}
+  .acos-public .ap-about-label{flex-direction:column;align-items:flex-start;left:16px;right:-12px;bottom:20px;padding:17px;border-width:5px}
+  .acos-public .ap-about-copy h2{font-size:32px}
+  .acos-public .ap-about-copy>p{font-size:11px}
+  .acos-public .ap-about-benefits{gap:15px}
+  .acos-public .ap-about-benefits strong{font-size:11px}
+  .acos-public .ap-about-benefits span{font-size:10px}
+  .acos-public .ap-journey{gap:17px}
+  .acos-public .ap-journey h3{font-size:12px;letter-spacing:-.3px}
+  .acos-public .ap-journey p{font-size:10px}
+  .acos-public .ap-step-number>span{width:40px;height:40px;font-size:13px}
+  .acos-public .ap-step-number:after{left:49px}
+  .acos-public .ap-digital-layout{gap:32px}
+  .acos-public .ap-digital h2{font-size:25px}
+  .acos-public .ap-digital p{font-size:11px}
+  .acos-public .ap-digital .ap-eyebrow{flex-wrap:wrap;gap:9px}
+  .acos-public .ap-workspace-body{padding:17px}
+  .acos-public .ap-workspace-items>span{padding:12px 7px;gap:14px}
+  .acos-public .ap-workspace-items strong{font-size:8px}
+  .acos-public .ap-faq-layout{gap:35px}
+  .acos-public .ap-contact h2{font-size:31px}
+  .acos-public .ap-contact-layout{gap:30px}
+  .acos-public .ap-contact .ap-eyebrow{font-size:8px}
+  .acos-public .ap-footer-main{grid-template-columns:1fr 1fr;gap:40px 50px}
+}
+@media(max-width:640px){
+  .acos-public .ap-container{width:calc(100% - 40px)}
+  .acos-public .ap-section{padding-block:56px}
+  .acos-public h2{font-size:30px;letter-spacing:-1.2px}
+  .acos-public .ap-eyebrow{font-size:9px;letter-spacing:1.3px;margin-bottom:14px}
+  .acos-public section[id]{scroll-margin-top:87px}
+  .acos-public .ap-topbar>.ap-container{min-height:29px;justify-content:center;width:100%}
+  .acos-public .ap-topbar span{font-size:8px;gap:6px}
+  .acos-public .ap-topbar button{display:none}
+  .acos-public .ap-navbar{height:76px}
+  .acos-public .ap-brand img{width:77px;height:59px}
+  .acos-public .ap-brand>span{font-size:6.5px;padding-left:10px}
+  .acos-public .ap-brand{gap:10px}
+  .acos-public .ap-nav{padding:14px 20px 24px}
+  .acos-public .ap-hero{min-height:710px}
+  .acos-public .ap-hero-photo{width:100%;height:400px;inset:0;object-position:55% center}
+  .acos-public .ap-hero-shade{background:linear-gradient(180deg,#082f2500 0%,#082f2500 25%,#082f2570 42%,#082f25f5 53%,#082f25 60%)}
+  .acos-public .ap-hero-content{padding-top:333px;padding-bottom:85px}
+  .acos-public .ap-hero .ap-eyebrow{font-size:8px;letter-spacing:1.2px;margin-bottom:17px;gap:8px}
+  .acos-public .ap-hero h1{font-size:46px;line-height:1.12;letter-spacing:-2.2px}
+  .acos-public .ap-hero-content>p{font-size:12px;line-height:1.85;margin-top:20px;max-width:330px}
+  .acos-public .ap-desktop-break{display:none}
+  .acos-public .ap-actions{gap:24px;margin-top:24px}
+  .acos-public .ap-button{min-height:49px;font-size:11px;padding:14px 20px;gap:17px}
+  .acos-public .ap-hero-consult{font-size:11px;gap:9px}
+  .acos-public .ap-hero-assurance{margin-top:25px;font-size:8px;gap:7px}
+  .acos-public .ap-shortcut-wrap{margin-top:-35px}
+  .acos-public .ap-shortcuts{grid-template-columns:repeat(3,1fr);border-radius:8px}
+  .acos-public .ap-shortcut-intro{padding:15px;gap:10px}
+  .acos-public .ap-shortcut-intro>span{font-size:6.5px;letter-spacing:.7px}
+  .acos-public .ap-shortcut-intro>strong{font-size:13px;letter-spacing:-.3px}
+  .acos-public .ap-shortcuts>button{padding:17px 6px;min-height:92px;border-bottom:1px solid #e6ece8}
+  .acos-public .ap-shortcuts>button:nth-child(3n + 2){border-left:0}
+  .acos-public .ap-shortcuts>button:nth-last-child(-n+3){border-bottom:0}
+  .acos-public .ap-shortcuts>button>span{font-size:10px}
+  .acos-public .ap-shortcuts>button>svg:last-child{display:none}
+  .acos-public .ap-products{padding-top:50px}
+  .acos-public .ap-section-heading{display:block;margin-bottom:28px}
+  .acos-public .ap-products-intro{max-width:100%;margin-top:20px}
+  .acos-public .ap-products-intro>p{font-size:11px;max-width:320px;margin-bottom:18px}
+  .acos-public .ap-filters{width:100%;display:flex;gap:4px}
+  .acos-public .ap-filters>button{flex:1;font-size:10px;padding:10px 8px}
+  .acos-public .ap-product-grid{grid-template-columns:1fr;gap:16px}
+  .acos-public .ap-product,.acos-public .ap-product-vida,.acos-public .ap-grid-filtered .ap-product{grid-column:auto;min-height:300px;padding:25px}
+  .acos-public .ap-product-vida{min-height:345px}
+  .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:29px}
+  .acos-public .ap-product-top>span:last-child{font-size:8px}
+  .acos-public .ap-product p{font-size:12px;max-width:290px}
+  .acos-public .ap-product button{font-size:11px}
+  .acos-public .ap-product-asesoria{min-height:275px}
+  .acos-public .ap-product-asesoria .ap-product-top>span:last-child{font-size:8px}
+  .acos-public .ap-product-note{gap:8px;margin-top:20px}
+  .acos-public .ap-product-note p{font-size:9px}
+  .acos-public .ap-business{grid-template-columns:1fr}
+  .acos-public .ap-business-image{height:300px;min-height:0}
+  .acos-public .ap-business-image>img{object-position:center 56%}
+  .acos-public .ap-business-image>span{left:25px;bottom:25px}
+  .acos-public .ap-business-copy{padding:42px 25px 45px}
+  .acos-public .ap-business h2{font-size:33px}
+  .acos-public .ap-business-copy>p{font-size:12px}
+  .acos-public .ap-business-needs{gap:16px}
+  .acos-public .ap-business-needs>span{font-size:10px}
+  .acos-public .ap-business .ap-button{font-size:11px}
+  .acos-public .ap-about-layout{grid-template-columns:1fr;gap:35px}
+  .acos-public .ap-about-visual{height:340px;margin-right:0;margin-bottom:0}
+  .acos-public .ap-about-visual>img{object-position:center}
+  .acos-public .ap-about-label{flex-direction:row;align-items:center;left:15px;right:15px;bottom:-10px;gap:12px;border-width:5px;padding:18px 12px}
+  .acos-public .ap-about-label strong{font-size:13px}
+  .acos-public .ap-about-label span{font-size:9px}
+  .acos-public .ap-about-copy h2{font-size:32px}
+  .acos-public .ap-about-copy>p{font-size:12px}
+  .acos-public .ap-about-benefits{gap:20px}
+  .acos-public .ap-about-benefits strong{font-size:12px}
+  .acos-public .ap-about-benefits span{font-size:11px}
+  .acos-public .ap-process .ap-section-heading>.ap-text-link{margin-top:20px}
+  .acos-public .ap-journey{grid-template-columns:1fr 1fr;gap:28px 24px;margin-top:32px}
+  .acos-public .ap-journey h3{font-size:13px;margin-bottom:8px}
+  .acos-public .ap-journey p{font-size:11px;max-width:220px}
+  .acos-public .ap-step-number{margin-bottom:16px}
+  .acos-public .ap-digital{padding-block:50px}
+  .acos-public .ap-digital-layout{grid-template-columns:1fr;gap:30px}
+  .acos-public .ap-digital h2{font-size:29px}
+  .acos-public .ap-digital p{font-size:12px}
+  .acos-public .ap-workspace-body{padding:20px}
+  .acos-public .ap-workspace-items>span{padding:15px 10px}
+  .acos-public .ap-workspace-items strong{font-size:9px}
+  .acos-public .ap-faq-layout{grid-template-columns:1fr;gap:30px}
+  .acos-public .ap-questions summary{font-size:12px;padding:21px 0;min-height:67px}
+  .acos-public .ap-questions details>p{font-size:11px;padding-right:15px}
+  .acos-public .ap-contact{padding-block:45px}
+  .acos-public .ap-contact-layout{display:block}
+  .acos-public .ap-contact h2{font-size:30px}
+  .acos-public .ap-contact .ap-eyebrow{font-size:7px;letter-spacing:1px;max-width:270px;line-height:1.7}
+  .acos-public .ap-contact-layout>div:last-child{margin-top:27px}
+  .acos-public .ap-contact-layout>div:last-child>p{font-size:10px}
+  .acos-public .ap-footer-main{grid-template-columns:1fr 1fr;gap:30px 20px;padding-block:42px 30px}
+  .acos-public .ap-footer-brand{grid-column:1/-1}
+  .acos-public .ap-footer-brand img{width:107px;height:82px;margin-top:-14px}
+  .acos-public .ap-footer-help{grid-column:1/-1;border-top:1px solid var(--ap-line);padding-top:25px}
+  .acos-public .ap-footer-main h2{font-size:11px;margin-bottom:12px}
+  .acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{font-size:10px;min-height:35px}
+  .acos-public .ap-footer-bottom{flex-wrap:wrap;justify-content:flex-start;gap:12px 25px;font-size:8px;padding-block:20px}
+  .acos-public .ap-footer-bottom>span:first-child{width:100%}
+  .acos-public .ap-dialog{max-height:calc(100dvh - 24px);width:calc(100% - 24px)}
+  .acos-public .ap-dialog-inner{padding:53px 22px 25px}
+  .acos-public .ap-dialog h2{font-size:27px}
+  .acos-public .ap-dialog-close{right:12px;top:12px;width:36px;height:36px}
+  .acos-public .ap-dialog .ap-eyebrow{font-size:7px}
+  .acos-public .ap-dialog-inner>p{font-size:11px}
+  .acos-public .ap-detail-layout{grid-template-columns:1fr;gap:20px}
+  .acos-public .ap-detail-layout>img{height:170px;min-height:170px}
+  .acos-public .ap-detail-layout p{font-size:12px}
+  .acos-public .ap-consultation select,.acos-public .ap-consultation textarea{font-size:16px}
+}
+@media(max-width:360px){
+  .acos-public .ap-container{width:calc(100% - 32px)}
+  .acos-public .ap-hero-content{padding-top:300px}
+  .acos-public .ap-hero-photo{height:370px}
+  .acos-public .ap-hero h1{font-size:40px}
+  .acos-public .ap-hero .ap-eyebrow{font-size:7px}
+  .acos-public .ap-hero-content>p{font-size:11px}
+  .acos-public .ap-actions{gap:18px}
+  .acos-public .ap-actions .ap-button{padding:13px 14px;gap:12px;font-size:10px}
+  .acos-public .ap-hero-consult{font-size:10px;gap:7px}
+  .acos-public .ap-hero-assurance{font-size:7px}
+  .acos-public .ap-shortcut-intro{padding-inline:12px}
+  .acos-public .ap-shortcut-intro>span{font-size:6px}
+  .acos-public .ap-shortcut-intro>strong{font-size:12px}
+  .acos-public h2{font-size:28px}
+  .acos-public .ap-business-copy{padding-inline:20px}
+  .acos-public .ap-business h2{font-size:30px}
+  .acos-public .ap-business-needs{gap:12px}
+  .acos-public .ap-business-needs>span{font-size:8px;gap:5px}
+  .acos-public .ap-about-label{left:9px;right:9px;padding-inline:9px;gap:8px}
+  .acos-public .ap-about-label strong{font-size:11px}
+  .acos-public .ap-about-label span{font-size:8px}
+  .acos-public .ap-contact h2{font-size:27px}
+}
+@media(prefers-reduced-motion:reduce){
+  .acos-public *,.acos-public *:before,.acos-public *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

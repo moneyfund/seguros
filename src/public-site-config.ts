@@ -1,15 +1,56 @@
-/** Business-approved public details only. Empty channels stay hidden.
- * WhatsApp requires an international number using digits only.
- * Do not use employee login addresses as commercial contact details.
- */
+/** Only publish business-confirmed contact channels. Employee accounts are not sales contacts. */
 export const publicContact = { email: '', phone: '', whatsapp: '', address: '' };
 
+/** Areas of advice, not binding offers or promises of coverage from a particular insurer. */
 export const publicSolutions = [
-  { id: 'vida', number: '01', name: 'Vida y familia', headline: 'Para quienes dan sentido a todo.', description: 'Conversamos sobre las personas que dependen de vos y las prioridades de tu familia, para explorar alternativas de protección.', topics: ['Protección familiar', 'Prioridades a futuro', 'Condiciones y beneficiarios'], cta: 'Consultar sobre vida', word: 'Cuidar.' },
-  { id: 'vehiculos', number: '02', name: 'Vehículos', headline: 'Seguí avanzando con claridad.', description: 'Te orientamos para entender las opciones de seguro según tu vehículo, su uso y las condiciones que necesitás revisar.', topics: ['Uso del vehículo', 'Deducibles y exclusiones', 'Responsabilidad civil'], cta: 'Consultar sobre vehículos', word: 'Avanzar.' },
-  { id: 'salud', number: '03', name: 'Salud', headline: 'Tu bienestar, con perspectiva.', description: 'Ponemos en contexto las alternativas de protección para que puedas revisar alcances, condiciones y requisitos con información clara.', topics: ['Necesidades de atención', 'Alcances y límites', 'Requisitos de contratación'], cta: 'Consultar sobre salud', word: 'Vivir.' },
-  { id: 'hogar', number: '04', name: 'Hogar y patrimonio', headline: 'Hay mucho más que paredes.', description: 'Exploramos las necesidades de protección de tu hogar y lo que guardás en él, de acuerdo con sus características y los riesgos a considerar.', topics: ['Inmueble y contenido', 'Riesgos del entorno', 'Condiciones de protección'], cta: 'Consultar sobre hogar', word: 'Habitar.' },
-  { id: 'empresas', number: '05', name: 'Empresas', headline: 'Respaldo para seguir construyendo.', description: 'Revisamos la actividad de tu empresa, sus activos y sus responsabilidades para orientar una conversación informada sobre riesgos.', topics: ['Actividad y operación', 'Activos y responsabilidades', 'Necesidades del equipo'], cta: 'Consultar sobre empresas', word: 'Crecer.' },
-  { id: 'asesoria', number: '06', name: 'Asesoría y acompañamiento', headline: 'Una buena decisión empieza aquí.', description: 'Te ayudamos a plantear las preguntas correctas, comprender las condiciones y organizar los siguientes pasos de tu seguro.', topics: ['Lectura de condiciones', 'Organización documental', 'Seguimiento de gestiones'], cta: 'Solicitar orientación', word: 'Entender.' },
+  {
+    id: 'vida', name: 'Seguro de vida', shortName: 'Vida y familia', audience: 'personas',
+    headline: 'Por los que más querés.',
+    description: 'Pensá en el futuro de tu familia. Te ayudamos a explorar alternativas de protección para las personas que dependen de vos.',
+    summary: 'Un respaldo para el futuro de quienes más querés.',
+    topics: ['Necesidades de protección familiar', 'Beneficiarios y suma asegurada', 'Condiciones, requisitos y exclusiones'],
+    image: '/images/vida.webp', alt: 'Una familia disfrutando de una tarde al aire libre.',
+  },
+  {
+    id: 'vehiculos', name: 'Seguro vehicular', shortName: 'Vehículos', audience: 'personas',
+    headline: 'Que tus planes sigan en marcha.',
+    description: 'Tu vehículo forma parte de tu día a día. Revisamos su uso y tus necesidades para orientarte sobre las opciones de protección.',
+    summary: 'Protección para acompañarte en cada trayecto.',
+    topics: ['Uso y características del vehículo', 'Responsabilidad civil y daños a consultar', 'Deducibles, límites y exclusiones'],
+    image: '/images/vehiculos.webp', alt: 'Un vehículo en circulación por una carretera.',
+  },
+  {
+    id: 'salud', name: 'Seguro de salud', shortName: 'Salud', audience: 'personas',
+    headline: 'Tu bienestar merece atención.',
+    description: 'Conocé qué aspectos revisar al elegir un seguro de salud. Te orientamos para entender los alcances y las condiciones de las alternativas disponibles.',
+    summary: 'Opciones para cuidar de vos y de tu familia.',
+    topics: ['Necesidades de atención médica', 'Red de atención y límites a consultar', 'Requisitos, carencias y exclusiones'],
+    image: '/images/salud.webp', alt: 'Profesional de salud con bata y estetoscopio.',
+  },
+  {
+    id: 'hogar', name: 'Seguro de hogar', shortName: 'Hogar', audience: 'personas',
+    headline: 'Cuidá el lugar donde pasa tu vida.',
+    description: 'Tu casa y lo que hay en ella merecen protección. Conversamos sobre el inmueble, su contenido y los riesgos que necesitás considerar.',
+    summary: 'Tu hogar y tu patrimonio, en buenas decisiones.',
+    topics: ['Características del inmueble y su contenido', 'Riesgos del entorno a evaluar', 'Límites y condiciones de protección'],
+    image: '/images/hogar.webp', alt: 'Casa con jardín e iluminación cálida al atardecer.',
+  },
+  {
+    id: 'empresas', name: 'Seguros empresariales', shortName: 'Empresas', audience: 'empresas',
+    headline: 'Vos hacés crecer tu negocio.',
+    description: 'Cada empresa tiene necesidades distintas. Analizamos tu actividad, tus activos y tu equipo para orientarte sobre alternativas de protección.',
+    summary: 'Respaldo para lo que construís cada día.',
+    topics: ['Actividad, instalaciones y activos', 'Responsabilidades de la operación', 'Necesidades de protección del equipo'],
+    image: '/images/empresas.webp', alt: 'Interior de una cafetería con mesas y área de atención.',
+  },
+  {
+    id: 'asesoria', name: 'Asesoría y acompañamiento', shortName: 'Asesoría', audience: 'todos',
+    headline: 'Elegir bien empieza por entender.',
+    description: 'Te ayudamos a comprender las condiciones, organizar tus documentos y dar seguimiento a las gestiones de tu seguro.',
+    summary: 'Resolvemos tus dudas. Te acompañamos a decidir.',
+    topics: ['Orientación sobre alternativas y condiciones', 'Apoyo con requisitos y documentos', 'Seguimiento de consultas y gestiones'],
+    image: '/images/asesoria.webp', alt: 'Personas revisando documentación en una mesa de trabajo.',
+  },
 ] as const;
+
 export type SolutionId = typeof publicSolutions[number]['id'];
