@@ -4,17 +4,17 @@ import PublicSite from './PublicSite';
 
 type Surface = 'public' | 'workspace';
 
-const publicHash = /^#(?:\/inicio(?:\/.*)?|\/web(?:\/.*)?|inicio|servicios|filosofia|proceso|contacto)$/;
+const workspaceHash = /^#\/(?:acceso|workspace)(?:\/.*)?$/i;
 
 /**
  * Entry policy:
- * - The real business system is the default entry at '/'.
- * - Marketing website lives at '#/inicio'.
+ * - The public commercial website is the default at '/'.
+ * - The protected business workspace lives at '#/acceso' or '#/workspace'.
  * - Legacy '#/demo' is no longer a public or available surface.
  * - Firebase Authentication is required before operational data is rendered.
  */
 function getSurface(): Surface {
-  return publicHash.test(window.location.hash) ? 'public' : 'workspace';
+  return workspaceHash.test(window.location.hash) ? 'workspace' : 'public';
 }
 
 function normalizeLegacyUrl() {
