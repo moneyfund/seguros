@@ -37,6 +37,12 @@ const load = async (hash = '#/inicio') => {
 };
 try {
   await load();
+  await test('Production root renders the commercial website without login', async () => {
+    await page.goto(base);
+    await page.locator('.acos-public').waitFor();
+    assert.equal(await page.locator('input[type=password]').count(), 0);
+    await load();
+  });
   await test('Photographs, six products and the commercial heading render', async () => {
     assert.match(await page.locator('h1').innerText(), /Aseguramos/);
     assert.equal(await page.locator('.ap-product').count(), 6);
@@ -141,7 +147,7 @@ try {
     }
   });
   await test('All existing private routes retain the unauthenticated access gate', async () => {
-    for (const hash of ['', '#/acceso', '#/registro', '#/direccion/solicitudes', '#/mi-panel', '#/demo', '#/dashboard', '#/admin']) {
+    for (const hash of ['#/acceso', '#/registro', '#/direccion/solicitudes', '#/mi-panel', '#/demo', '#/dashboard', '#/admin']) {
       await page.goto(base + hash);
       await page.locator('input[type=password]').waitFor();
       assert.equal(await page.locator('.acos-public').count(), 0);
