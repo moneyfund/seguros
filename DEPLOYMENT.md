@@ -25,4 +25,6 @@ Proyecto: `moneyfund/seguros`. Aplicación React + Vite. Esta política rige el 
 
 **Nota:** Vercel Hobby está limitado por sus términos a uso personal y no comercial; contratar un plan adecuado antes de la explotación comercial de ACOS.
 
-**Dirección de producción verificada:** pendiente de asignación/confirmación en Vercel. No inventar ni anunciar una URL hasta verificar el dominio y el despliegue.
+**Dominio observado en el panel de Vercel:** `seguros-green.vercel.app` (proyecto `seguros`). Validar públicamente tras publicar el commit de integración; no dar por finalizada la configuración de Deployment Protection ni Firebase hasta comprobar el acceso.
+
+**Proyecto duplicado observado:** `seguros-mknk`. Revisar variables de entorno y dominios antes de desactivar la integración Git o eliminarlo; la consolidación del código en GitHub no desactiva por sí sola un proyecto Vercel.

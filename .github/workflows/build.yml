@@ -23,4 +23,4 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Typecheck and build
-        run: npm run build
+        run: npm run typecheck && npm run build

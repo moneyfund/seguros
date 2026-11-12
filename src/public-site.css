@@ -1,0 +1,503 @@
+
+/* Public layout uses the same official brand tokens as the private workspace. */
+.acos-public{--ap-navy:var(--brand-navy);--ap-deep:var(--brand-navy);--ap-accent:var(--brand-bronze-text);--ap-gold:var(--brand-champagne);--ap-ink:var(--brand-navy);--ap-muted:var(--brand-slate);--ap-surface:var(--brand-mist);--ap-line:var(--brand-line);--ap-sans:var(--brand-sans);background:#fff;color:var(--ap-ink);font:400 14px/1.7 var(--ap-sans);isolation:isolate;overflow:clip}
+.acos-public *{box-sizing:border-box}
+.acos-public h1,.acos-public h2,.acos-public h3,.acos-public p{margin:0}
+.acos-public h1,.acos-public h2,.acos-public h3{font-family:var(--ap-sans);font-weight:600;color:inherit}
+.acos-public h2{font-size:clamp(30px,3.1vw,44px);line-height:1.24;letter-spacing:-1.7px}
+.acos-public h2>span{color:var(--ap-accent)}
+.acos-public button,.acos-public input,.acos-public select,.acos-public textarea{font-family:var(--ap-sans)}
+.acos-public button,.acos-public a{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.acos-public button{color:inherit}
+.acos-public button:focus-visible,.acos-public a:focus-visible,.acos-public select:focus-visible,.acos-public textarea:focus-visible,.acos-public summary:focus-visible{outline:3px solid var(--brand-muted)!important;outline-offset:4px}
+.acos-public section:focus,.acos-public main:focus{outline:none!important}
+.acos-public img{display:block;max-width:100%}
+.acos-public svg{flex-shrink:0}
+.acos-public [hidden]{display:none!important}
+.acos-public ::selection{background:var(--ap-gold);color:var(--ap-deep)}
+.acos-public .ap-container{width:min(1280px,calc(100% - 112px));margin-inline:auto}
+.acos-public .ap-section{padding-block:96px}
+.acos-public section[id]{scroll-margin-top:100px}
+.acos-public .ap-eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:10px;line-height:1.5;letter-spacing:1.65px;font-weight:600;color:var(--ap-accent);margin-bottom:18px}
+.acos-public .ap-light-eyebrow{color:var(--brand-line)}
+.acos-public .ap-section-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:50px;margin-bottom:38px}
+.acos-public .ap-button{display:inline-flex;align-items:center;justify-content:center;gap:24px;min-height:52px;padding:15px 24px;border:1px solid var(--ap-navy);border-radius:6px;background:var(--ap-navy);color:white;font-size:12px;font-weight:600;line-height:1.5;text-align:center;transition:background .2s,transform .2s}
+.acos-public .ap-button:hover{background:var(--brand-navy);transform:translateY(-2px)}
+.acos-public .ap-button svg,.acos-public .ap-text-link svg{transition:transform .2s}
+.acos-public .ap-button:hover svg,.acos-public .ap-text-link:hover svg{transform:translateX(3px)}
+.acos-public .ap-button-gold{color:var(--ap-deep);background:var(--ap-gold);border-color:var(--ap-gold)}
+.acos-public .ap-button-gold:hover{background:var(--brand-champagne);border-color:var(--brand-champagne)}
+.acos-public .ap-text-link{display:inline-flex;align-items:center;gap:15px;min-height:44px;background:transparent;border:0;border-bottom:1px solid var(--brand-muted);padding:7px 0;color:var(--ap-navy);font-size:12px;font-weight:600;text-align:left}
+.acos-public .ap-icon-button{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--ap-line);background:white;color:var(--ap-navy);border-radius:6px;flex-shrink:0}
+.acos-public .ap-skip{position:fixed;top:12px;left:20px;z-index:1000;background:var(--ap-navy);color:white;padding:14px 22px;transform:translateY(-180%)}
+.acos-public .ap-skip:focus{transform:translateY(0)}
+
+/* A familiar commercial navigation, with a distinct staff entrance. */
+.acos-public .ap-topbar{background:var(--ap-navy);color:var(--brand-mist);font-size:10px}
+.acos-public .ap-topbar>.ap-container{display:flex;align-items:center;justify-content:space-between;min-height:33px}
+.acos-public .ap-topbar span,.acos-public .ap-topbar button{display:inline-flex;align-items:center;gap:8px}
+.acos-public .ap-topbar button{border:0;background:transparent;color:var(--brand-mist);font-size:10px;padding:7px 0;min-height:33px}
+.acos-public .ap-topbar button:hover{color:var(--ap-gold)}
+.acos-public .ap-header{position:sticky;top:0;z-index:50;background:#fff;transition:box-shadow .25s}
+.acos-public .ap-header-scrolled{box-shadow:0 2px 16px rgb(0 25 41 / 0.071)}
+.acos-public .ap-navbar{height:92px;display:flex;align-items:center;justify-content:space-between;gap:24px}
+.acos-public .ap-brand{display:flex;align-items:center;gap:14px;flex-shrink:0}
+.acos-public .ap-brand img{width:92px;height:71px;object-fit:contain}
+.acos-public .ap-brand>span{font-size:7.5px;letter-spacing:1px;line-height:1.8;color:var(--brand-slate);border-left:1px solid var(--brand-line);padding-left:14px}
+.acos-public .ap-nav{display:flex;align-items:center;gap:25px}
+.acos-public .ap-nav>a{position:relative;display:flex;align-items:center;min-height:48px;font-size:11px;font-weight:500;color:var(--brand-slate);white-space:nowrap}
+.acos-public .ap-nav>a:after{content:'';position:absolute;bottom:3px;left:0;right:0;height:2px;background:var(--brand-slate);transform:scaleX(0);transform-origin:left;transition:transform .2s}
+.acos-public .ap-nav>a:hover:after,.acos-public .ap-nav>a[aria-current]:after{transform:scaleX(1)}
+.acos-public .ap-nav>a[aria-current]{color:var(--ap-navy)}
+.acos-public .ap-nav-cta{font-size:10px;padding:12px 17px;gap:12px;min-height:44px}
+.acos-public .ap-menu-toggle,.acos-public .ap-mobile-enterprise{display:none}
+
+/* Real photography and a high-contrast, product-first introduction. */
+.acos-public .ap-hero{position:relative;min-height:590px;background:var(--brand-navy);color:#fff;overflow:hidden}
+.acos-public .ap-hero-photo{position:absolute;inset:0 0 0 auto;width:78%;height:100%;object-fit:cover;object-position:center 40%}
+.acos-public .ap-hero-shade{position:absolute;inset:0;background:linear-gradient(90deg,var(--brand-navy) 0%,rgb(0 25 41 / 0.949) 23%,rgb(0 25 41 / 0.651) 43%,rgb(0 25 41 / 0.063) 66%,rgb(0 25 41 / 0.031) 100%)}
+.acos-public .ap-hero-content{position:relative;padding-block:68px 100px}
+.acos-public .ap-hero .ap-eyebrow{font-size:9px;letter-spacing:1.8px;margin-bottom:23px}
+.acos-public .ap-hero .ap-eyebrow>span{width:23px;height:2px;background:var(--ap-gold)}
+.acos-public .ap-hero h1{font-size:clamp(50px,4.75vw,70px);line-height:1.12;font-weight:600;letter-spacing:-3.3px;max-width:650px;color:#fff}
+.acos-public .ap-hero h1>span{color:var(--ap-gold)}
+.acos-public .ap-hero-content>p{font-size:14px;line-height:1.9;margin-top:24px;color:var(--brand-mist);max-width:440px}
+.acos-public .ap-actions{display:flex;align-items:center;gap:29px;margin-top:30px}
+.acos-public .ap-hero-consult{display:inline-flex;align-items:center;gap:14px;min-height:48px;padding:10px 0;background:transparent;border:0;border-bottom:1px solid #ffffff80;color:#fff;font-size:12px;font-weight:500}
+.acos-public .ap-hero-consult:hover{color:var(--ap-gold);border-color:var(--ap-gold)}
+.acos-public .ap-hero-assurance{display:flex;align-items:center;gap:10px;margin-top:32px;color:var(--brand-line);font-size:10px}
+.acos-public .ap-hero-assurance svg{color:var(--ap-gold)}
+.acos-public .ap-hero-caption{position:absolute;right:max(56px,calc((100% - 1280px)/2));bottom:95px;display:flex;flex-direction:column;text-align:right;color:#fff;text-shadow:0 1px 7px #0008}
+.acos-public .ap-hero-caption>span{font-size:9px;letter-spacing:2px}
+.acos-public .ap-hero-caption>strong{font-size:20px;font-weight:500;letter-spacing:-.5px;margin-top:5px}
+
+/* The service dock makes every category reachable in one click. */
+.acos-public .ap-shortcut-wrap{position:relative;z-index:3;margin-top:-48px}
+.acos-public .ap-shortcuts{display:grid;grid-template-columns:1.5fr repeat(6,1fr);min-height:130px;background:#fff;border:1px solid var(--brand-mist);border-radius:10px;box-shadow:0 12px 30px rgb(0 25 41 / 0.039);overflow:hidden}
+.acos-public .ap-shortcut-intro{display:flex;flex-direction:column;justify-content:center;padding:24px 28px;background:var(--brand-mist)}
+.acos-public .ap-shortcut-intro>span{font-size:8px;font-weight:600;letter-spacing:1px;color:var(--brand-slate);margin-bottom:7px}
+.acos-public .ap-shortcut-intro>strong{font-size:20px;line-height:1.25;letter-spacing:-.6px;font-weight:600}
+.acos-public .ap-shortcuts>button{position:relative;background:white;border:0;border-left:1px solid var(--brand-mist);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:17px 9px;color:var(--ap-navy);transition:background .2s}
+.acos-public .ap-shortcuts>button>span{font-size:11px;font-weight:500}
+.acos-public .ap-shortcuts>button>svg:last-child{position:absolute;right:12px;top:13px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s,transform .2s}
+.acos-public .ap-shortcuts>button:hover,.acos-public .ap-shortcuts>button:focus-visible{background:var(--brand-mist)}
+.acos-public .ap-shortcuts>button:hover>svg:last-child{opacity:1;transform:translate(0)}
+
+/* An asymmetric catalogue. */
+.acos-public .ap-products{padding-top:73px}
+.acos-public .ap-products-intro{max-width:368px;flex-shrink:0}
+.acos-public .ap-products-intro>p{font-size:12px;line-height:1.9;color:var(--ap-muted);margin-bottom:21px}
+.acos-public .ap-filters{display:inline-flex;gap:4px;padding:4px;background:var(--brand-mist);border-radius:6px}
+.acos-public .ap-filters>button{border:0;background:transparent;padding:10px 15px;min-height:41px;border-radius:4px;font-size:10px;font-weight:500;white-space:nowrap;color:var(--brand-slate);transition:background .2s}
+.acos-public .ap-filters>button[aria-pressed=true]{background:var(--ap-navy);color:white}
+.acos-public .ap-filters>button:hover:not([aria-pressed=true]){background:var(--brand-mist)}
+.acos-public .ap-product-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:18px}
+.acos-public .ap-product{grid-column:span 3;position:relative;min-height:345px;border-radius:10px;overflow:hidden;background:var(--ap-navy);color:white;isolation:isolate;display:flex;flex-direction:column;justify-content:space-between;padding:27px}
+.acos-public .ap-product-vida{grid-column:span 6}
+.acos-public .ap-product-hogar{grid-column:span 4}
+.acos-public .ap-product-empresas{grid-column:span 5}
+.acos-public .ap-product-asesoria{grid-column:span 3;background:var(--brand-line);color:var(--ap-navy)}
+.acos-public .ap-product>img{position:absolute;z-index:-2;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s}
+.acos-public .ap-product:hover>img{transform:scale(1.035)}
+.acos-public .ap-product-shade{position:absolute;inset:0;z-index:-1;background:linear-gradient(180deg,rgb(0 25 41 / 0.333) 0%,rgb(0 25 41 / 0.071) 24%,rgb(0 25 41 / 0.639) 62%,rgb(0 25 41 / 0.949) 100%)}
+.acos-public .ap-product-asesoria .ap-product-shade{display:none}
+.acos-public .ap-product-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.acos-public .ap-product-top>span:last-child{font-size:8px;letter-spacing:1.2px;font-weight:500}
+.acos-public .ap-product-icon{display:grid;place-items:center;width:43px;height:43px;background:#ffffffed;color:var(--ap-navy);border-radius:50%}
+.acos-public .ap-product-asesoria .ap-product-icon{background:var(--ap-navy);color:var(--brand-line);width:55px;height:55px}
+.acos-public .ap-product h3{font-size:25px;line-height:1.25;letter-spacing:-.8px;font-weight:600;max-width:400px}
+.acos-public .ap-product-vida h3{font-size:34px}
+.acos-public .ap-product p{font-size:11px;line-height:1.7;color:var(--brand-mist);margin-top:10px;max-width:320px}
+.acos-public .ap-product-asesoria p{color:var(--brand-slate)}
+.acos-public .ap-product button{display:flex;width:100%;justify-content:space-between;align-items:center;gap:9px;min-height:43px;padding:14px 0 0;border:0;border-top:1px solid #ffffff50;background:transparent;color:#fff;font-size:10px;font-weight:500;text-align:left;margin-top:20px}
+.acos-public .ap-product button:hover{color:var(--ap-gold)}
+.acos-public .ap-product-asesoria button{color:var(--ap-navy);border-color:rgb(64 87 102 / 0.251)}
+.acos-public .ap-product-asesoria button:hover{color:var(--brand-navy)}
+.acos-public .ap-product-hogar,.acos-public .ap-product-empresas,.acos-public .ap-product-asesoria{min-height:290px}
+.acos-public .ap-product-vehiculos>img{object-position:61% center}
+.acos-public .ap-product-salud>img{object-position:52% center}
+.acos-public .ap-grid-filtered .ap-product{grid-column:span 4;min-height:310px}
+.acos-public .ap-grid-filtered .ap-product-vida{grid-column:span 8}
+.acos-public .ap-grid-filtered .ap-product-empresas{grid-column:span 8}
+.acos-public .ap-product-note{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:26px;color:var(--brand-slate)}
+.acos-public .ap-product-note p{font-size:10px;line-height:1.8}
+
+/* A full-bleed business feature, with warm photography. */
+.acos-public .ap-business{display:grid;grid-template-columns:1fr 1fr;background:var(--ap-navy);color:#fff;min-height:570px}
+.acos-public .ap-business-image{position:relative;min-height:100%;overflow:hidden}
+.acos-public .ap-business-image>img{width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center 52%}
+.acos-public .ap-business-image:after{content:'';position:absolute;inset:50% 0 0;background:linear-gradient(0deg,rgb(0 25 41 / 0.788),transparent)}
+.acos-public .ap-business-image>span{position:absolute;bottom:55px;left:max(56px,calc((200% - 1280px)/2));z-index:1;font-size:9px;letter-spacing:1.5px;color:#fff}
+.acos-public .ap-business-image strong{font-size:25px;letter-spacing:-.7px;font-weight:500}
+.acos-public .ap-business-copy{padding:65px max(56px,calc((200% - 1280px)/2)) 65px 65px}
+.acos-public .ap-business h2{font-size:clamp(32px,3.05vw,44px);line-height:1.24;color:#fff}
+.acos-public .ap-business h2>span{color:var(--ap-gold)}
+.acos-public .ap-business-copy>p{font-size:12px;line-height:1.9;color:var(--brand-line);max-width:400px;margin-top:24px}
+.acos-public .ap-business-needs{display:flex;gap:22px;margin-block:28px 32px;padding-block:20px;border-top:1px solid #ffffff2b;border-bottom:1px solid #ffffff2b}
+.acos-public .ap-business-needs>span{display:flex;align-items:center;gap:8px;font-size:10px;white-space:nowrap;color:var(--brand-mist)}
+.acos-public .ap-business-needs svg{color:var(--brand-line)}
+
+/* People, service and a practical next step. */
+.acos-public .ap-about-layout{display:grid;grid-template-columns:1fr 1fr;gap:90px;align-items:center}
+.acos-public .ap-about-visual{position:relative;height:510px;margin-right:20px}
+.acos-public .ap-about-visual>img{width:100%;height:100%;object-fit:cover;object-position:53% center;border-radius:10px}
+.acos-public .ap-about-label{position:absolute;bottom:28px;right:-35px;left:35px;background:var(--brand-mist);border:7px solid white;padding:23px 20px;display:flex;align-items:center;gap:17px;border-radius:8px}
+.acos-public .ap-about-label strong{display:block;font-size:16px;letter-spacing:-.4px;font-weight:600}
+.acos-public .ap-about-label span{display:block;font-size:10px;margin-top:3px;color:var(--brand-slate)}
+.acos-public .ap-about-copy>p{font-size:12px;line-height:1.95;color:var(--ap-muted);margin-top:22px;max-width:440px}
+.acos-public .ap-about-benefits{padding:0;list-style:none;margin:26px 0 15px;display:grid;gap:18px}
+.acos-public .ap-about-benefits>li{display:flex;align-items:flex-start;gap:12px}
+.acos-public .ap-about-benefits>li>svg{box-sizing:content-box;padding:6px;background:var(--brand-mist);border-radius:50%;color:var(--brand-slate)}
+.acos-public .ap-about-benefits strong{font-size:12px;font-weight:600;display:block}
+.acos-public .ap-about-benefits span{font-size:11px;color:var(--ap-muted);display:block;margin-top:2px}
+.acos-public .ap-process{background:var(--brand-mist)}
+.acos-public .ap-journey{padding:0;list-style:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:28px;margin:50px 0 0}
+.acos-public .ap-step-number{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;position:relative}
+.acos-public .ap-step-number:after{content:'';height:1px;position:absolute;left:65px;right:27px;background:var(--brand-line)}
+.acos-public .ap-step-number>span{width:47px;height:47px;display:grid;place-items:center;border:1px solid var(--brand-line);border-radius:50%;font-size:15px;color:var(--ap-navy)}
+.acos-public .ap-step-number>svg{color:var(--brand-muted)}
+.acos-public .ap-journey li:first-child .ap-step-number>span{background:var(--ap-navy);color:var(--ap-gold);border-color:var(--ap-navy)}
+.acos-public .ap-journey li:last-child .ap-step-number>svg,.acos-public .ap-journey li:last-child .ap-step-number:after{visibility:hidden}
+.acos-public .ap-journey h3{font-size:14px;line-height:1.5;margin-bottom:10px;letter-spacing:-.4px}
+.acos-public .ap-journey p{font-size:11px;line-height:1.85;color:var(--ap-muted);max-width:195px}
+.acos-public .ap-digital{padding-block:70px;background:var(--brand-mist)}
+.acos-public .ap-digital-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:80px;align-items:center}
+.acos-public .ap-digital .ap-eyebrow{font-size:9px;gap:14px}
+.acos-public .ap-development{font-size:8px;color:var(--brand-slate);background:var(--brand-white);padding:4px 8px;border:1px solid var(--brand-line);border-radius:3px;letter-spacing:.4px}
+.acos-public .ap-digital h2{font-size:30px;letter-spacing:-1px}
+.acos-public .ap-digital p{font-size:12px;line-height:1.9;color:var(--brand-slate);max-width:450px;margin-top:20px}
+.acos-public .ap-digital-copy>small{display:block;font-size:10px;color:var(--brand-slate);margin-top:16px}
+.acos-public .ap-workspace-preview{background:#fff;border:1px solid var(--brand-line);border-radius:9px;box-shadow:0 16px 0 -8px var(--brand-line)}
+.acos-public .ap-workspace-top{display:flex;align-items:center;justify-content:space-between;padding:17px 22px;border-bottom:1px solid var(--ap-line);color:var(--ap-navy)}
+.acos-public .ap-workspace-top>span{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;letter-spacing:.5px}
+.acos-public .ap-workspace-top b{font-size:8px;font-weight:500;letter-spacing:1px;color:var(--brand-slate)}
+.acos-public .ap-workspace-body{padding:22px}
+.acos-public .ap-preview-label{font-size:8px;font-weight:500;letter-spacing:1px;color:var(--brand-slate)}
+.acos-public .ap-workspace-items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:15px}
+.acos-public .ap-workspace-items>span{display:flex;flex-direction:column;align-items:flex-start;gap:15px;background:var(--brand-mist);border:1px solid var(--brand-mist);border-radius:5px;padding:17px 13px;color:var(--brand-slate)}
+.acos-public .ap-workspace-items strong{font-size:9px;font-weight:500}
+.acos-public .ap-workspace-flow{display:flex;align-items:center;justify-content:space-between;margin-top:18px;font-size:9px;color:var(--brand-slate)}
+.acos-public .ap-workspace-body>small{display:block;font-size:7px;letter-spacing:.7px;color:var(--brand-slate);margin-top:24px}
+.acos-public .ap-faq-layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:85px}
+.acos-public .ap-faq-layout>div>p{font-size:12px;color:var(--ap-muted);margin:20px 0}
+.acos-public .ap-questions{border-top:1px solid var(--ap-line)}
+.acos-public .ap-questions details{border-bottom:1px solid var(--ap-line)}
+.acos-public .ap-questions summary{display:flex;align-items:center;justify-content:space-between;gap:24px;cursor:pointer;list-style:none;padding:24px 0;font-size:13px;font-weight:500;min-height:70px}
+.acos-public .ap-questions summary::-webkit-details-marker{display:none}
+.acos-public .ap-questions summary svg{transition:transform .2s}
+.acos-public .ap-questions details[open] summary svg{transform:rotate(180deg)}
+.acos-public .ap-questions details[open] summary{color:var(--ap-accent)}
+.acos-public .ap-questions details>p{font-size:12px;line-height:1.95;color:var(--ap-muted);padding:0 34px 24px 0}
+.acos-public .ap-contact{background:var(--ap-gold);padding-block:66px;border-bottom:1px solid var(--brand-muted)}
+.acos-public .ap-contact-layout{display:flex;align-items:center;justify-content:space-between;gap:50px}
+.acos-public .ap-contact .ap-eyebrow{font-size:9px;letter-spacing:1.3px;color:var(--brand-navy)}
+.acos-public .ap-contact h2{font-size:38px}
+.acos-public .ap-contact h2>span{color:var(--brand-slate)}
+.acos-public .ap-contact-layout>div:last-child{flex-shrink:0}
+.acos-public .ap-contact-layout>div:last-child>p{font-size:10px;margin-top:13px;color:var(--brand-navy)}
+.acos-public address{display:grid;gap:9px;margin-top:16px;font-style:normal;font-size:11px}
+.acos-public address a{display:flex;align-items:center;gap:9px}
+
+/* Brand artwork always keeps its original colors and proportions. */
+.acos-public .ap-footer{background:var(--brand-white);color:var(--brand-slate)}
+.acos-public .ap-footer-main{display:grid;grid-template-columns:1.3fr 1fr 1.1fr 1.1fr;gap:45px;padding-block:55px 42px}
+.acos-public .ap-footer-brand img{width:124px;height:95px;object-fit:contain;margin-top:-16px;margin-bottom:11px}
+.acos-public .ap-footer-brand p,.acos-public .ap-footer-help p{font-size:10px;line-height:1.9;color:var(--brand-slate)}
+.acos-public .ap-footer-brand>span{display:flex;align-items:center;gap:6px;font-size:10px;margin-top:15px}
+.acos-public .ap-footer-main h2{font-size:11px;line-height:1.6;letter-spacing:0;font-weight:600;margin-bottom:17px;color:var(--brand-navy)}
+.acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{display:flex;align-items:center;gap:8px;width:fit-content;border:0;background:transparent;padding:5px 0;min-height:32px;font-size:10px;color:var(--brand-slate);text-align:left}
+.acos-public .ap-footer-main>div>a:hover,.acos-public .ap-footer-main>div>button:hover{color:var(--ap-navy);text-decoration:underline}
+.acos-public .ap-footer-help .ap-text-link{font-weight:600;color:var(--ap-navy);margin-top:10px}
+.acos-public .ap-footer-help .ap-footer-access{border:1px solid var(--brand-line);border-radius:4px;padding:10px 13px;margin-top:18px;font-size:9px}
+.acos-public .ap-footer-bottom{padding-block:20px;display:flex;justify-content:space-between;align-items:center;gap:25px;border-top:1px solid var(--brand-line);font-size:9px;color:var(--brand-muted)}
+.acos-public .ap-footer-bottom strong{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--brand-slate)}
+.acos-public .ap-footer-bottom a{display:flex;align-items:center;gap:8px;min-height:32px}
+.acos-public .ap-footer-bottom a svg{transform:rotate(180deg)}
+
+/* Accessible native dialogs; no false delivery confirmations or invented contacts. */
+.acos-public .ap-dialog{width:min(590px,calc(100% - 32px));max-height:calc(100dvh - 40px);margin:auto;padding:0;border:1px solid var(--brand-line);border-radius:12px;background:white;color:var(--ap-ink);font:400 13px/1.7 var(--ap-sans);box-shadow:0 24px 80px #001d283d}
+.acos-public .ap-dialog::backdrop{background:rgb(0 25 41 / 0.659);backdrop-filter:blur(3px)}
+.acos-public .ap-dialog-inner{position:relative;padding:42px}
+.acos-public .ap-dialog-close{position:absolute;right:15px;top:15px;background:var(--brand-white)}
+.acos-public .ap-dialog .ap-eyebrow{font-size:8px;margin-right:20px}
+.acos-public .ap-dialog h2{font-size:29px;letter-spacing:-1px;line-height:1.2;margin:3px 0 17px;padding-right:10px}
+.acos-public .ap-dialog-inner>p{font-size:12px;line-height:1.85;color:var(--ap-muted)}
+.acos-public .ap-consultation{margin-top:23px}
+.acos-public .ap-consultation label{display:block;font-size:11px;font-weight:500;margin:18px 0 8px}
+.acos-public .ap-consultation select,.acos-public .ap-consultation textarea{display:block;width:100%;border:1px solid var(--brand-line);border-radius:5px;background:var(--brand-white);color:var(--ap-ink);font-size:12px;padding:13px;line-height:1.8}
+.acos-public .ap-consultation textarea{resize:vertical;min-height:130px}
+.acos-public .ap-consultation-actions{display:flex;flex-wrap:wrap;align-items:center;gap:15px;margin-top:20px}
+.acos-public .ap-copy-status{min-height:20px;margin-top:12px;font-size:11px;color:var(--brand-slate)}
+.acos-public .ap-dialog-note{display:flex;align-items:flex-start;gap:8px;font-size:10px!important;color:var(--brand-muted)!important;line-height:1.8;margin-top:21px!important;border-top:1px solid var(--ap-line);padding-top:16px}
+.acos-public .ap-dialog-note svg{margin-top:2px}
+.acos-public .ap-dialog-wide{width:min(850px,calc(100% - 32px))}
+.acos-public .ap-detail-layout{display:grid;grid-template-columns:.85fr 1.15fr;gap:28px;margin-top:25px}
+.acos-public .ap-detail-layout>img{width:100%;height:100%;max-height:340px;min-height:240px;object-fit:cover;border-radius:7px}
+.acos-public .ap-detail-layout p{font-size:12px;line-height:1.85;color:var(--brand-slate)}
+.acos-public .ap-detail-layout h3{font-size:12px;margin-top:20px;font-weight:600}
+.acos-public .ap-detail-layout ul{padding:0;margin:13px 0 23px;list-style:none;display:grid;gap:10px}
+.acos-public .ap-detail-layout li{display:flex;align-items:flex-start;gap:8px;font-size:11px;color:var(--brand-slate)}
+.acos-public .ap-detail-layout li svg{color:var(--brand-slate);margin-top:2px}
+.acos-public .ap-privacy h3{font-size:13px;margin:22px 0 7px}
+.acos-public .ap-privacy p{font-size:12px;line-height:1.9;color:var(--brand-slate)}
+
+@keyframes ap-enter{from{opacity:.65;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:no-preference){.acos-public .ap-in-view{animation:ap-enter .6s ease-out both}}
+
+@media(min-width:1600px){
+  .acos-public .ap-hero{min-height:650px}
+  .acos-public .ap-hero-content{padding-top:90px}
+  .acos-public .ap-hero-photo{object-position:center 38%}
+}
+@media(max-width:1330px){
+  .acos-public .ap-container{width:calc(100% - 80px)}
+  .acos-public .ap-brand>span{display:none}
+  .acos-public .ap-nav{gap:23px}
+  .acos-public .ap-product{padding:24px}
+  .acos-public .ap-product h3{font-size:23px}
+  .acos-public .ap-product-vida h3{font-size:32px}
+  .acos-public .ap-business-copy{padding:60px 40px}
+  .acos-public .ap-business-image>span{left:40px}
+  .acos-public .ap-business-needs{gap:17px}
+  .acos-public .ap-about-layout{gap:65px}
+}
+@media(max-width:1180px){
+  .acos-public .ap-navbar{height:82px}
+  .acos-public .ap-brand img{width:85px;height:65px}
+  .acos-public .ap-brand>span{display:block}
+  .acos-public .ap-menu-toggle{display:grid}
+  .acos-public .ap-nav{display:none;position:absolute;top:100%;left:0;right:0;background:white;padding:20px 40px 28px;max-height:calc(100dvh - 115px);overflow:auto;box-shadow:0 12px 20px rgb(0 25 41 / 0.078);flex-direction:column;align-items:stretch;gap:0}
+  .acos-public .ap-nav-open{display:flex}
+  .acos-public .ap-nav>a{font-size:14px;padding:12px 0;min-height:48px;border-bottom:1px solid var(--brand-mist)}
+  .acos-public .ap-nav>a:after{display:none}
+  .acos-public .ap-nav>a[aria-current]{font-weight:600;color:var(--brand-slate)}
+  .acos-public .ap-nav-cta{margin-top:20px;font-size:12px;min-height:48px}
+  .acos-public .ap-mobile-enterprise{display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:0;font-size:11px;padding:17px 10px 0}
+  .acos-public .ap-menu-scrim{position:fixed;inset:0;background:rgb(0 25 41 / 0.349);z-index:40;border:0}
+  .acos-public .ap-hero{min-height:560px}
+  .acos-public .ap-hero-content{padding-block:65px 95px}
+  .acos-public .ap-hero h1{font-size:57px}
+  .acos-public .ap-hero-photo{width:83%;object-position:55% 40%}
+  .acos-public .ap-hero-caption{right:40px;font-size:17px}
+  .acos-public .ap-shortcut-intro{padding:22px 18px}
+  .acos-public .ap-shortcut-intro>strong{font-size:18px}
+  .acos-public .ap-shortcuts>button>span{font-size:10px}
+  .acos-public .ap-product{grid-column:span 4;min-height:320px}
+  .acos-public .ap-product-vida{grid-column:span 4}
+  .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:25px}
+  .acos-public .ap-product-asesoria .ap-product-top>span:last-child{font-size:7px}
+  .acos-public .ap-business h2{font-size:34px}
+  .acos-public .ap-business-needs{gap:12px;flex-wrap:wrap}
+  .acos-public .ap-about-layout{gap:50px}
+  .acos-public .ap-about-visual{height:485px;margin-right:10px}
+  .acos-public .ap-about-label{left:20px;right:-20px;padding:20px 15px;gap:13px}
+  .acos-public .ap-about-label strong{font-size:14px}
+  .acos-public .ap-journey{gap:22px}
+  .acos-public .ap-journey h3{font-size:12px}
+  .acos-public .ap-digital-layout{gap:40px}
+  .acos-public .ap-faq-layout{gap:50px}
+  .acos-public .ap-footer-main{gap:30px}
+}
+@media(max-width:900px){
+  .acos-public .ap-container{width:calc(100% - 48px)}
+  .acos-public .ap-section{padding-block:70px}
+  .acos-public h2{font-size:34px}
+  .acos-public .ap-hero h1{font-size:51px;letter-spacing:-2.5px}
+  .acos-public .ap-hero-photo{width:100%;object-position:65% 40%}
+  .acos-public .ap-hero-shade{background:linear-gradient(90deg,rgb(0 25 41 / 0.929) 0%,rgb(0 25 41 / 0.788) 29%,rgb(0 25 41 / 0.333) 65%,rgb(0 25 41 / 0.102) 100%)}
+  .acos-public .ap-hero-caption{display:none}
+  .acos-public .ap-shortcuts{grid-template-columns:repeat(6,1fr)}
+  .acos-public .ap-shortcut-intro{grid-column:1/-1;flex-direction:row;align-items:center;justify-content:space-between;padding:14px 20px;gap:20px}
+  .acos-public .ap-shortcut-intro>strong{font-size:16px}
+  .acos-public .ap-shortcut-intro>strong>br{display:none}
+  .acos-public .ap-shortcut-intro>span{margin:0;font-size:8px}
+  .acos-public .ap-shortcuts>button{padding:20px 4px;gap:10px}
+  .acos-public .ap-shortcuts>button>svg:first-child{width:25px;height:25px}
+  .acos-public .ap-section-heading{gap:30px}
+  .acos-public .ap-products-intro{max-width:310px}
+  .acos-public .ap-products-intro>p{font-size:11px}
+  .acos-public .ap-filters>button{padding:10px 13px;font-size:9px}
+  .acos-public .ap-product-grid{gap:14px}
+  .acos-public .ap-product,.acos-public .ap-product-vida{grid-column:span 6;min-height:310px}
+  .acos-public .ap-product h3{font-size:26px}
+  .acos-public .ap-product-vida h3{font-size:29px}
+  .acos-public .ap-grid-filtered .ap-product{grid-column:span 6}
+  .acos-public .ap-grid-filtered .ap-product-vida{grid-column:span 12}
+  .acos-public .ap-product-note{align-items:flex-start;text-align:left}
+  .acos-public .ap-product-note svg{margin-top:2px}
+  .acos-public .ap-business{min-height:530px;grid-template-columns:.9fr 1.1fr}
+  .acos-public .ap-business-copy{padding:45px 30px}
+  .acos-public .ap-business h2{font-size:30px}
+  .acos-public .ap-business-copy>p{font-size:11px}
+  .acos-public .ap-business-image>span{left:25px;bottom:30px;font-size:8px}
+  .acos-public .ap-business-image strong{font-size:20px}
+  .acos-public .ap-business-needs{gap:12px}
+  .acos-public .ap-business-needs>span{font-size:9px}
+  .acos-public .ap-business .ap-button{font-size:10px;padding:14px 17px;gap:17px}
+  .acos-public .ap-about-layout{gap:36px}
+  .acos-public .ap-about-visual{height:510px}
+  .acos-public .ap-about-label{flex-direction:column;align-items:flex-start;left:16px;right:-12px;bottom:20px;padding:17px;border-width:5px}
+  .acos-public .ap-about-copy h2{font-size:32px}
+  .acos-public .ap-about-copy>p{font-size:11px}
+  .acos-public .ap-about-benefits{gap:15px}
+  .acos-public .ap-about-benefits strong{font-size:11px}
+  .acos-public .ap-about-benefits span{font-size:10px}
+  .acos-public .ap-journey{gap:17px}
+  .acos-public .ap-journey h3{font-size:12px;letter-spacing:-.3px}
+  .acos-public .ap-journey p{font-size:10px}
+  .acos-public .ap-step-number>span{width:40px;height:40px;font-size:13px}
+  .acos-public .ap-step-number:after{left:49px}
+  .acos-public .ap-digital-layout{gap:32px}
+  .acos-public .ap-digital h2{font-size:25px}
+  .acos-public .ap-digital p{font-size:11px}
+  .acos-public .ap-digital .ap-eyebrow{flex-wrap:wrap;gap:9px}
+  .acos-public .ap-workspace-body{padding:17px}
+  .acos-public .ap-workspace-items>span{padding:12px 7px;gap:14px}
+  .acos-public .ap-workspace-items strong{font-size:8px}
+  .acos-public .ap-faq-layout{gap:35px}
+  .acos-public .ap-contact h2{font-size:31px}
+  .acos-public .ap-contact-layout{gap:30px}
+  .acos-public .ap-contact .ap-eyebrow{font-size:8px}
+  .acos-public .ap-footer-main{grid-template-columns:1fr 1fr;gap:40px 50px}
+}
+@media(max-width:640px){
+  .acos-public .ap-container{width:calc(100% - 40px)}
+  .acos-public .ap-section{padding-block:56px}
+  .acos-public h2{font-size:30px;letter-spacing:-1.2px}
+  .acos-public .ap-eyebrow{font-size:9px;letter-spacing:1.3px;margin-bottom:14px}
+  .acos-public section[id]{scroll-margin-top:87px}
+  .acos-public .ap-topbar>.ap-container{min-height:29px;justify-content:center;width:100%}
+  .acos-public .ap-topbar span{font-size:8px;gap:6px}
+  .acos-public .ap-topbar button{display:none}
+  .acos-public .ap-navbar{height:76px}
+  .acos-public .ap-brand img{width:77px;height:59px}
+  .acos-public .ap-brand>span{font-size:6.5px;padding-left:10px}
+  .acos-public .ap-brand{gap:10px}
+  .acos-public .ap-nav{padding:14px 20px 24px}
+  .acos-public .ap-hero{min-height:710px}
+  .acos-public .ap-hero-photo{width:100%;height:400px;inset:0;object-position:55% center}
+  .acos-public .ap-hero-shade{background:linear-gradient(180deg,rgb(0 25 41 / 0.0) 0%,rgb(0 25 41 / 0.0) 25%,rgb(0 25 41 / 0.439) 42%,rgb(0 25 41 / 0.961) 53%,var(--brand-navy) 60%)}
+  .acos-public .ap-hero-content{padding-top:333px;padding-bottom:85px}
+  .acos-public .ap-hero .ap-eyebrow{font-size:8px;letter-spacing:1.2px;margin-bottom:17px;gap:8px}
+  .acos-public .ap-hero h1{font-size:46px;line-height:1.12;letter-spacing:-2.2px}
+  .acos-public .ap-hero-content>p{font-size:12px;line-height:1.85;margin-top:20px;max-width:330px}
+  .acos-public .ap-desktop-break{display:none}
+  .acos-public .ap-actions{gap:24px;margin-top:24px}
+  .acos-public .ap-button{min-height:49px;font-size:11px;padding:14px 20px;gap:17px}
+  .acos-public .ap-hero-consult{font-size:11px;gap:9px}
+  .acos-public .ap-hero-assurance{margin-top:25px;font-size:8px;gap:7px}
+  .acos-public .ap-shortcut-wrap{margin-top:-35px}
+  .acos-public .ap-shortcuts{grid-template-columns:repeat(3,1fr);border-radius:8px}
+  .acos-public .ap-shortcut-intro{padding:15px;gap:10px}
+  .acos-public .ap-shortcut-intro>span{font-size:6.5px;letter-spacing:.7px}
+  .acos-public .ap-shortcut-intro>strong{font-size:13px;letter-spacing:-.3px}
+  .acos-public .ap-shortcuts>button{padding:17px 6px;min-height:92px;border-bottom:1px solid var(--brand-mist)}
+  .acos-public .ap-shortcuts>button:nth-child(3n + 2){border-left:0}
+  .acos-public .ap-shortcuts>button:nth-last-child(-n+3){border-bottom:0}
+  .acos-public .ap-shortcuts>button>span{font-size:10px}
+  .acos-public .ap-shortcuts>button>svg:last-child{display:none}
+  .acos-public .ap-products{padding-top:50px}
+  .acos-public .ap-section-heading{display:block;margin-bottom:28px}
+  .acos-public .ap-products-intro{max-width:100%;margin-top:20px}
+  .acos-public .ap-products-intro>p{font-size:11px;max-width:320px;margin-bottom:18px}
+  .acos-public .ap-filters{width:100%;display:flex;gap:4px}
+  .acos-public .ap-filters>button{flex:1;font-size:10px;padding:10px 8px}
+  .acos-public .ap-product-grid{grid-template-columns:1fr;gap:16px}
+  .acos-public .ap-product,.acos-public .ap-product-vida,.acos-public .ap-grid-filtered .ap-product{grid-column:auto;min-height:300px;padding:25px}
+  .acos-public .ap-product-vida{min-height:345px}
+  .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:29px}
+  .acos-public .ap-product-top>span:last-child{font-size:8px}
+  .acos-public .ap-product p{font-size:12px;max-width:290px}
+  .acos-public .ap-product button{font-size:11px}
+  .acos-public .ap-product-asesoria{min-height:275px}
+  .acos-public .ap-product-asesoria .ap-product-top>span:last-child{font-size:8px}
+  .acos-public .ap-product-note{gap:8px;margin-top:20px}
+  .acos-public .ap-product-note p{font-size:9px}
+  .acos-public .ap-business{grid-template-columns:1fr}
+  .acos-public .ap-business-image{height:300px;min-height:0}
+  .acos-public .ap-business-image>img{object-position:center 56%}
+  .acos-public .ap-business-image>span{left:25px;bottom:25px}
+  .acos-public .ap-business-copy{padding:42px 25px 45px}
+  .acos-public .ap-business h2{font-size:33px}
+  .acos-public .ap-business-copy>p{font-size:12px}
+  .acos-public .ap-business-needs{gap:16px}
+  .acos-public .ap-business-needs>span{font-size:10px}
+  .acos-public .ap-business .ap-button{font-size:11px}
+  .acos-public .ap-about-layout{grid-template-columns:1fr;gap:35px}
+  .acos-public .ap-about-visual{height:340px;margin-right:0;margin-bottom:0}
+  .acos-public .ap-about-visual>img{object-position:center}
+  .acos-public .ap-about-label{flex-direction:row;align-items:center;left:15px;right:15px;bottom:-10px;gap:12px;border-width:5px;padding:18px 12px}
+  .acos-public .ap-about-label strong{font-size:13px}
+  .acos-public .ap-about-label span{font-size:9px}
+  .acos-public .ap-about-copy h2{font-size:32px}
+  .acos-public .ap-about-copy>p{font-size:12px}
+  .acos-public .ap-about-benefits{gap:20px}
+  .acos-public .ap-about-benefits strong{font-size:12px}
+  .acos-public .ap-about-benefits span{font-size:11px}
+  .acos-public .ap-process .ap-section-heading>.ap-text-link{margin-top:20px}
+  .acos-public .ap-journey{grid-template-columns:1fr 1fr;gap:28px 24px;margin-top:32px}
+  .acos-public .ap-journey h3{font-size:13px;margin-bottom:8px}
+  .acos-public .ap-journey p{font-size:11px;max-width:220px}
+  .acos-public .ap-step-number{margin-bottom:16px}
+  .acos-public .ap-digital{padding-block:50px}
+  .acos-public .ap-digital-layout{grid-template-columns:1fr;gap:30px}
+  .acos-public .ap-digital h2{font-size:29px}
+  .acos-public .ap-digital p{font-size:12px}
+  .acos-public .ap-workspace-body{padding:20px}
+  .acos-public .ap-workspace-items>span{padding:15px 10px}
+  .acos-public .ap-workspace-items strong{font-size:9px}
+  .acos-public .ap-faq-layout{grid-template-columns:1fr;gap:30px}
+  .acos-public .ap-questions summary{font-size:12px;padding:21px 0;min-height:67px}
+  .acos-public .ap-questions details>p{font-size:11px;padding-right:15px}
+  .acos-public .ap-contact{padding-block:45px}
+  .acos-public .ap-contact-layout{display:block}
+  .acos-public .ap-contact h2{font-size:30px}
+  .acos-public .ap-contact .ap-eyebrow{font-size:7px;letter-spacing:1px;max-width:270px;line-height:1.7}
+  .acos-public .ap-contact-layout>div:last-child{margin-top:27px}
+  .acos-public .ap-contact-layout>div:last-child>p{font-size:10px}
+  .acos-public .ap-footer-main{grid-template-columns:1fr 1fr;gap:30px 20px;padding-block:42px 30px}
+  .acos-public .ap-footer-brand{grid-column:1/-1}
+  .acos-public .ap-footer-brand img{width:107px;height:82px;margin-top:-14px}
+  .acos-public .ap-footer-help{grid-column:1/-1;border-top:1px solid var(--ap-line);padding-top:25px}
+  .acos-public .ap-footer-main h2{font-size:11px;margin-bottom:12px}
+  .acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{font-size:10px;min-height:35px}
+  .acos-public .ap-footer-bottom{flex-wrap:wrap;justify-content:flex-start;gap:12px 25px;font-size:8px;padding-block:20px}
+  .acos-public .ap-footer-bottom>span:first-child{width:100%}
+  .acos-public .ap-dialog{max-height:calc(100dvh - 24px);width:calc(100% - 24px)}
+  .acos-public .ap-dialog-inner{padding:53px 22px 25px}
+  .acos-public .ap-dialog h2{font-size:27px}
+  .acos-public .ap-dialog-close{right:12px;top:12px;width:36px;height:36px}
+  .acos-public .ap-dialog .ap-eyebrow{font-size:7px}
+  .acos-public .ap-dialog-inner>p{font-size:11px}
+  .acos-public .ap-detail-layout{grid-template-columns:1fr;gap:20px}
+  .acos-public .ap-detail-layout>img{height:170px;min-height:170px}
+  .acos-public .ap-detail-layout p{font-size:12px}
+  .acos-public .ap-consultation select,.acos-public .ap-consultation textarea{font-size:16px}
+}
+@media(max-width:360px){
+  .acos-public .ap-container{width:calc(100% - 32px)}
+  .acos-public .ap-hero-content{padding-top:300px}
+  .acos-public .ap-hero-photo{height:370px}
+  .acos-public .ap-hero h1{font-size:40px}
+  .acos-public .ap-hero .ap-eyebrow{font-size:7px}
+  .acos-public .ap-hero-content>p{font-size:11px}
+  .acos-public .ap-actions{gap:18px}
+  .acos-public .ap-actions .ap-button{padding:13px 14px;gap:12px;font-size:10px}
+  .acos-public .ap-hero-consult{font-size:10px;gap:7px}
+  .acos-public .ap-hero-assurance{font-size:7px}
+  .acos-public .ap-shortcut-intro{padding-inline:12px}
+  .acos-public .ap-shortcut-intro>span{font-size:6px}
+  .acos-public .ap-shortcut-intro>strong{font-size:12px}
+  .acos-public h2{font-size:28px}
+  .acos-public .ap-business-copy{padding-inline:20px}
+  .acos-public .ap-business h2{font-size:30px}
+  .acos-public .ap-business-needs{gap:12px}
+  .acos-public .ap-business-needs>span{font-size:8px;gap:5px}
+  .acos-public .ap-about-label{left:9px;right:9px;padding-inline:9px;gap:8px}
+  .acos-public .ap-about-label strong{font-size:11px}
+  .acos-public .ap-about-label span{font-size:8px}
+  .acos-public .ap-contact h2{font-size:27px}
+}
+@media(prefers-reduced-motion:reduce){
+  .acos-public *,.acos-public *:before,.acos-public *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}

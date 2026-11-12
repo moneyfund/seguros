@@ -10,6 +10,25 @@ service cloud.firestore {
         request.auth.token.email_verified == true;
     }
 
+    // The corporate domain is configured only after ownership is verified.
+    // Create companies/main/settings/staffIdentity = {domain: 'verified-company-domain'}.
+    function staffDomainPath() {
+      return /databases/$(database)/documents/companies/main/settings/staffIdentity;
+    }
+    // Invitation-first onboarding: corporate email domain is NOT required to start.
+    // A verified, preinvited email can request access but cannot assign itself privileges.
+    function staffInvitationPath() {
+      return /databases/$(database)/documents/companies/main/staffInvitations/$(request.auth.token.email);
+    }
+    function isInvitedStaffUser() {
+      return verified() &&
+        exists(staffInvitationPath()) &&
+        get(staffInvitationPath()).data.status == 'invited';
+    }
+    function isInstitutionalUser() {
+      return isInvitedStaffUser();
+    }
+
     function isOwner() {
       return verified() &&
         request.auth.token.email in [
@@ -30,7 +49,17 @@ service cloud.firestore {
 
     function hasRole(allowed) {
       return isOwner() ||
-        (isActiveMember() && get(memberPath()).data.role in allowed);
+        (isActiveMember() && (
+          get(memberPath()).data.role in allowed ||
+          get(memberPath()).data.get('roles', []).hasAny(allowed)
+        ));
+    }
+
+    // Menus are not a security boundary: enforce approved views alongside roles.
+    function hasView(viewKey) {
+      return isOwner() ||
+        (isActiveMember() &&
+          get(memberPath()).data.get('allowedSections', []).hasAny([viewKey]));
     }
 
     function isClient() {
@@ -51,8 +80,8 @@ service cloud.firestore {
       match /members/{memberUid} {
         allow get: if isOwner() ||
           (verified() && request.auth.uid == memberUid) ||
-          hasRole(['supervision']);
-        allow list: if isOwner() || hasRole(['supervision']);
+          (hasRole(['supervision']) && hasView('equipo'));
+        allow list: if isOwner() || (hasRole(['supervision']) && hasView('equipo'));
 
         allow create: if isOwner() &&
           request.resource.data.keys().hasAll(
@@ -62,51 +91,110 @@ service cloud.firestore {
             'direccion','ventas','operaciones','servicio',
             'finanzas','supervision','cliente'
           ] &&
-          request.resource.data.active is bool;
+          request.resource.data.active is bool &&
+          request.resource.data.get('roles', []) is list &&
+          request.resource.data.get('roles', []).hasOnly([
+            'direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'
+          ]) &&
+          request.resource.data.get('allowedSections', []) is list &&
+          request.resource.data.get('allowedSections', []).hasOnly([
+            'resumen','prospectos','polizas','clientes','solicitudes','finanzas','equipo','documentos','configuracion'
+          ]);
 
         allow update, delete: if isOwner();
       }
 
-      // Solicitudes de ingreso creadas por la propia cuenta.
-      match /accessRequests/{uid} {
+      // Invitations are created by direction, not by applicants. Each employee
+      // can only read the invitation for their *verified* Firebase email address.
+      match /staffInvitations/{email} {
         allow get: if isOwner() ||
-          (verified() && request.auth.uid == uid);
+          (verified() && request.auth.token.email == email);
+        allow list: if isOwner();
+        allow create: if isOwner() &&
+          request.resource.data.email == email &&
+          request.resource.data.status == 'invited' &&
+          request.resource.data.createdBy == request.auth.uid &&
+          request.resource.data.requestedDepartment in [
+            'direccion','ventas','operaciones','servicio','finanzas','supervision'
+          ];
+        allow update, delete: if isOwner();
+      }
+
+      // Institutional onboarding. A draft is created before uploading its two private files.
+      match /accessRequests/{uid} {
+        allow get: if isOwner() || (verified() && request.auth.uid == uid);
         allow list: if isOwner();
 
-        allow create: if verified() &&
+        allow create: if isInstitutionalUser() &&
           request.auth.uid == uid &&
-          request.resource.data.keys().hasAll(
-            ['email','displayName','requestedRole','status','requestedAt']
-          ) &&
-          request.resource.data.keys().hasOnly(
-            ['email','displayName','requestedRole','status','requestedAt']
-          ) &&
+          request.resource.data.keys().hasOnly([
+            'email','displayName','phone','requestedDepartment','requestedRole','status','requestedAt'
+          ]) &&
+          request.resource.data.keys().hasAll([
+            'email','displayName','phone','requestedDepartment','requestedRole','status','requestedAt'
+          ]) &&
           request.resource.data.email == request.auth.token.email &&
           request.resource.data.displayName is string &&
-          request.resource.data.displayName.size() >= 2 &&
+          request.resource.data.displayName.size() >= 3 &&
           request.resource.data.displayName.size() <= 90 &&
-          request.resource.data.requestedRole in [
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision','cliente'
+          request.resource.data.phone is string &&
+          request.resource.data.phone.matches('[+]?[0-9 ()-]{8,20}') &&
+          request.resource.data.requestedDepartment in [
+            'direccion','ventas','operaciones','servicio','finanzas','supervision'
           ] &&
-          request.resource.data.status == 'pending' &&
+          request.resource.data.requestedRole == request.resource.data.requestedDepartment &&
+          request.resource.data.status == 'draft' &&
           request.resource.data.requestedAt is timestamp;
 
-        allow update: if isOwner() &&
-          changedOnly(['status','reviewedAt']) &&
-          request.resource.data.status in ['approved','rejected'];
+        allow update: if
+          (isInstitutionalUser() &&
+           request.auth.uid == uid &&
+           resource.data.status == 'draft' &&
+           (
+             (request.resource.data.status == 'draft' &&
+              changedOnly(['displayName','phone','requestedDepartment','requestedRole']) &&
+              request.resource.data.email == request.auth.token.email &&
+              request.resource.data.displayName is string &&
+              request.resource.data.displayName.size() >= 3 &&
+              request.resource.data.displayName.size() <= 90 &&
+              request.resource.data.phone is string &&
+              request.resource.data.phone.matches('[+]?[0-9 ()-]{8,20}') &&
+              request.resource.data.requestedDepartment in [
+                'direccion','ventas','operaciones','servicio','finanzas','supervision'
+              ] &&
+              request.resource.data.requestedRole == request.resource.data.requestedDepartment)
+             ||
+             (request.resource.data.status == 'pending' &&
+              changedOnly(['status','profilePhotoPath','identityDocumentPath','submittedAt']) &&
+              request.resource.data.profilePhotoPath.matches(
+                'companies/main/onboarding/' + uid + '/photo-.*[.](jpg|png|webp)'
+              ) &&
+              request.resource.data.identityDocumentPath.matches(
+                'companies/main/onboarding/' + uid + '/identity-.*[.](pdf|jpg|png|webp)'
+              ) &&
+              request.resource.data.submittedAt is timestamp)
+           )) ||
+          (isOwner() &&
+           resource.data.status == 'pending' &&
+           changedOnly([
+             'status','reviewedAt','approvedDepartment','employeeCode','notificationStatus'
+           ]) &&
+           request.resource.data.status in ['approved','rejected']);
 
         allow delete: if isOwner();
       }
 
+      // Only privileged server-side code may eventually mark notifications as sent.
+      // No client can send arbitrary email from ACOS.
       // Oportunidades comerciales: agentes, supervisores y gerencia.
       match /leads/{leadId} {
-        allow read: if isOwner() ||
+        allow read: if hasView('prospectos') && (isOwner() ||
           hasRole(['direccion','supervision']) ||
           (hasRole(['ventas']) &&
-           resource.data.assignedToUid == request.auth.uid);
+           resource.data.assignedToUid == request.auth.uid));
 
-        allow create: if hasRole(['direccion','supervision','ventas']) &&
+        allow create: if hasView('prospectos') &&
+          hasRole(['direccion','supervision','ventas']) &&
           request.resource.data.keys().hasAll([
             'name','product','estimatedPremium','status','channel',
             'assignedToUid','assignedToName','createdBy','createdAt'
@@ -120,7 +208,7 @@ service cloud.firestore {
           request.resource.data.estimatedPremium >= 0 &&
           request.resource.data.createdAt is timestamp;
 
-        allow update: if (isOwner() ||
+        allow update: if hasView('prospectos') && (isOwner() ||
           hasRole(['direccion','supervision']) ||
           (hasRole(['ventas']) &&
            resource.data.assignedToUid == request.auth.uid)) &&
@@ -135,13 +223,11 @@ service cloud.firestore {
       // Expedientes de polizas: cliente solo sus propias polizas
       // con clientUid = su UID autenticado.
       match /policies/{policyId} {
-        allow read: if hasRole([
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision'
-          ]) ||
-          (isClient() && resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('polizas') && (
+          hasRole(['direccion','ventas','operaciones','servicio','finanzas','supervision']) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole(['direccion','operaciones']) &&
+        allow create: if hasView('polizas') && hasRole(['direccion','operaciones']) &&
           request.resource.data.keys().hasAll([
             'clientName','insurer','product','premium',
             'status','clientUid','createdBy','createdAt'
@@ -154,23 +240,21 @@ service cloud.firestore {
           request.resource.data.premium >= 0 &&
           request.resource.data.createdAt is timestamp;
 
-        allow update: if isOwner() ||
+        allow update: if hasView('polizas') && (isOwner() ||
           (hasRole(['direccion','operaciones']) &&
-           changedOnly(['status','updatedAt']));
+           changedOnly(['status','updatedAt'])));
 
         allow delete: if isOwner();
       }
 
       // Casos de servicio y solicitudes del asegurado.
       match /tickets/{ticketId} {
-        allow read: if hasRole([
-            'direccion','operaciones','servicio','supervision'
-          ]) ||
-          (isClient() && resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('solicitudes') && (
+          hasRole(['direccion','operaciones','servicio','supervision']) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole([
-            'direccion','operaciones','servicio','supervision','cliente'
-          ]) &&
+        allow create: if hasView('solicitudes') &&
+          hasRole(['direccion','operaciones','servicio','supervision','cliente']) &&
           request.resource.data.keys().hasAll([
             'subject','detail','type','status','priority',
             'clientUid','createdBy','createdAt'
@@ -190,7 +274,8 @@ service cloud.firestore {
             (!isClient() && request.resource.data.clientUid == '')
           );
 
-        allow update: if hasRole(['direccion','operaciones','servicio']) &&
+        allow update: if hasView('solicitudes') &&
+          hasRole(['direccion','operaciones','servicio']) &&
           changedOnly(['status','updatedAt']) &&
           request.resource.data.status == 'Resuelto';
 
@@ -200,23 +285,20 @@ service cloud.firestore {
       // Liquidaciones: lectura restringida a finanzas y direccion.
       // Hasta definir conciliacion, solo propietarios pueden escribir.
       match /commissions/{commissionId} {
-        allow read: if hasRole(['direccion','finanzas']);
+        allow read: if hasView('finanzas') && hasRole(['direccion','finanzas']);
         allow create, update, delete: if isOwner();
       }
 
       // Metadatos documentales. El empleado solo ve sus propios
       // archivos; el cliente solo los que estan asociados a su UID.
       match /documents/{documentId} {
-        allow read: if isOwner() ||
-          (isActiveMember() &&
-           resource.data.uploaderUid == request.auth.uid) ||
-          (isClient() &&
-           resource.data.clientUid == request.auth.uid);
+        allow read: if hasView('documentos') && (
+          isOwner() ||
+          (isActiveMember() && resource.data.uploaderUid == request.auth.uid) ||
+          (isClient() && resource.data.clientUid == request.auth.uid));
 
-        allow create: if hasRole([
-            'direccion','ventas','operaciones','servicio',
-            'finanzas','supervision','cliente'
-          ]) &&
+        allow create: if hasView('documentos') &&
+          hasRole(['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente']) &&
           request.resource.data.keys().hasAll([
             'fileName','contentType','bytes','storagePath',
             'uploaderUid','clientUid','createdAt'
@@ -244,12 +326,12 @@ service cloud.firestore {
 
       // Colecciones en reserva. Solo gerencia, hasta definir alcance.
       match /clients/{clientId} {
-        allow read: if hasRole(['direccion']);
+        allow read: if hasRole(['direccion']) && hasView('clientes');
         allow write: if isOwner();
       }
 
       match /insurers/{insurerId} {
-        allow read: if hasRole([
+        allow read: if hasView('polizas') && hasRole([
           'direccion','ventas','operaciones','servicio','finanzas','supervision'
         ]);
         allow write: if isOwner();
@@ -257,6 +339,23 @@ service cloud.firestore {
 
       match /settings/{settingId} {
         allow read, write: if isOwner();
+      }
+
+      // Dedicated fictitious-data laboratory, readable and writable ONLY by verified owners.
+      // These collections never authorize normal employees and never alter live CRM records.
+      match /{pilotCollection}/{pilotRecordId} {
+        allow read: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ];
+        allow create, update: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ] && request.resource.data.isPilot == true;
+        allow delete: if isOwner() && pilotCollection in [
+          'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
+          'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
+        ];
       }
 
       match /auditLogs/{auditId} {

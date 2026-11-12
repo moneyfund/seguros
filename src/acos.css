@@ -1,65 +1,65 @@
 /* ACOS | Identidad visual corporativa — marca original verde y plata.
    Se utiliza la imagen del logo proporcionado, sin redibujar el emblema ni la tipografía. */
-:root { --acos-forest:#053d2b; --acos-ink:#102f27; --acos-silver:#e6e9e8; --acos-accent:#52745f; }
-.insurance-site { color: #17352b; }
-.insurance-topline { background:#063a29; }
+:root { --acos-forest:var(--brand-navy); --acos-ink:var(--brand-navy); --acos-silver:var(--brand-mist); --acos-accent:var(--brand-slate); }
+.insurance-site { color: var(--brand-navy); }
+.insurance-topline { background:var(--brand-navy); }
 .insurance-navbar { min-height:104px;height:auto;padding:6px 0; }
 .acos-site-logo { display:flex;align-items:center;gap:11px;flex-shrink:0;min-width:0; }
 .acos-brand-img { width:100px;height:85px;object-fit:contain;display:block; }
-.acos-logo-descriptor { color:#628073;font-size:8px;font-weight:600;letter-spacing:1.3px;line-height:1.7;max-width:88px; }
+.acos-logo-descriptor { color:var(--brand-muted);font-size:8px;font-weight:600;letter-spacing:1.3px;line-height:1.7;max-width:88px; }
 .insurance-nav { gap:27px; }
-.insurance-nav a { color:#4f655b; }
+.insurance-nav a { color:var(--brand-slate); }
 .insurance-header-cta { background:var(--acos-forest);border-color:var(--acos-forest); }
-.insurance-login { background:#f5f7f6;border-color:#dbe1de; }
-.acos-hero { background:#ecf0ed;border-bottom:none;position:relative; }
+.insurance-login { background:var(--brand-white);border-color:var(--brand-line); }
+.acos-hero { background:var(--brand-mist);border-bottom:none;position:relative; }
 .acos-hero-layout { min-height:660px;display:grid;grid-template-columns:minmax(0,.93fr) minmax(0,1.07fr);gap:58px;position:relative; }
 .acos-hero-copy { padding:76px 0 70px;display:flex;flex-direction:column;justify-content:center;position:relative;z-index:2; }
-.acos-hero-meta { display:flex;align-items:center;gap:13px;color:#507360;font-size:9px;letter-spacing:2.2px;font-weight:600; }
-.acos-meta-mark { width:25px;height:2px;background:#35664d; }
-.acos-meta-divider { width:1px;height:12px;background:#adc1b1; }
-.acos-hero-copy h1 { font-weight:550;font-size:clamp(45px,4.5vw,69px);line-height:1.17;letter-spacing:-3px;color:#0d3328;margin:35px 0 25px; }
-.acos-hero-copy h1 span { color:#5e8471; }
-.acos-hero-copy p { color:#5f7167;font-size:12px;line-height:2.15;max-width:492px;margin:0;font-weight:400; }
+.acos-hero-meta { display:flex;align-items:center;gap:13px;color:var(--brand-slate);font-size:9px;letter-spacing:2.2px;font-weight:600; }
+.acos-meta-mark { width:25px;height:2px;background:var(--brand-slate); }
+.acos-meta-divider { width:1px;height:12px;background:var(--brand-muted); }
+.acos-hero-copy h1 { font-weight:550;font-size:clamp(45px,4.5vw,69px);line-height:1.17;letter-spacing:-3px;color:var(--brand-navy);margin:35px 0 25px; }
+.acos-hero-copy h1 span { color:var(--brand-muted); }
+.acos-hero-copy p { color:var(--brand-slate);font-size:12px;line-height:2.15;max-width:492px;margin:0;font-weight:400; }
 .acos-hero-cta { display:flex;align-items:center;gap:26px;margin-top:35px;flex-wrap:wrap; }
-.acos-hero-cta .insurance-solid-btn { min-height:52px;background:#0a432f;border-radius:3px;font-size:11px;padding-inline:23px; }
-.acos-hero-secondary { display:inline-flex;align-items:center;gap:11px;font-size:11px;color:#2b5845;font-weight:600;border-bottom:1px solid #a3b9a9;padding:5px 0 8px; }
-.acos-hero-secondary:hover { color:#0b7650; }
+.acos-hero-cta .insurance-solid-btn { min-height:52px;background:var(--brand-navy);border-radius:3px;font-size:11px;padding-inline:23px; }
+.acos-hero-secondary { display:inline-flex;align-items:center;gap:11px;font-size:11px;color:var(--brand-navy);font-weight:600;border-bottom:1px solid var(--brand-muted);padding:5px 0 8px; }
+.acos-hero-secondary:hover { color:var(--brand-navy); }
 .acos-hero-bottom { display:flex;gap:18px;align-items:center;margin-top:67px; }
-.acos-hero-mini-line { width:34px;height:1px;background:#748d79; }
+.acos-hero-mini-line { width:34px;height:1px;background:var(--brand-muted); }
 .acos-hero-bottom>div { display:flex;flex-direction:column;gap:4px; }
-.acos-hero-bottom strong { font-size:9px;letter-spacing:1.4px;color:#315b45;font-weight:650; }
-.acos-hero-bottom small { color:#778d7d;font-size:10px; }
-.acos-hero-visual { min-height:615px;position:relative;margin:26px 0 26px;background:#d0d7d2;overflow:hidden; }
+.acos-hero-bottom strong { font-size:9px;letter-spacing:1.4px;color:var(--brand-navy);font-weight:650; }
+.acos-hero-bottom small { color:var(--brand-muted);font-size:10px; }
+.acos-hero-visual { min-height:615px;position:relative;margin:26px 0 26px;background:var(--brand-line);overflow:hidden; }
 .acos-hero-visual>img { display:block;width:100%;height:100%;position:absolute;inset:0;object-fit:cover;object-position:center 45%;filter:saturate(.74) contrast(.99); }
-.acos-hero-visual:before { content:'';position:absolute;inset:0;z-index:1;border:1px solid #0f3d3212;pointer-events:none; }
-.acos-hero-visual:after { content:'';position:absolute;inset:65% 0 0;background:linear-gradient(to bottom,transparent,#0d28274f);z-index:1;pointer-events:none; }
+.acos-hero-visual:before { content:'';position:absolute;inset:0;z-index:1;border:1px solid rgb(0 25 41 / 0.071);pointer-events:none; }
+.acos-hero-visual:after { content:'';position:absolute;inset:65% 0 0;background:linear-gradient(to bottom,transparent,rgb(0 25 41 / 0.31));z-index:1;pointer-events:none; }
 .acos-hero-picture-frame { position:absolute;top:19px;right:19px;left:19px;bottom:19px;border:1px solid #ffffff7a;z-index:2;pointer-events:none; }
-.acos-hero-photo-tag { position:absolute;z-index:3;bottom:33px;left:0;background:#fff;color:#163d2e;border-left:4px solid #0d5d3b;box-shadow:0 5px 20px #1a342c19;padding:17px 24px;display:flex;flex-direction:column;gap:8px; }
-.acos-tag-index { font-size:8px;font-weight:700;letter-spacing:1.3px;color:#789182; }
+.acos-hero-photo-tag { position:absolute;z-index:3;bottom:33px;left:0;background:#fff;color:var(--brand-navy);border-left:4px solid var(--brand-navy);box-shadow:0 5px 20px rgb(0 25 41 / 0.098);padding:17px 24px;display:flex;flex-direction:column;gap:8px; }
+.acos-tag-index { font-size:8px;font-weight:700;letter-spacing:1.3px;color:var(--brand-muted); }
 .acos-hero-photo-tag>span:last-child { font-size:12px;line-height:1.65;font-weight:600; }
-.acos-hero-accent { background:#0d392a;color:#e9f0e9;border-top:1px solid #315345; }
+.acos-hero-accent { background:var(--brand-navy);color:var(--brand-mist);border-top:1px solid var(--brand-navy); }
 .acos-hero-accent .wrap { display:flex;justify-content:center;align-items:center;gap:40px;min-height:54px; }
 .acos-hero-accent .wrap>span:not(.acos-hero-accent-rule) { font-size:9px;letter-spacing:1.8px;font-weight:500;white-space:nowrap; }
-.acos-hero-accent-rule { width:1px;height:14px;background:#749887; }
-.insurance-statement { background:#f5f7f5;color:#274c38;border-bottom:1px solid #e0e5e0; }
+.acos-hero-accent-rule { width:1px;height:14px;background:var(--brand-muted); }
+.insurance-statement { background:var(--brand-white);color:var(--brand-navy);border-bottom:1px solid var(--brand-mist); }
 .insurance-statement-grid { padding-block:29px; }
-.insurance-statement-grid>div { border-right:1px solid #d4ddd5; }
-.insurance-statement-grid strong { color:#244b38; }
-.insurance-statement-grid small { color:#7c9280; }
-.statement-num { color:#8ba58e; }
-.insurance-about { background:#e9edeb; }
-.insurance-footer { background:#f1f3f1; }
+.insurance-statement-grid>div { border-right:1px solid var(--brand-line); }
+.insurance-statement-grid strong { color:var(--brand-navy); }
+.insurance-statement-grid small { color:var(--brand-muted); }
+.statement-num { color:var(--brand-muted); }
+.insurance-about { background:var(--brand-mist); }
+.insurance-footer { background:var(--brand-mist); }
 .acos-footer-brand>img { display:block;width:142px;height:112px;object-fit:contain;object-position:left center; }
 .insurance-footer-main { align-items:center; }
-.insurance-footer-bottom strong { color:#0a5337; }
+.insurance-footer-bottom strong { color:var(--brand-navy); }
 .live-auth-screen .live-auth-brand.acos-auth-logo { align-items:center;flex-direction:column;gap:0;margin-bottom:21px; }
 .acos-auth-logo>img { display:block;width:146px;height:122px;object-fit:contain; }
-.acos-auth-logo>span { font-size:9px;letter-spacing:1.9px;font-weight:600;color:#658472;text-align:center; }
+.acos-auth-logo>span { font-size:9px;letter-spacing:1.9px;font-weight:600;color:var(--brand-muted);text-align:center; }
 .live-auth-screen .live-auth-title h1 { font-size:27px; }
-.live-shell .sidebar .acos-sidebar-brand { margin:0 auto 24px;width:100%;min-height:119px;background:#f5f7f5;display:flex;align-items:center;flex-direction:column;justify-content:center;border:1px solid #d6dfd8;gap:0;padding:5px 8px 9px;border-radius:4px; }
+.live-shell .sidebar .acos-sidebar-brand { margin:0 auto 24px;width:100%;min-height:119px;background:var(--brand-white);display:flex;align-items:center;flex-direction:column;justify-content:center;border:1px solid var(--brand-line);gap:0;padding:5px 8px 9px;border-radius:4px; }
 .acos-sidebar-brand img { display:block;width:106px;height:93px;object-fit:contain; }
-.acos-sidebar-brand span { font-size:8px;letter-spacing:1.7px;color:#627e68;font-weight:600;margin-top:-4px; }
-.live-auth-screen .live-auth-card { border-top:3px solid #879d8d; }
+.acos-sidebar-brand span { font-size:8px;letter-spacing:1.7px;color:var(--brand-muted);font-weight:600;margin-top:-4px; }
+.live-auth-screen .live-auth-card { border-top:3px solid var(--brand-muted); }
 .live-shell .sidebar-top { display:flex;align-items:flex-start;justify-content:space-between; }
 .live-shell .sidebar-bottom strong { font-size:9px; }
 @media(max-width:1330px) {
