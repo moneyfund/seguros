@@ -1,4 +1,4 @@
-name: Check demo build
+name: ACOS production build
 
 on:
   push:
