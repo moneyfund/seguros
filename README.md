@@ -32,15 +32,15 @@ npm run dev
 npm run build
 ```
 
-Acceder al inicio de sesión en `/` o `/#/acceso`; acceder a la web pública en `/#/inicio`. Los enlaces anteriores a `/#/demo` redirigen al acceso empresarial.
+Acceder a la web pública en `/` o `/#/inicio`; el ingreso empresarial protegido está en `/#/acceso` y `/#/workspace`. Los enlaces anteriores a `/#/demo` redirigen al acceso empresarial.
 
 ## Experiencia visual y navegación
 
-**Ruta principal desde noviembre de 2026:** la aplicación inicia en Firebase Authentication. El antiguo panel demostrativo fue retirado del enrutamiento de producción para impedir acceso accidental a datos ficticios.
+**Ruta principal desde noviembre de 2026:** la aplicación inicia en la web comercial pública y presenta un acceso explícito al área empresarial, protegida por Firebase Authentication. El antiguo panel demostrativo fue retirado del enrutamiento de producción para impedir acceso accidental a datos ficticios.
 
 
-- `/` — entrada empresarial con Firebase Authentication. Para visitantes sin sesión, muestra la pantalla de acceso.
-- `/#/acceso` y `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados pueden ver registros de la compañía.
+- `/` — web comercial pública, visible sin una cuenta de Vercel ni autenticación de Firebase.
+- `/#/acceso` y `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados deben poder consultar registros de la compañía, sujeto a reglas de Firestore y Storage publicadas y verificadas.
 - `/#/demo` — ruta retirada; cualquier enlace anterior ahora redirige al acceso empresarial. La demostración pública ya no está disponible.
 - La web pública nunca envía información de formularios ficticios a Firestore.
 - Fotografías con licencia gratuita de Pexels (consultar condiciones aplicables): [reunión de asesoría](https://www.pexels.com/photo/an-insurance-agent-discussing-documents-to-a-client-8441785/), [revisión de documentos](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) y [familia](https://www.pexels.com/photo/a-family-smiling-together-7983214/). Las imágenes se cargan desde el CDN de Pexels.
