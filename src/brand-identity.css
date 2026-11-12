@@ -1,0 +1,153 @@
+/* Applications of the official ACOS identity. Layout/data/access rules stay in their own modules. */
+:root{font-family:var(--brand-sans);color:var(--brand-navy);background:var(--brand-mist);--forest:var(--brand-navy);--deep:var(--brand-navy);--green:var(--brand-bronze-text);--mint:var(--brand-ivory);--silver:var(--brand-mist);--ink:var(--brand-navy);--muted:var(--brand-muted);--line:var(--brand-line);--bg:var(--brand-mist)}
+body{font-family:var(--brand-sans)}
+::selection{background:var(--brand-champagne);color:var(--brand-navy)}
+:focus-visible{outline:3px solid var(--brand-bronze)!important;outline-offset:3px}
+.acos-mark{display:block;flex-shrink:0;width:220px}
+.acos-mark img{display:block;width:100%;height:auto;object-fit:contain;filter:none;transform:none}
+.acos-mark-primary{width:180px}
+.acos-mark-symbol{width:44px}
+
+/* Public site: navy navigation, original horizontal negative artwork, gold calls to action. */
+.acos-public .ap-topbar{background:var(--brand-navy-raised);color:var(--brand-white)}
+.acos-public .ap-topbar button{color:var(--brand-white)}
+.acos-public .ap-header{background:var(--brand-navy);border-bottom:1px solid rgb(218 187 131 / .22)}
+.acos-public .ap-navbar{min-height:124px;height:auto;padding-block:28px;gap:32px}
+.acos-public .ap-brand{margin-right:12px}
+.acos-public .ap-brand .acos-mark img{width:100%;height:auto}
+.acos-public .ap-nav>a{color:var(--brand-white)}
+.acos-public .ap-nav>a:hover,.acos-public .ap-nav>a[aria-current]{color:var(--brand-champagne)}
+.acos-public .ap-nav>a[aria-current]:after{background:var(--brand-champagne)}
+.acos-public .ap-nav-cta,.acos-public .ap-button-gold{background:var(--brand-champagne);border-color:var(--brand-champagne);color:var(--brand-navy)}
+.acos-public .ap-nav-cta:hover,.acos-public .ap-button-gold:hover{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
+.acos-public .ap-menu-toggle{background:transparent;border-color:rgb(218 187 131 / .5);color:var(--brand-champagne)}
+.acos-public h1,.acos-public h2,.acos-public .ap-product h3{font-family:var(--brand-display);font-weight:400;letter-spacing:-.025em;font-synthesis:none}
+.acos-public h2{line-height:1.15;font-size:clamp(34px,3.2vw,46px)}
+.acos-public .ap-hero h1{font-family:var(--brand-display);font-weight:400;font-size:clamp(62px,6.2vw,88px);line-height:1.03;letter-spacing:-.025em}
+.acos-public .ap-hero h1>span{color:var(--brand-champagne)}
+.acos-public .ap-hero .ap-eyebrow{color:var(--brand-champagne)}
+.acos-public .ap-hero-assurance{color:var(--brand-white)}
+.acos-public .ap-product h3{font-size:31px;line-height:1.1}
+.acos-public .ap-product-vida h3{font-size:39px}
+.acos-public .ap-product-icon{color:var(--brand-navy)}
+.acos-public .ap-product-asesoria{background:var(--brand-ivory);color:var(--brand-navy)}
+.acos-public .ap-product-asesoria .ap-product-icon{background:var(--brand-navy);color:var(--brand-champagne)}
+.acos-public .ap-product-asesoria p{color:var(--brand-muted)}
+.acos-public .ap-business h2{font-size:clamp(34px,3.4vw,48px);font-weight:400;line-height:1.15}
+.acos-public .ap-business h2>span{color:var(--brand-champagne)}
+.acos-public .ap-about-label{background:var(--brand-ivory)}
+.acos-public .ap-step-number>span{border-color:var(--brand-bronze)}
+.acos-public .ap-journey>li:first-child .ap-step-number>span{background:var(--brand-navy);color:var(--brand-champagne)}
+.acos-public .ap-process,.acos-public .ap-insurers{background:var(--brand-mist)}
+.acos-public .ap-digital{background:var(--brand-ivory)}
+.acos-public .ap-insurers h2{font-family:var(--brand-display);letter-spacing:-.025em;line-height:1.15}
+.acos-public .ap-insurers-foot{color:var(--brand-muted)}
+.acos-public .ap-contact{background:var(--brand-navy);color:var(--brand-white);border-top:1px solid rgb(218 187 131 / .3)}
+.acos-public .ap-contact h2,.acos-public .ap-contact h2>span{color:var(--brand-white)}
+.acos-public .ap-contact .ap-eyebrow,.acos-public .ap-contact p{color:var(--brand-champagne)}
+.acos-public .ap-contact .ap-button{background:var(--brand-champagne);color:var(--brand-navy);border-color:var(--brand-champagne)}
+.acos-public .ap-footer{background:var(--brand-ivory)}
+.acos-public .ap-footer-main .ap-footer-brand>a{display:block;width:270px;padding:36px 45px 45px;margin-top:-18px;margin-left:-45px}
+.acos-public .ap-footer-brand .acos-mark img{width:100%;height:auto;margin:0}
+.acos-public .ap-dialog h2{font-family:var(--brand-display);font-weight:400;font-size:36px;letter-spacing:-.025em}
+.acos-public .ap-dialog-note{color:var(--brand-muted)}
+.acos-public button:focus-visible,.acos-public a:focus-visible,.acos-public select:focus-visible,.acos-public textarea:focus-visible,.acos-public summary:focus-visible{outline-color:var(--brand-bronze)!important}
+
+/* Business interface: Poppins for controls and data; restrained gold highlights. */
+.app-shell,.live-shell{--forest:var(--brand-navy);--ink:var(--brand-navy);--bg:var(--brand-mist);font-family:var(--brand-sans);background:var(--brand-mist)}
+.live-shell .sidebar{width:288px;min-width:288px;padding:20px 18px 15px;background:var(--brand-navy);border-right:1px solid rgb(218 187 131 / .2)}
+.live-shell .sidebar-top{position:relative}
+.live-shell .sidebar .acos-sidebar-brand{background:none;border:0;border-radius:0;padding:14px 16px 0;margin:0 0 28px;gap:34px;min-height:0}
+.acos-sidebar-brand .acos-mark{width:220px}
+.acos-sidebar-brand .acos-mark img{width:100%;height:auto}
+.acos-sidebar-brand>span{margin:0;color:var(--brand-champagne);font-size:8px;letter-spacing:2px}
+.live-shell .workspace-title,.live-shell .sidebar-group-label{color:var(--brand-champagne)}
+.live-shell .workspace-profile{background:rgb(255 255 255 / .055);border-color:rgb(218 187 131 / .2)}
+.live-shell .workspace-profile-copy strong{color:var(--brand-white)}
+.live-shell .workspace-profile-copy>span{color:var(--brand-line)}
+.live-shell .workspace-avatar,.live-shell .topbar-avatar{background:var(--brand-ivory);color:var(--brand-navy)}
+.live-shell .acos-owner-state{color:var(--brand-champagne)}
+.live-shell .sidebar-item{color:var(--brand-line)}
+.live-shell .sidebar-item.active{background:var(--brand-champagne);color:var(--brand-navy);font-weight:600}
+.live-shell .sidebar-item:hover:not(.active){background:var(--brand-navy-raised);color:var(--brand-white)}
+.live-shell .sidebar-item i{background:var(--brand-ivory);color:var(--brand-navy)}
+.live-shell .live-sidebar-links button{color:var(--brand-line)}
+.live-shell .sidebar-bottom strong,.live-shell .sidebar-bottom small,.live-shell .live-brand-sign{color:var(--brand-line)}
+.live-shell .sidebar-bottom{border-color:rgb(218 187 131 / .2)}
+.live-shell .live-environment{background:var(--brand-navy-raised);color:var(--brand-champagne)}
+.live-shell .app-topbar{border-bottom-color:var(--brand-line)}
+.live-shell .live-title-row h1{color:var(--brand-navy)}
+.live-shell .live-title-row p,.live-shell .date-line{color:var(--brand-muted)}
+.live-shell .live-home-eyebrow,.live-shell .live-card-eyebrow{color:var(--brand-bronze-text)}
+.live-shell .metric>strong{color:var(--brand-navy);font-variant-numeric:tabular-nums}
+.live-shell .live-metric-grid{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+.live-shell .live-metric-label>svg{background:var(--brand-ivory);color:var(--brand-bronze-text)}
+.live-shell .live-metric-button:hover{border-color:var(--brand-bronze)}
+.live-shell .live-work-icon{background:var(--brand-ivory);color:var(--brand-bronze-text)}
+.live-shell .live-home-security{background:var(--brand-ivory);border-color:var(--brand-line);color:var(--brand-navy)}
+.live-shell .btn-dark,.live-auth-screen .btn-dark{background:var(--brand-champagne);color:var(--brand-navy);border:1px solid var(--brand-champagne)}
+.live-shell .btn-dark:hover,.live-auth-screen .btn-dark:hover{background:var(--brand-gold);border-color:var(--brand-gold)}
+.live-shell .btn-soft{background:var(--brand-white);border-color:var(--brand-line);color:var(--brand-navy)}
+.live-shell .ins-live-entry{background:var(--brand-navy);border-color:var(--brand-navy)}
+.live-shell .ins-live-entry strong{color:var(--brand-white)}
+.live-shell .ins-live-entry small,.live-shell .ins-live-entry .ins-eyebrow{color:var(--brand-champagne)}
+.live-shell .ins-live-entry button{background:var(--brand-champagne);color:var(--brand-navy);border-color:var(--brand-champagne)}
+.live-shell input,.live-shell select,.live-shell textarea{accent-color:var(--brand-navy)}
+.live-shell .mobile-close{position:absolute;right:-6px;top:-5px;color:var(--brand-champagne)}
+
+/* Sign-in and employee onboarding share the same mark, clear space and neutral forms. */
+.live-auth-screen{background:var(--brand-navy)}
+.live-auth-screen:before{background:radial-gradient(ellipse at 85% 30%,rgb(218 187 131 / .09),transparent 55%)}
+.live-auth-screen .live-auth-card{border-top:3px solid var(--brand-bronze);box-shadow:0 24px 70px rgb(0 0 0 / .22);border-radius:8px}
+.live-auth-screen .live-auth-brand.acos-auth-logo{gap:44px;padding-top:24px;margin-bottom:26px}
+.acos-auth-logo .acos-mark{width:180px}
+.live-auth-screen .live-auth-brand.acos-auth-logo>span{display:block;width:auto;height:auto;background:none;color:var(--brand-muted);font-size:9px;letter-spacing:1.5px;line-height:1.5}
+.live-auth-screen .live-auth-title h1{color:var(--brand-navy)}
+.live-auth-screen .live-auth-title>span{color:var(--brand-bronze-text)}
+.live-auth-screen .live-auth-title p,.live-auth-screen .live-auth-foot{color:var(--brand-muted)}
+.live-auth-screen .live-form input,.live-auth-screen .live-form select{background:var(--brand-mist);border-color:var(--brand-line);color:var(--brand-navy)}
+.live-auth-screen .live-form input:focus,.live-auth-screen .live-form select:focus{border-color:var(--brand-bronze)}
+.live-auth-screen .live-auth-foot{background:var(--brand-mist)}
+.live-auth-screen .live-auth-copyright{color:var(--brand-champagne)}
+.live-loading{background:var(--brand-navy);color:var(--brand-champagne)}
+.access-guide-header>.acos-mark{margin-block:32px}
+.access-guide-header>div{padding-block:24px}
+.access-guide-header>div>small{display:block;margin-top:32px;color:var(--brand-muted)}
+.access-mini-brand{gap:20px;padding-block:12px}
+.access-mini-brand .acos-mark{width:36px}
+
+@media(min-width:1181px){.acos-public .ap-nav{gap:23px}}
+@media(max-width:1180px){
+  .acos-public .ap-nav{background:var(--brand-navy)}
+  .acos-public .ap-nav>a{border-color:rgb(218 187 131 / .18)}
+  .acos-public .ap-mobile-enterprise{color:var(--brand-white)}
+  .live-shell .sidebar{width:288px;min-width:288px}
+}
+@media(max-width:760px){
+  .live-shell .sidebar{width:288px;min-width:288px}
+  .live-shell .live-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .live-shell .live-title-row h1{font-size:26px}
+  .acos-public .ap-hero h1{font-size:64px}
+}
+@media(max-width:580px){
+  .acos-mark-responsive{width:44px}
+  .acos-public .ap-navbar{min-height:88px;padding-block:24px}
+  .acos-public .ap-brand{margin:0 26px 0 10px}
+  .acos-public .ap-brand .acos-mark{width:44px}
+  .acos-public .ap-brand .acos-mark img{width:44px;height:auto;aspect-ratio:1400/1187}
+  .acos-public .ap-hero h1{font-size:64px;line-height:1.03}
+  .acos-public h2,.acos-public .ap-insurers h2,.acos-public .ap-about-copy h2{font-size:36px;letter-spacing:-.025em;line-height:1.15}
+  .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:36px}
+  .acos-public .ap-business h2{font-size:38px}
+  .acos-public .ap-footer-main .ap-footer-brand>a{margin-left:0;padding:38px 45px 45px;width:270px}
+  .acos-public .ap-footer-brand .acos-mark{width:180px}
+  .acos-public .ap-dialog h2{font-size:33px}
+}
+@media(max-width:360px){.acos-public .ap-hero h1{font-size:57px}.acos-public .ap-business h2{font-size:34px}}
+
+.acos-public .ap-footer-main h2{font-family:var(--brand-sans);font-weight:600}
+
+.acos-public section[id]{scroll-margin-top:156px}
+@media(max-width:580px){.acos-public section[id]{scroll-margin-top:112px}}
+
+.acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-champagne)}

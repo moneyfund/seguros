@@ -1,81 +1,43 @@
-# XARCON Insurance OS · Prototipo empresarial
+# ACOS · Plataforma empresarial de correduría de seguros
 
-Primera versión visual de una plataforma modular para una **empresa intermediaria de seguros**, desarrollada por XARCON como propuesta para revisión de alcance con los propietarios.
+Desarrollado por XARCON sobre React 19, TypeScript, Vite y Firebase para ACOS Nicaragua.
 
-> **Primera versión en construcción, no lista para operar con expedientes de clientes.** La demostración en `/#/demo` usa información ficticia. El nuevo espacio `/#/workspace` integra Firebase Authentication (Google/correo), Firestore y Storage, sujeto a las reglas reales de seguridad que se deben publicar desde Firebase Console. No introducir documentación sensible hasta verificar y auditar los permisos.
+## Estado operativo
+- **Web pública comercial:** catálogo de seguros, asesoría, aseguradoras y contacto, con la identidad oficial definida por ACOS.
+- **Acceso empresarial:** Firebase Authentication y control de identidad/roles; interfaz de Dirección, colaboradores y servicios operativos.
+- **Piloto:** componentes administrativos, expedientes y modelos de datos en construcción; la existencia de una pantalla **no acredita** que su flujo ya esté listo para operar.
+- **SQL:** estructura para Firebase Data Connect / Cloud SQL PostgreSQL versionada en `dataconnect/`. Aún debe provisionarse, migrarse, auditarse y probarse con cuentas de prueba y facturación autorizada. **No hay instancia SQL conectada ni migración de clientes implementada.**
 
-## Incluye
+No introducir pólizas reales, identificaciones, información sensible de clientes ni expedientes en el entorno hasta completar controles de seguridad, reglas publicadas y pruebas negativas de roles/usuarios.
 
-- Web pública responsive: portada, soluciones de seguros, proceso comercial, solicitud simulada.
-- Panel interno general y vistas de **Dirección, Comercial, Operaciones, Servicio al Cliente, Finanzas, Supervisión y Portal del asegurado**.
-- Ventas: embudo Kanban con oportunidades y cambio de etapa en memoria.
-- Pólizas: cartera de ejemplo, vencimientos y fichas de expediente.
-- Clientes: directorio basado en datos simulados.
-- Servicio: casos demostrativos con cambio local de estado.
-- Finanzas: comisiones, conciliación de ejemplo y exportación CSV de prueba.
-- Equipo: vista de colaboradores, invitación simulada, formulario con identificación, teléfono, foto y código.
-- Documentos: selección desde dispositivo o cámara, listando solo nombre y metadatos en memoria, **sin subir archivos**.
-- Selector de roles para facilitar una reunión de demostración; **no representa seguridad real**.
+## Navegación
+- `/` o `/#/inicio`: web pública sin autenticación.
+- `/#/acceso` y `/#/workspace`: panel con Firebase Authentication y autorización de empresa.
+- `/#/registro`, `/#/mi-panel` y `/#/direccion/...`: rutas internas sujetas a verificación de permisos.
+- `/#/demo`: retirada y redirigida al acceso privado.
 
-## Stack
-
-- React 19 + TypeScript + Vite.
-- CSS adaptativo personalizado (verde oscuro y plata).
-- Lucide.
-- Repositorio GitHub y compatible con Vercel.
-
-## Desarrollo local
-
+## Desarrollo y validación
 ```bash
 npm install
-npm run dev
+npm run typecheck
 npm run build
+npm run dev
 ```
 
-Acceder a la web pública en `/` o `/#/inicio`; el ingreso empresarial protegido está en `/#/acceso` y `/#/workspace`. Los enlaces anteriores a `/#/demo` redirigen al acceso empresarial.
+## Arquitectura y normas
+- Proyecto Firebase de integración: `seguros-d1a86`, con autenticación, Firestore y Storage.
+- SQL Connect: `dataconnect/` y `dataconnect/README.md`. Operaciones administrativas SQL definidas como NO_ACCESS hasta implementar backend fiable.
+- Seguridad: revisar `firestore.rules` y `storage.rules`, publicarlas con autorización y comprobarlas en emulador antes de permitir datos reales.
+- Acceso empresarial: la UI es informativa; los permisos reales se aplican en backend y reglas.
+- Credenciales sensibles: nunca en el repositorio ni en variables `VITE_*`.
+- Contexto de funcionalidades: `EXECUTION_PLAN.md`, `INSURANCE_WORKFLOW.md`, `STAFF_ONBOARDING.md`, `PILOT_WORKSPACE.md`.
 
-## Experiencia visual y navegación
+## Publicación única
+- Única rama de producción: `main`.
+- Proyecto de Vercel elegido: `seguros`; dominio temporal identificado en el dashboard: `seguros-green.vercel.app`.
+- Despliegues Preview pertenecen a ramas; no compartir las URL efímeras como definitivas.
+- Hay un proyecto duplicado `seguros-mknk` que debe desconectarse/eliminarse **después** de verificar producción y transferir cualquier configuración exclusiva. No crear terceros.
+- Para la futura migración a dominio propio, agregarlo en Vercel Domains y Firebase Authentication Authorized domains; conservar `main` y el proyecto existente.
+- Ver `DEPLOYMENT.md` para política operativa y verificaciones posteriores al despliegue.
 
-**Ruta principal desde noviembre de 2026:** la aplicación inicia en la web comercial pública y presenta un acceso explícito al área empresarial, protegida por Firebase Authentication. El antiguo panel demostrativo fue retirado del enrutamiento de producción para impedir acceso accidental a datos ficticios.
-
-
-- `/` — web comercial pública, visible sin una cuenta de Vercel ni autenticación de Firebase.
-- `/#/acceso` y `/#/workspace` — autenticación real con Google y controles de Firebase; únicamente usuarios autorizados deben poder consultar registros de la compañía, sujeto a reglas de Firestore y Storage publicadas y verificadas.
-- `/#/demo` — ruta retirada; cualquier enlace anterior ahora redirige al acceso empresarial. La demostración pública ya no está disponible.
-- La web pública nunca envía información de formularios ficticios a Firestore.
-- Fotografías con licencia gratuita de Pexels (consultar condiciones aplicables): [reunión de asesoría](https://www.pexels.com/photo/an-insurance-agent-discussing-documents-to-a-client-8441785/), [revisión de documentos](https://www.pexels.com/photo/an-elderly-man-consulting-an-insurance-agent-8441780/) y [familia](https://www.pexels.com/photo/a-family-smiling-together-7983214/). Las imágenes se cargan desde el CDN de Pexels.
-
-La identidad comercial es provisional hasta recibir el nombre, marca, información legal y datos de contacto autorizados por los propietarios.
-
-## Proyecto Firebase conectado
-
-- Proyecto: `seguros-d1a86`.
-- Entrada privada: `/`, `/#/acceso` o `/#/workspace`.
-- Authentication: Google y correo/contraseña (activar proveedores en Firebase Console).
-- Firestore: colecciones bajo `companies/main`, con roles empresariales, expedientes, ventas, solicitudes, comisiones, documentos y solicitudes de autorización.
-- Storage: carga segura disponible en el código, pero **requiere publicar sus propias reglas**; `storage.rules` permanece en modo denegar todos por defecto hasta completar permisos.
-- Administradores iniciales autorizados por correo verificado: `norvingarcia220@gmail.com` y `amyblandon171@gmail.com`. No se crean automáticamente cuentas o usuarios con privilegios de otros correos.
-- Reglas versionadas en `firestore.rules`, listas para revisar y copiar en Firebase Console → Firestore Database → Rules.
-- Una vez publicadas las reglas, verificar con cuentas de prueba y probar que un agente no pueda leer otra área o elevarse privilegios.
-- Los documentos de demostración no se migran a producción.
-- La base SQL aún no se ha implementado; este MVP utiliza Firestore.
-
-### Próximos pasos de entrega real
-
-1. Publicar y probar reglas Firestore y Storage, con protección de cédulas, pólizas y documentos.
-2. Validar registro, acceso y autorizaciones de Amy y XARCON usando cuentas verificadas.
-3. Definir condiciones de cada póliza, compañía aseguradora, conciliación y comisiones.
-4. Implementar un esquema de auditoría confiable desde backend, historiales, avisos y backups.
-5. Evaluar estructura de datos relacional SQL para la versión contractual definitiva.
-
-## Advertencias de protección de datos
-
-- No compartir una URL de demostración como si fuera una plataforma operativa.
-- Nunca tratar el selector de perfiles como mecanismo de autenticación o control de acceso.
-- No guardar cédulas, pólizas, fotos, datos de salud ni financieros sin autorización, reglas y revisión de seguridad.
-- Evitar colocar secretos en variables `VITE_*`: en una web Vite son visibles al usuario final.
-- Las futuras integraciones con aseguradoras requieren autorización y validación de sus interfaces oficiales.
-
-## Créditos
-
-Concepto y desarrollo: **XARCON** · Noviembre 2026.
+**Estado:** integración de software lista para validación progresiva, no certificación para gestionar datos de clientes reales.

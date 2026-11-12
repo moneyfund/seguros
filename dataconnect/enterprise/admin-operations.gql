@@ -1,0 +1,26 @@
+# Privileged entry points are deliberately not callable from browsers.
+# When a trusted server is deployed, use Firebase Admin SDK and audit its actions.
+# Do NOT switch these to USER or PUBLIC to make demos work.
+
+query InternalCompanyStaff($companyId: UUID!) @auth(level: NO_ACCESS) {
+  companyMembers(where: {company:{id:{eq:$companyId}}}) {
+    id employeeCode active
+    user {firebaseUid displayName email}
+    department {code name}
+  }
+}
+
+query InternalPendingApplications($companyId: UUID!) @auth(level: NO_ACCESS) {
+  staffApplications(where: {
+    company:{id:{eq:$companyId}}
+    status:{eq:"PENDING"}
+  }) {
+    id firebaseUid email displayName phone status photoStoragePath identityStoragePath
+  }
+}
+
+query InternalCustomers($companyId: UUID!) @auth(level: NO_ACCESS) {
+  customers(where:{company:{id:{eq:$companyId}}}) {
+    id fullName email city active
+  }
+}

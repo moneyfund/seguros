@@ -1,0 +1,261 @@
+# ACOS Enterprise · SQL Connect relational schema v1
+#
+# Production target: Firebase SQL Connect -> Cloud SQL for PostgreSQL.
+# No sensitive identity number or file contents are stored here:
+# private documents live in Firebase Storage; this schema stores metadata.
+# All monetary amounts are in minor currency units (cents), not floating point.
+# All tenant-owned records reference Company, enabling reuse by other brokerages.
+# Any browser-facing operation must have server-side authorization in the connector.
+
+type Company @table {
+  slug: String! @unique
+  legalName: String!
+  publicName: String!
+  countryCode: String! @default(value: "NI")
+  active: Boolean! @default(value: true)
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type AppUser @table(key: "firebaseUid") {
+  firebaseUid: String!
+  email: String! @unique
+  displayName: String!
+  phone: String
+  photoStoragePath: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type Department @table @unique(fields: ["company", "code"]) {
+  company: Company!
+  code: String!
+  name: String!
+  active: Boolean! @default(value: true)
+}
+
+type CompanyRole @table @unique(fields: ["company", "key"]) {
+  company: Company!
+  key: String!
+  label: String!
+  active: Boolean! @default(value: true)
+}
+
+type PortalView @table(key: "key") {
+  key: String!
+  label: String!
+  description: String
+}
+
+type RoleView @table(key: ["role", "view"]) {
+  role: CompanyRole!
+  view: PortalView!
+}
+
+type CompanyMember @table @unique(fields: ["company", "user"]) {
+  company: Company!
+  user: AppUser!
+  department: Department!
+  employeeCode: String! @unique
+  active: Boolean! @default(value: true)
+  joinedAt: Timestamp! @default(expr: "request.time")
+  approvedBy: AppUser
+}
+
+type MemberRole @table(key: ["member", "role"]) {
+  member: CompanyMember!
+  role: CompanyRole!
+}
+
+# Overrides are explicit and cannot grant database access by themselves.
+# The connector still checks roles, tenant and record ownership.
+type MemberViewOverride @table(key: ["member", "view"]) {
+  member: CompanyMember!
+  view: PortalView!
+  enabled: Boolean!
+}
+
+type StaffInvitation @table @unique(fields: ["company", "email"]) {
+  company: Company!
+  email: String!
+  requestedDepartment: Department
+  invitedBy: AppUser!
+  status: String! @default(value: "INVITED")
+  expiresAt: Timestamp
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type StaffApplication @table @unique(fields: ["company", "firebaseUid"]) {
+  company: Company!
+  firebaseUid: String!
+  email: String!
+  displayName: String!
+  phone: String!
+  requestedDepartment: Department
+  photoStoragePath: String
+  identityStoragePath: String
+  status: String! @default(value: "PENDING")
+  submittedAt: Timestamp! @default(expr: "request.time")
+  reviewedAt: Timestamp
+  reviewedBy: AppUser
+  reviewNotes: String
+}
+
+type Insurer @table @unique(fields: ["company", "name"]) {
+  company: Company!
+  name: String!
+  active: Boolean! @default(value: true)
+}
+
+type Customer @table {
+  company: Company!
+  fullName: String!
+  email: String
+  phone: String
+  city: String
+  customerType: String! @default(value: "PERSON")
+  active: Boolean! @default(value: true)
+  owner: CompanyMember
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type SalesOpportunity @table {
+  company: Company!
+  customer: Customer!
+  assignedTo: CompanyMember!
+  product: String!
+  estimatedPremiumCents: Int64!
+  currency: String! @default(value: "USD")
+  source: String!
+  stage: String! @default(value: "NEW")
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type InsuranceQuote @table {
+  company: Company!
+  opportunity: SalesOpportunity!
+  insurer: Insurer!
+  proposedPremiumCents: Int64!
+  currency: String! @default(value: "USD")
+  status: String! @default(value: "DRAFT")
+  notes: String
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type InsurancePolicy @table @unique(fields: ["company", "policyNumber"]) {
+  company: Company!
+  customer: Customer!
+  insurer: Insurer!
+  opportunity: SalesOpportunity
+  agent: CompanyMember!
+  policyNumber: String!
+  product: String!
+  premiumCents: Int64!
+  currency: String! @default(value: "USD")
+  startDate: Date!
+  endDate: Date!
+  status: String! @default(value: "IN_PROCESS")
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type Commission @table {
+  company: Company!
+  policy: InsurancePolicy!
+  agent: CompanyMember!
+  baseCents: Int64!
+  rateBasisPoints: Int!
+  amountCents: Int64!
+  currency: String! @default(value: "USD")
+  status: String! @default(value: "PENDING")
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type ServiceCase @table {
+  company: Company!
+  customer: Customer!
+  policy: InsurancePolicy
+  assignedTo: CompanyMember
+  subject: String!
+  description: String!
+  caseType: String! @default(value: "GENERAL")
+  status: String! @default(value: "OPEN")
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type ManagedDocument @table {
+  company: Company!
+  customer: Customer
+  policy: InsurancePolicy
+  serviceCase: ServiceCase
+  uploadedBy: AppUser!
+  storagePath: String! @unique
+  originalFileName: String!
+  mimeType: String!
+  sizeBytes: Int64!
+  documentType: String!
+  versionNumber: Int! @default(value: 1)
+  status: String! @default(value: "ACTIVE")
+  uploadedAt: Timestamp! @default(expr: "request.time")
+}
+
+type ActivityEntry @table {
+  company: Company!
+  actor: AppUser!
+  entityType: String!
+  entityId: String!
+  action: String!
+  detail: String
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Future Namecheap integration; never store SMTP/IMAP passwords in these rows.
+type Mailbox @table @unique(fields: ["company", "address"]) {
+  company: Company!
+  address: String!
+  department: Department
+  responsible: CompanyMember
+  provider: String! @default(value: "NAMECHEAP")
+  secretReference: String
+  active: Boolean! @default(value: false)
+}
+
+type MailThread @table {
+  company: Company!
+  mailbox: Mailbox!
+  customer: Customer
+  assignedTo: CompanyMember
+  externalThreadKey: String
+  subject: String!
+  status: String! @default(value: "OPEN")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+type MailEvent @table {
+  company: Company!
+  thread: MailThread!
+  externalMessageKey: String!
+  direction: String!
+  fromAddress: String!
+  toAddress: String!
+  subject: String!
+  sentAt: Timestamp
+  receivedAt: Timestamp! @default(expr: "request.time")
+}
+
+type OutboundNotification @table {
+  company: Company!
+  recipientEmail: String!
+  recipient: AppUser
+  kind: String!
+  relatedEntityId: String
+  status: String! @default(value: "QUEUED")
+  createdAt: Timestamp! @default(expr: "request.time")
+  deliveredAt: Timestamp
+}

@@ -29,3 +29,12 @@ export const initialAdminEmails = ['norvingarcia220@gmail.com', 'amyblandon171@g
 export function isInitialAdmin(email: string | null | undefined): boolean {
   return !!email && initialAdminEmails.some(adminEmail => adminEmail === email.trim().toLowerCase());
 }
+
+/** Evaluación de propietarios desde el token firmado de Firebase Auth.
+ * Coincide con request.auth.token.email y email_verified de las reglas Firestore.
+ * Nunca concede privilegios a direcciones no verificadas ni a aliases parecidos.
+ */
+export function isVerifiedInitialAdminToken(claims: Record<string, unknown>): boolean {
+  return claims.email_verified === true &&
+    typeof claims.email === 'string' && isInitialAdmin(claims.email);
+}

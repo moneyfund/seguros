@@ -6,6 +6,7 @@ import {
 import { deleteObject, ref, uploadBytes } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { companyId, db, storage } from './firebase';
+import type { Section } from './data';
 
 export type EnterpriseRole = 'direccion' | 'ventas' | 'operaciones' | 'servicio' | 'finanzas' | 'supervision' | 'cliente';
 export type LiveCollection = 'leads' | 'policies' | 'tickets' | 'commissions' | 'documents' | 'members' | 'accessRequests';
@@ -13,6 +14,8 @@ export type LiveRecord = { id: string; [key: string]: unknown };
 export type Member = {
   uid: string;
   role: EnterpriseRole;
+  roles?: EnterpriseRole[];
+  allowedSections?: Section[];
   active: boolean;
   displayName: string;
   email: string;
@@ -39,7 +42,11 @@ export async function memberFor(user: User): Promise<Member | null> {
   const data = snapshot.data();
   if (!data || data.active !== true) return null;
   if (!['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'].includes(data.role)) return null;
-  return { uid: user.uid, role: data.role, active: true, displayName: data.displayName || user.displayName || user.email || 'Usuario', email: data.email || user.email || '' };
+  const validRoles: EnterpriseRole[]=['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
+  const validSections: Section[]=['resumen','prospectos','polizas','clientes','solicitudes','finanzas','equipo','documentos','configuracion'];
+  const additionalRoles = Array.isArray(data.roles)?data.roles.filter((r:unknown):r is EnterpriseRole=>typeof r==='string'&&validRoles.includes(r as EnterpriseRole)):[];
+  const allowedSections=Array.isArray(data.allowedSections)?data.allowedSections.filter((v:unknown):v is Section=>typeof v==='string'&&validSections.includes(v as Section)):undefined;
+  return { uid:user.uid, role:data.role, roles:additionalRoles.length?additionalRoles:[data.role], allowedSections, active:true, displayName:data.displayName||user.displayName||user.email||'Usuario', email:data.email||user.email||'' };
 }
 export async function requestAccess(user: User, displayName: string, requestedRole: EnterpriseRole) {
   if (!user.emailVerified) throw new Error('Verifica tu correo antes de solicitar acceso.');

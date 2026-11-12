@@ -30,6 +30,14 @@ service firebase.storage {
         ).data.active == true;
     }
 
+    function canViewDocuments() {
+      return isOwner() || (
+        isActiveMember() &&
+        firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid))
+          .data.get('allowedSections', []).hasAny(['documentos'])
+      );
+    }
+
     function supportedDocument() {
       return request.resource != null &&
         request.resource.size > 0 &&
@@ -42,18 +50,65 @@ service firebase.storage {
         ];
     }
 
+    // Pilot-only fictional attachments. Real identity/policy documents must not be uploaded.
+    match /companies/main/pilotDocuments/{ownerUid}/{fileName} {
+      allow get: if isOwner();
+      allow list: if false;
+      allow create: if isOwner() &&
+        request.auth.uid == ownerUid &&
+        supportedDocument() &&
+        fileName.matches('[0-9a-f-]+[.](pdf|jpg|png|webp)');
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
+    // Applicant files are private. No public downloads or folder listing.
+    // Staff identity domain is configured in Firestore after the domain is purchased.
+    function institutionalApplicant(uid) {
+      return verified() &&
+        request.auth.uid == uid &&
+        firestore.exists(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)) &&
+        firestore.get(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)).data.status
+          in ['invited', 'approved'];
+    }
+    function canUploadApplicant(uid) {
+      return institutionalApplicant(uid) &&
+        firestore.get(/databases/(default)/documents/companies/main/staffInvitations/$(request.auth.token.email)).data.status == 'invited';
+    }
+    function hasDraft(uid) {
+      return firestore.exists(/databases/(default)/documents/companies/main/accessRequests/$(uid)) &&
+        firestore.get(/databases/(default)/documents/companies/main/accessRequests/$(uid)).data.status == 'draft';
+    }
+
+    match /companies/main/onboarding/{uid}/{fileName} {
+      allow get: if isOwner() || institutionalApplicant(uid);
+      allow list: if false;
+      allow create: if canUploadApplicant(uid) && hasDraft(uid) &&
+        request.resource != null && request.resource.size > 0 &&
+        (
+          (fileName.matches('photo-[0-9a-f-]+[.](jpg|png|webp)') &&
+           request.resource.size <= 3 * 1024 * 1024 &&
+           request.resource.contentType in ['image/jpeg','image/png','image/webp']) ||
+          (fileName.matches('identity-[0-9a-f-]+[.](jpg|png|webp|pdf)') &&
+           request.resource.size <= 8 * 1024 * 1024 &&
+           request.resource.contentType in ['image/jpeg','image/png','image/webp','application/pdf'])
+        );
+      allow update: if false;
+      allow delete: if isOwner();
+    }
+
     // Cada usuario autorizado guarda sus archivos en su carpeta UID.
     // Este mismo patrón se usa en src/backend.ts.
     match /companies/main/documents/{ownerUid}/{fileName} {
       // Los administradores ven todos; el empleado o cliente solo los suyos.
       allow get: if isOwner() ||
-        (isActiveMember() && request.auth.uid == ownerUid);
+        (canViewDocuments() && request.auth.uid == ownerUid);
 
       // Para evitar enumerar carpetas ajenas, solo los administradores listan.
       allow list: if isOwner();
 
       // No es posible subir archivos en la carpeta de otro usuario.
-      allow create: if (isOwner() || isActiveMember()) &&
+      allow create: if canViewDocuments() &&
         request.auth.uid == ownerUid &&
         supportedDocument() &&
         fileName.matches('.*[.](pdf|jpg|png|webp)') &&
