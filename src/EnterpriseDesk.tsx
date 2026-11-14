@@ -1,9 +1,9 @@
-import {useEffect,useState,type FormEvent} from 'react';
+import {useEffect,useRef,useState,type FormEvent} from 'react';
 import type {User} from 'firebase/auth';
-import {Bell,Camera,CheckCircle2,Download,FileText,FolderOpen,Plus,Search,ShieldCheck,Users,X} from 'lucide-react';
+import {Bell,Camera,CheckCircle2,Download,FileText,LoaderCircle,Upload,FolderOpen,Plus,Search,ShieldCheck,Users,X} from 'lucide-react';
 import InsurerLogo from './InsurerLogo';
 import {nicaraguanInsurers,insurerById} from './insurers';
-import {attachDocument,claimRequest,createCustomer,createRequest,documentSlots,downloadAttachment,issueRequest,markSeen,returnRequest,slotLabels,statusLabels,submitRequest,unseen,setEnterpriseTrialEnabled,emptyProfile,emptyVehicle,readImageAttachment,type Customer,type EnterpriseRecords,type RequestRecord,type Slot} from './enterpriseTrial';
+import {attachDocument,claimRequest,createCustomer,createRequest,documentSlots,downloadAttachment,issueRequest,markSeen,returnRequest,slotLabels,statusLabels,submitRequest,unseen,setEnterpriseTrialEnabled,emptyProfile,emptyVehicle,readImageAttachment,attachmentError,type AttachmentProgress,type Customer,type EnterpriseRecords,type RequestRecord,type Slot} from './enterpriseTrial';
 import './enterprise-desk.css';
 
 const emptyClient={fullName:'',email:'',phone:'',city:'',profile:emptyProfile};
@@ -20,12 +20,29 @@ export default function EnterpriseDesk({user,records,access,mode,onChangeMode,se
  const [policy,setPolicy]=useState(emptyPolicy),[pdf,setPdf]=useState<File|null>(null),[reason,setReason]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [filter,setFilter]=useState('all');
+ const [photoStates,setPhotoStates]=useState<Record<string,AttachmentProgress&{result?:'saved'|'error';message?:string;file?:File}>>({});
+ const uploadLock=useRef(false);
+ const photoKey=(id:string,slot:Slot)=>id+':'+slot;
+ async function uploadPhoto(record:RequestRecord,slot:Slot,file:File){
+  if(uploadLock.current||busy)return;
+  uploadLock.current=true;setBusy(true);setError('');setNotice('');
+  const key=photoKey(record.id,slot);
+  const progress=(value:AttachmentProgress)=>setPhotoStates(prev=>({...prev,[key]:value}));
+  progress({phase:'preparing',percent:0,originalBytes:file.size});
+  try{
+   await attachDocument(user,record,slot,file,progress);
+   setPhotoStates(prev=>({...prev,[key]:{...prev[key],phase:'saving',percent:100,result:'saved'}}));
+  }catch(e){
+   setPhotoStates(prev=>({...prev,[key]:{...prev[key],result:'error',message:attachmentError(e),file}}));
+  }finally{uploadLock.current=false;setBusy(false);}
+ }
+ const formatBytes=(n:number)=>n>=1024*1024?(n/(1024*1024)).toFixed(1)+' MB':Math.ceil(n/1024)+' KB';
  const [accepted,setAccepted]=useState(false);
  const client=records.clients.find(x=>x.id===clientId);
  const req=records.requests.find(x=>x.id===requestId);
  useEffect(()=>{setPolicy(emptyPolicy);setPdf(null);setReason('');setPreview(null);setError('');setNotice('');},[requestId]);
  useEffect(()=>{setCarrier(null);setNewRequest(false);},[clientId]);
- async function action(fn:()=>Promise<unknown>,success:string){if(busy)return;setBusy(true);setError('');setNotice('');try{await fn();setNotice(success);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
+ async function action(fn:()=>Promise<unknown>,success:string){if(busy||uploadLock.current)return;setBusy(true);setError('');setNotice('');try{await fn();setNotice(success);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
  function openRequest(r:RequestRecord){setRequestId(r.id);setClientId(r.clientId);onChangeMode('issuance');}
  async function addClient(e:FormEvent){e.preventDefault();await action(async()=>{const id=await createCustomer(user,clientForm);setClientId(id);setClientForm(emptyClient);setNewClient(false);},'Expediente registrado.');}
  async function startRequest(e:FormEvent){e.preventDefault();if(!client)return;await action(async()=>{const id=await createRequest(user,client,insurer,plate,vehicle);setRequestId(id);setNewRequest(false);setPlate('');setVehicle(emptyVehicle);setFilter('all');onChangeMode('issuance');},'Solicitud guardada como borrador.');}
@@ -94,7 +111,25 @@ export default function EnterpriseDesk({user,records,access,mode,onChangeMode,se
       <div className="ed-profile-grid">{[['Marca',req.vehicle?.make],['Modelo',req.vehicle?.model],['Año',req.vehicle?.year],['Color',req.vehicle?.color],['VIN / chasis',req.vehicle?.vin],['Uso',req.vehicle?.use]].map(([k,v])=><div key={k}><small>{k}</small><strong>{v||'Sin registrar'}</strong></div>)}</div>
       <h4>3. Documentos del vehículo y titular · {documentSlots.filter(s=>req.files[s]).length}/3</h4><p className="ed-muted">Puedes usar la cámara del teléfono o elegir una imagen JPG, PNG o WebP (máx. 8 MB). Adjunta únicamente imágenes de prueba anonimizadas.</p>
       {preview&&<div className="ed-preview"><div className="ed-head"><strong>{preview.label}</strong><button className="btn btn-soft" onClick={()=>setPreview(null)}>Cerrar vista previa</button></div><img src={preview.url} alt={preview.label}/></div>}
-      <div className="ed-docs">{documentSlots.map(slot=><div key={slot} className="ed-doc"><strong>{slotLabels[slot]}</strong><small>{req.files[slot]?'Archivo adjunto':'Pendiente'}</small>{req.files[slot]&&<button type="button" className="btn btn-soft" disabled={busy} onClick={()=>void action(async()=>{const blob=await readImageAttachment(req,slot);setPreview({url:URL.createObjectURL(blob),label:slotLabels[slot]});},'Vista previa disponible.')}>Ver fotografía</button>}{req.files[slot]&&<button type="button" className="btn btn-soft" disabled={busy} onClick={()=>void action(()=>downloadAttachment(req,req.files[slot]),'Archivo descargado.')}><Download size={14}/> Descargar</button>}{editable(req,user.uid)&&access.sales&&<><label className="ed-file"><Camera size={16}/> Tomar fotografía<input disabled={busy} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void action(()=>attachDocument(user,req,slot,f),'Documento adjuntado.');}}/></label><label className="ed-file">Elegir imagen<input disabled={busy} type="file" accept="image/jpeg,image/png,image/webp" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void action(()=>attachDocument(user,req,slot,f),'Documento adjuntado.');}}/></label></>}</div>)}</div>
+      <div className="ed-docs">{documentSlots.map(slot=>{
+       const state=photoStates[photoKey(req.id,slot)],loading=!!state&&!state.result;
+       const saved=!!req.files[slot]||state?.result==='saved';
+       return <div key={slot} className={'ed-doc '+(loading?'ed-doc-loading':state?.result==='error'?'ed-doc-error':saved?'ed-doc-saved':'')}>
+        <strong>{slotLabels[slot]}</strong>
+        <div className="ed-upload-status" role="status" aria-live="polite">
+          {loading?<><LoaderCircle size={15} className="ed-spin"/><span>{state.phase==='preparing'?'Preparando fotografía…':state.phase==='saving'?'Guardando en expediente…':state.paused?'Carga en pausa…':'Subiendo fotografía…'}</span></>:state?.result==='error'?<span>La carga no se completó</span>:saved?<><CheckCircle2 size={16}/><span>Documento guardado</span></>:<span>Pendiente de adjuntar</span>}
+        </div>
+        {loading&&<><progress className="ed-upload-progress" max={100} value={state.phase==='preparing'?undefined:state.percent} aria-label={'Progreso de '+slotLabels[slot]}/><small>{state.phase==='uploading'?state.percent+'% · '+formatBytes(state.bytesTransferred||0)+' de '+formatBytes(state.totalBytes||0):state.phase==='saving'?'100% transferido · verificando registro':'Optimizando tamaño sin perder legibilidad innecesariamente'}</small></>}
+        {state?.totalBytes&&state.originalBytes&&state.totalBytes<state.originalBytes?<small>Imagen optimizada: {formatBytes(state.originalBytes)} → {formatBytes(state.totalBytes)}</small>:null}
+        {state?.result==='error'&&<><p className="ed-upload-error" role="alert">{state.message}</p>{state.file&&editable(req,user.uid)&&access.sales&&<button type="button" className="btn btn-soft" disabled={busy} onClick={()=>{if(state.file)void uploadPhoto(req,slot,state.file);}}>Reintentar carga</button>}</>}
+        {req.files[slot]&&<><button type="button" className="btn btn-soft" disabled={busy} onClick={()=>void action(async()=>{const blob=await readImageAttachment(req,slot);setPreview({url:URL.createObjectURL(blob),label:slotLabels[slot]});},'Vista previa disponible.')}>Ver fotografía</button><button type="button" className="btn btn-soft" disabled={busy} onClick={()=>void action(()=>downloadAttachment(req,req.files[slot]),'Archivo descargado.')}><Download size={14}/> Descargar</button></>}
+        {editable(req,user.uid)&&access.sales&&<>
+         <label className={'ed-file ed-file-control '+(busy?'ed-file-disabled':'')}><Camera size={17}/><span>Tomar fotografía</span><input aria-label={'Tomar fotografía de '+slotLabels[slot]} disabled={busy} type="file" accept="image/*" capture="environment" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void uploadPhoto(req,slot,f);}}/></label>
+         <label className={'ed-file ed-file-control '+(busy?'ed-file-disabled':'')}><Upload size={16}/><span>{saved?'Cambiar imagen':'Elegir imagen'}</span><input aria-label={'Elegir imagen de '+slotLabels[slot]} disabled={busy} type="file" accept="image/*" onChange={e=>{const f=e.target.files?.[0];e.target.value='';if(f)void uploadPhoto(req,slot,f);}}/></label>
+        </>}
+       </div>
+      })}</div>
+      {busy&&documentSlots.some(slot=>{const s=photoStates[photoKey(req.id,slot)];return s&&!s.result;})&&<p className="ed-muted" role="status">Mantén abierta esta pantalla hasta que termine la carga. Podrás adjuntar la siguiente fotografía cuando se haya guardado la actual.</p>}
       {editable(req,user.uid)&&access.sales&&<button className="btn btn-dark" disabled={busy||!documentSlots.every(s=>req.files[s])} onClick={()=>void action(()=>submitRequest(user,req),'Solicitud enviada a emisión.')}>Enviar a emisión</button>}
       {access.operator&&req.status==='SUBMITTED'&&<button className="btn btn-dark" disabled={busy} onClick={()=>void action(()=>claimRequest(user,req),'Solicitud asignada a tu revisión.')}>Tomar solicitud</button>}
       {access.operator&&req.status==='IN_REVIEW'&&req.operatorUid===user.uid&&<><div className="ed-form"><label>Motivo de devolución o rechazo<textarea maxLength={1000} value={reason} onChange={e=>setReason(e.target.value)}/></label><button className="btn btn-soft" disabled={busy||reason.trim().length<2} onClick={()=>void action(()=>returnRequest(user,req,reason),'Devuelta al agente.')}>Solicitar corrección</button><button className="btn btn-soft" disabled={busy||reason.trim().length<2} onClick={()=>void action(()=>returnRequest(user,req,reason,true),'Solicitud rechazada.')}>Rechazar</button></div>

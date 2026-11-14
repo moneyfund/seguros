@@ -1,6 +1,6 @@
 import { useEffect,useState } from 'react';
 import { collection,doc,onSnapshot,query,where,addDoc,setDoc,runTransaction,serverTimestamp, type DocumentReference } from 'firebase/firestore';
-import { ref,uploadBytes,getBlob,getMetadata } from 'firebase/storage';
+import { ref,uploadBytesResumable,getBlob,getMetadata } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { db,storage,companyId } from './firebase';
 import type { EnterpriseRole } from './backend';
@@ -68,21 +68,72 @@ export async function createRequest(user:User,client:Customer,insurerId:string,p
  const d=await addDoc(root('enterpriseIssuance'),{...(detail?{vehicle:detail}:{}),clientId:client.id,clientName:client.fullName,agentUid:user.uid,insurerId,productKey:'VEHICLE_MANDATORY',plate:clean,files:{front:'',back:'',registration:''},status:'DRAFT',pdf:'',policyNumber:'',startDate:'',endDate:'',premiumCents:0,currency:'USD',operatorUid:'',reason:'',revision:0,agentSeenRevision:0,trial:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return d.id;
 }
 const mimeExt:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
-async function upload(id:string,kind:Slot|'policy',file:File){
- const ext=kind==='policy'?(file.type==='application/pdf'?'pdf':''):mimeExt[file.type];
- if(!ext||file.size<1||file.size>8*1024*1024)throw Error('Tipo no permitido o archivo superior a 8 MB.');
- const bytes=new Uint8Array(await file.slice(0,12).arrayBuffer());
- const magic=kind==='policy'?String.fromCharCode(...bytes.slice(0,5))==='%PDF-':ext==='jpg'?bytes[0]===255&&bytes[1]===216&&bytes[2]===255:ext==='png'?bytes[0]===137&&bytes[1]===80&&bytes[2]===78&&bytes[3]===71:String.fromCharCode(...bytes.slice(0,4))==='RIFF'&&String.fromCharCode(...bytes.slice(8,12))==='WEBP';
- if(!magic)throw Error('El contenido no coincide con el tipo de archivo.');
+const maxUploadBytes=8*1024*1024;
+export type AttachmentProgress={phase:'preparing'|'uploading'|'saving';percent:number;bytesTransferred?:number;totalBytes?:number;originalBytes?:number;paused?:boolean};
+type ProgressCallback=(progress:AttachmentProgress)=>void;
+async function detectImageType(file:Blob){
+ const b=new Uint8Array(await file.slice(0,12).arrayBuffer());
+ if(b[0]===255&&b[1]===216&&b[2]===255)return 'image/jpeg';
+ if(b[0]===137&&b[1]===80&&b[2]===78&&b[3]===71)return 'image/png';
+ if(String.fromCharCode(...b.slice(0,4))==='RIFF'&&String.fromCharCode(...b.slice(8,12))==='WEBP')return 'image/webp';
+ throw Error('Formato no compatible. Selecciona una fotografía JPG, PNG o WebP; si es HEIC, conviértela a JPG.');
+}
+async function preparePhoto(file:File):Promise<Blob>{
+ if(!file.size)throw Error('La fotografía está vacía.');
+ if(file.size>40*1024*1024)throw Error('La imagen supera 40 MB. Elige una fotografía de menor tamaño.');
+ const type=await detectImageType(file);
+ const original=file.slice(0,file.size,type);
+ if(original.size<=1024*1024)return original;
+ const url=URL.createObjectURL(original);
+ try{
+  const image=new Image();
+  await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=()=>reject(Error('No se pudo leer la imagen.'));image.src=url;});
+  const scale=Math.min(1,2600/Math.max(image.naturalWidth,image.naturalHeight));
+  const canvas=document.createElement('canvas');
+  canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+  const ctx=canvas.getContext('2d');
+  if(ctx){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);
+   // Retain full resolution when possible; keep original if re-encoding increases size.
+   const compressed=await new Promise<Blob|null>(resolve=>canvas.toBlob(resolve,'image/jpeg',0.88));
+   if(compressed&&compressed.type==='image/jpeg'&&compressed.size>0&&compressed.size<original.size&&compressed.size<=maxUploadBytes)return compressed;
+  }
+ }catch{/* Fall back to validated original when browser cannot compress it. */}
+ finally{URL.revokeObjectURL(url);}
+ if(original.size>maxUploadBytes)throw Error('No se pudo reducir la fotografía a menos de 8 MB. Usa una imagen de menor resolución.');
+ return original;
+}
+export function attachmentError(error:unknown){
+ const code=typeof error==='object'&&error!==null&&'code' in error?String(error.code):'';
+ const message=error instanceof Error?error.message:String(error);
+ if(code==='storage/unauthorized')return 'Storage rechazó la carga. Comprueba tu acceso y las reglas publicadas. ('+code+')';
+ if(code==='storage/retry-limit-exceeded')return 'La conexión tardó demasiado. Intenta de nuevo con una red estable. ('+code+')';
+ if(code==='storage/quota-exceeded')return 'Storage alcanzó su cuota de uso. ('+code+')';
+ if(code==='storage/canceled')return 'Carga cancelada. Puedes reintentar.';
+ return message+(code&&!message.includes(code)?' ('+code+')':'');
+}
+async function upload(id:string,kind:Slot|'policy',file:File,onProgress?:ProgressCallback){
+ onProgress?.({phase:'preparing',percent:0,originalBytes:file.size});
+ const payload=kind==='policy'?file:await preparePhoto(file);
+ const ext=kind==='policy'?(payload.type==='application/pdf'?'pdf':''):mimeExt[payload.type];
+ if(!ext||payload.size<1||payload.size>maxUploadBytes)throw Error('Tipo no permitido o archivo superior a 8 MB.');
+ if(kind==='policy'){
+  const bytes=new Uint8Array(await payload.slice(0,5).arrayBuffer());
+  if(String.fromCharCode(...bytes)!=='%PDF-')throw Error('El contenido no coincide con un PDF.');
+ }
  const name=kind+'-'+crypto.randomUUID()+'.'+ext;
- await uploadBytes(ref(storage,path(id,name)),file,{contentType:file.type});return name;
+ const report=(bytesTransferred:number,totalBytes:number,paused=false)=>onProgress?.({phase:'uploading',percent:Math.min(100,Math.floor(bytesTransferred/totalBytes*100)),bytesTransferred,totalBytes,originalBytes:file.size,paused});
+ report(0,payload.size);
+ const task=uploadBytesResumable(ref(storage,path(id,name)),payload,{contentType:payload.type});
+ await new Promise<void>((resolve,reject)=>{task.on('state_changed',s=>report(s.bytesTransferred,s.totalBytes,s.state==='paused'),reject,()=>resolve());});
+ onProgress?.({phase:'saving',percent:100,bytesTransferred:payload.size,totalBytes:payload.size,originalBytes:file.size});
+ return name;
 }
 async function change(id:string,fn:(current:RequestRecord)=>Record<string,unknown>){
  await runTransaction(db,async tx=>{const d=requestDoc(id),s=await tx.get(d);if(!s.exists())throw Error('Solicitud no encontrada.');const current={...s.data(),id:s.id} as RequestRecord;tx.update(d,fn(current));});
 }
-export async function attachDocument(user:User,record:RequestRecord,slot:Slot,file:File){
+export async function attachDocument(user:User,record:RequestRecord,slot:Slot,file:File,onProgress?:ProgressCallback){
  if(record.agentUid!==user.uid||!['DRAFT','NEEDS_CORRECTION'].includes(record.status))throw Error('No puedes adjuntar a esta solicitud.');
- const name=await upload(record.id,slot,file);
+ const name=await upload(record.id,slot,file,onProgress);
  await change(record.id,current=>{if(current.agentUid!==user.uid||!['DRAFT','NEEDS_CORRECTION'].includes(current.status))throw Error('La solicitud cambió.');return {files:{...current.files,[slot]:name},updatedAt:serverTimestamp()};});
 }
 async function verifyDocuments(r:RequestRecord){
