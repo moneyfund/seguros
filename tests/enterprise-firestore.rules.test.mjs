@@ -17,7 +17,9 @@ before(async()=>{env=await initializeTestEnvironment({projectId,firestore:{rules
 after(async()=>{if(env)await env.cleanup();});
 test('Expediente y emisión: aislamiento, permisos, transiciones y revisión',async()=>{
  const a=ctx(aUid),b=ctx(bUid),o=ctx(oUid),s=ctx(serviceUid),f=ctx(financeUid),anon=env.unauthenticatedContext().firestore();
- await assertSucceeds(setDoc(d(a,'enterpriseClients/a'),client(aUid)));
+ const profile={documentType:'CEDULA',documentNumber:'TEST-001',birthDate:'2000-01-01',nationality:'Ficticia',occupation:'Prueba',department:'Prueba',address:'Dirección de ejemplo',alternatePhone:''};
+ await assertSucceeds(setDoc(d(a,'enterpriseClients/a'),{...client(aUid),profile}));
+ await assertFails(setDoc(d(a,'enterpriseClients/invalid-profile'),{...client(aUid),profile:{...profile,unexpected:'no'}}));
  await assertSucceeds(setDoc(d(b,'enterpriseClients/b'),client(bUid)));
  await assertFails(setDoc(d(a,'enterpriseClients/forged'),client(bUid)));
  await assertFails(getDoc(d(a,'enterpriseClients/b')));
@@ -29,7 +31,9 @@ test('Expediente y emisión: aislamiento, permisos, transiciones y revisión',as
  await assertFails(getDoc(d(f,'enterpriseClients/a')));
  await assertFails(updateDoc(d(a,'enterpriseClients/a'),{ownerUid:bUid}));
  await assertFails(setDoc(d(b,'enterpriseIssuance/forged'),draft(bUid,'a')));
- await assertSucceeds(setDoc(d(a,'enterpriseIssuance/a'),draft(aUid,'a')));
+ const vehicle={make:'Prueba',model:'Modelo',year:'2020',color:'Azul',vin:'TEST-CHASIS',use:'Particular'};
+ await assertSucceeds(setDoc(d(a,'enterpriseIssuance/a'),{...draft(aUid,'a'),vehicle}));
+ await assertFails(setDoc(d(a,'enterpriseIssuance/invalid-vehicle'),{...draft(aUid,'a'),vehicle:{...vehicle,year:'texto'}}));
  await assertFails(getDoc(d(b,'enterpriseIssuance/a')));
  await assertFails(getDocs(collection(a,base+'enterpriseIssuance')));
  await assertSucceeds(getDocs(q(a,'enterpriseIssuance','agentUid',aUid)));

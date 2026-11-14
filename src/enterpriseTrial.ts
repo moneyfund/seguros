@@ -11,8 +11,12 @@ export const documentSlots=['front','back','registration'] as const;
 export type Slot=typeof documentSlots[number];
 export const slotLabels:Record<Slot,string>={front:'Cédula · frente',back:'Cédula · reverso',registration:'Circulación del vehículo'};
 export const statusLabels:Record<IssuanceStatus,string>={DRAFT:'Borrador',SUBMITTED:'Recibida',IN_REVIEW:'En revisión',NEEDS_CORRECTION:'Requiere corrección',ISSUED:'PDF disponible',REJECTED:'Rechazada',CANCELLED:'Cancelada'};
-export type Customer={id:string;fullName:string;email:string;phone:string;city:string;ownerUid:string;trial:true};
-export type RequestRecord={id:string;clientId:string;clientName:string;agentUid:string;insurerId:string;productKey:string;plate:string;status:IssuanceStatus;files:Record<Slot,string>;pdf:string;policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO';operatorUid:string;reason:string;revision:number;agentSeenRevision:number;trial:true};
+export type CustomerProfile={documentType:string;documentNumber:string;birthDate:string;nationality:string;occupation:string;department:string;address:string;alternatePhone:string};
+export type VehicleDetails={make:string;model:string;year:string;color:string;vin:string;use:string};
+export const emptyProfile:CustomerProfile={documentType:'CEDULA',documentNumber:'',birthDate:'',nationality:'',occupation:'',department:'',address:'',alternatePhone:''};
+export const emptyVehicle:VehicleDetails={make:'',model:'',year:'',color:'',vin:'',use:'Particular'};
+export type Customer={id:string;fullName:string;email:string;phone:string;city:string;profile?:CustomerProfile;ownerUid:string;trial:true};
+export type RequestRecord={id:string;clientId:string;clientName:string;agentUid:string;insurerId:string;productKey:string;plate:string;vehicle?:VehicleDetails;status:IssuanceStatus;files:Record<Slot,string>;pdf:string;policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO';operatorUid:string;reason:string;revision:number;agentSeenRevision:number;trial:true};
 const root=(name:string)=>collection(db,'companies',companyId,name);
 const requestDoc=(id:string)=>doc(root('enterpriseIssuance'),id);
 const path=(id:string,name:string)=>'companies/'+companyId+'/enterpriseTrial/'+id+'/'+name;
@@ -51,13 +55,17 @@ export type EnterpriseRecords=ReturnType<typeof useEnterpriseRecords>;
 export async function createCustomer(user:User,values:Omit<Customer,'id'|'ownerUid'|'trial'>){
  const fullName=values.fullName.trim(),email=values.email.trim().toLowerCase(),phone=values.phone.trim(),city=values.city.trim();
  if(fullName.length<2||fullName.length>120||email.length>150||(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))||phone.length>32||city.length>100)throw Error('Revisa los datos del cliente.');
- const d=await addDoc(root('enterpriseClients'),{fullName,email,phone,city,ownerUid:user.uid,trial:true,createdAt:serverTimestamp()});
+ const profile=values.profile?Object.fromEntries(Object.entries(values.profile).map(([key,value])=>[key,value.trim()])) as CustomerProfile:undefined;
+ if(profile&&(profile.documentNumber.length>40||profile.birthDate&&!/^\d{4}-\d{2}-\d{2}$/.test(profile.birthDate)||profile.nationality.length>60||profile.occupation.length>100||profile.department.length>80||profile.address.length>240||profile.alternatePhone.length>32||!['CEDULA','PASAPORTE','RESIDENCIA','RUC','OTRO'].includes(profile.documentType)))throw Error('Revisa los datos adicionales del expediente.');
+ const d=await addDoc(root('enterpriseClients'),{fullName,email,phone,city,...(profile?{profile}:{}),ownerUid:user.uid,trial:true,createdAt:serverTimestamp()});
  return d.id;
 }
-export async function createRequest(user:User,client:Customer,insurerId:string,plate:string){
+export async function createRequest(user:User,client:Customer,insurerId:string,plate:string,vehicle?:VehicleDetails){
  if(client.ownerUid!==user.uid)throw Error('Solo puedes crear solicitudes para tus clientes.');
  const clean=plate.trim().toUpperCase();if(!clean||clean.length>24)throw Error('Introduce una placa o referencia ficticia.');
- const d=await addDoc(root('enterpriseIssuance'),{clientId:client.id,clientName:client.fullName,agentUid:user.uid,insurerId,productKey:'VEHICLE_MANDATORY',plate:clean,files:{front:'',back:'',registration:''},status:'DRAFT',pdf:'',policyNumber:'',startDate:'',endDate:'',premiumCents:0,currency:'USD',operatorUid:'',reason:'',revision:0,agentSeenRevision:0,trial:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return d.id;
+ const detail=vehicle?Object.fromEntries(Object.entries(vehicle).map(([k,v])=>[k,v.trim()])) as VehicleDetails:undefined;
+ if(detail&&(detail.make.length>60||detail.model.length>80||detail.year&&!/^\d{4}$/.test(detail.year)||detail.color.length>40||detail.vin.length>40||!['Particular','Comercial','Taxi','Motocicleta','Otro'].includes(detail.use)))throw Error('Revisa los datos del vehículo.');
+ const d=await addDoc(root('enterpriseIssuance'),{...(detail?{vehicle:detail}:{}),clientId:client.id,clientName:client.fullName,agentUid:user.uid,insurerId,productKey:'VEHICLE_MANDATORY',plate:clean,files:{front:'',back:'',registration:''},status:'DRAFT',pdf:'',policyNumber:'',startDate:'',endDate:'',premiumCents:0,currency:'USD',operatorUid:'',reason:'',revision:0,agentSeenRevision:0,trial:true,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});return d.id;
 }
 const mimeExt:Record<string,string>={'image/jpeg':'jpg','image/png':'png','image/webp':'webp'};
 async function upload(id:string,kind:Slot|'policy',file:File){
@@ -106,3 +114,5 @@ export async function downloadAttachment(r:RequestRecord,name:string){
  const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name;a.click();}finally{setTimeout(()=>URL.revokeObjectURL(url),30000);}
 }
 export function unseen(r:RequestRecord,uid:string){return r.agentUid===uid&&r.agentSeenRevision<r.revision&&['ISSUED','NEEDS_CORRECTION','REJECTED'].includes(r.status);}
+
+export async function readImageAttachment(r:RequestRecord,slot:Slot){const name=r.files[slot];if(!name)throw Error('Documento no disponible.');const blob=await getBlob(ref(storage,path(r.id,name)),8*1024*1024);if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw Error('No es una imagen compatible.');return blob;}

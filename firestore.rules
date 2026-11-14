@@ -352,8 +352,26 @@ service cloud.firestore {
       function enterpriseCustomerPath(id) {
         return /databases/$(database)/documents/companies/main/enterpriseClients/$(id);
       }
+      function validProfile(p) {
+        return p is map && p.keys().hasOnly(['documentType','documentNumber','birthDate','nationality','occupation','department','address','alternatePhone']) &&
+          p.keys().hasAll(['documentType','documentNumber','birthDate','nationality','occupation','department','address','alternatePhone']) &&
+          p.documentType in ['CEDULA','PASAPORTE','RESIDENCIA','RUC','OTRO'] &&
+          validString(p.documentNumber,0,40) && validString(p.birthDate,0,10) &&
+          (p.birthDate == '' || p.birthDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}')) &&
+          validString(p.nationality,0,60) && validString(p.occupation,0,100) &&
+          validString(p.department,0,80) && validString(p.address,0,240) &&
+          validString(p.alternatePhone,0,32);
+      }
+      function validVehicle(v) {
+        return v is map && v.keys().hasOnly(['make','model','year','color','vin','use']) &&
+          v.keys().hasAll(['make','model','year','color','vin','use']) &&
+          validString(v.make,0,60) && validString(v.model,0,80) &&
+          validString(v.year,0,4) && (v.year == '' || v.year.matches('[0-9]{4}')) &&
+          validString(v.color,0,40) && validString(v.vin,0,40) &&
+          v.use in ['Particular','Comercial','Taxi','Motocicleta','Otro'];
+      }
       function validCustomer(d) {
-        return d.keys().hasOnly(['fullName','email','phone','city','ownerUid','createdAt','trial']) &&
+        return d.keys().hasOnly(['fullName','email','phone','city','ownerUid','createdAt','trial','profile']) && (!d.keys().hasAny(['profile']) || validProfile(d.profile)) &&
           d.keys().hasAll(['fullName','email','phone','city','ownerUid','createdAt','trial']) &&
           validString(d.fullName, 2, 120) && validString(d.email, 0, 150) &&
           (d.email == '' || d.email.matches('[^@ ]+@[^@ ]+[.][^@ ]+')) &&
@@ -385,7 +403,7 @@ service cloud.firestore {
       }
       function validDraft(d) {
         return d.keys().hasAll(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial']) &&
-          d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial']) &&
+          d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial','vehicle']) && (!d.keys().hasAny(['vehicle']) || validVehicle(d.vehicle)) &&
           validString(d.clientId,1,80) && exists(enterpriseCustomerPath(d.clientId)) &&
           get(enterpriseCustomerPath(d.clientId)).data.ownerUid == request.auth.uid &&
           get(enterpriseCustomerPath(d.clientId)).data.fullName == d.clientName &&

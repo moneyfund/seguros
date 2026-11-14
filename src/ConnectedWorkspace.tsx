@@ -15,7 +15,7 @@ import {
 } from './backend';
 import { money, navigationByRole, roles, type Section } from './data';
 import { nicaraguanInsurers } from './insurers';
-import CarrierOverview from './CarrierOverview';
+
 import EnterpriseDesk from './EnterpriseDesk';
 import EnterpriseDocumentCenter from './EnterpriseDocumentCenter';
 import CommissionCutDesk from './CommissionCutDesk';
@@ -158,7 +158,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
  const enterpriseAccess=permissions(admin,grantedRoles.length?grantedRoles:[role],activeTabs);
  const enterprise=useEnterpriseRecords(user.uid,enterpriseAccess.canView,enterpriseAccess.wide);
- const enterpriseMode=route==='modulo/clientes/emision'?'issuance':'clients';
+ const enterpriseMode=route==='modulo/clientes/emision'?'issuance':route==='modulo/polizas'?'policies':'clients';
  const enterpriseCount=enterprise.requests.filter(r=>unseen(r,user.uid)||(enterpriseAccess.operator&&r.status==='SUBMITTED')).length;
  const collections=useMemo(()=>{
    const viewFor:Partial<Record<LiveCollection,Section>>={
@@ -260,7 +260,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span>{admin&&<small className="acos-owner-state">ADMINISTRACIÓN GENERAL · ACCESO COMPLETO</small>}</div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
-   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.flatMap(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:tab==='clientes'?enterprise.clients.length:0;const item=<button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;return tab==='clientes'&&enterpriseAccess.canView&&enterpriseAccess.issuance?[item,<button key="emision" className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Emisión de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>]:[item];})}{admin&&<>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.flatMap(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?(enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length):tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:tab==='clientes'?enterprise.clients.length:0;const item=<button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;return tab==='clientes'&&enterpriseAccess.canView&&enterpriseAccess.issuance?[item,<button key="emision" className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Emisión de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>]:[item];})}{admin&&<>
     <div className="sidebar-group-label">CONTROL DE ACCESOS</div>
     <button className={'sidebar-item '+(route==='direccion/solicitudes'?'active':'')} onClick={()=>special('direccion/solicitudes')}><UserRound size={18}/><span>Solicitudes de personal</span></button>
     <button className={'sidebar-item '+(route==='direccion/vistas'?'active':'')} onClick={()=>special('direccion/vistas')}><LayoutDashboard size={18}/><span>Vista de colaboradores</span></button>
@@ -275,7 +275,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <header className="app-topbar"><div className="breadcrumbs"><button className="mobile-menu" onClick={()=>setMobile(true)} aria-label="Abrir menú"><Menu size={23}/></button><span>Empresa</span><ChevronRight size={14}/><strong>{displaySection}</strong></div><div className="topbar-right"><span className="demo-top-note"><span/> SESIÓN VERIFICADA</span><button className="live-top-docs" title="Ir al centro documental" onClick={()=>go('documentos')}><FileText size={16}/><span>Documentos</span></button><button className="live-top-signout" title="Cerrar sesión" onClick={()=>void signOut(auth)}><LogOut size={15}/></button><span className="topbar-avatar">{(user.displayName||user.email||'US').slice(0,2).toUpperCase()}</span></div></header>
    <main className="workspace live-workspace">
     <div className="date-line"><CalendarClock size={15}/> ACOS · PLATAFORMA EMPRESARIAL <span className="live-crumb-separator">/</span> {name.toUpperCase()} <span className="live-crumb-separator">/</span> {displaySection.toUpperCase()}</div>
-    <div className="live-title-row"><div><h1>{displaySection}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='polizas'&&canOperate&&<button className="btn btn-dark" onClick={()=>setModal('policy')}><Plus size={16}/> Expediente preliminar</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
+    <div className="live-title-row"><div><h1>{displaySection}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
     {error&&<div className="live-error-banner"><LockKeyhole size={16}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Cerrar error"><X size={16}/></button></div>}
     {notice&&<div className="live-success-banner"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Cerrar aviso"><X size={16}/></button></div>}
     <div className="live-body">
@@ -307,10 +307,10 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></>}
-     {section==='polizas'&&<CarrierOverview policies={policies} onOpenCatalogue={admin?()=>special('laboratorio'):undefined}/>}
+     
      {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
-      {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='documentos')&&(()=>{
+      {(section==='prospectos'||section==='polizas'&&!enterpriseAccess.canView||section==='solicitudes'||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':'documents';
         const data=filtered(rows[kind]||[]);
         return <div className="data-card live-list"><div className="data-card-head"><div><h3>{displaySection}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
@@ -326,7 +326,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      </>}
      {section==='documentos'&&enterpriseAccess.canView&&<EnterpriseDocumentCenter records={enterprise} search={search}/>}
      {section==='finanzas'&&<CommissionCutDesk rows={filtered(commissions)} own={!admin&&!([role,...grantedRoles].some(r=>['direccion','finanzas'].includes(r)))}/>}
-     {section==='clientes'&&(enterpriseAccess.canView?<EnterpriseDesk user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
+     {(section==='clientes'||section==='polizas'&&enterpriseAccess.canView)&&(enterpriseAccess.canView?<EnterpriseDesk user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
+     {section==='polizas'&&enterpriseAccess.canView&&policies.length>0&&<details className="data-card ed-block"><summary>Registros preliminares anteriores ({policies.length}) · no son pólizas emitidas</summary><div className="table-wrap"><table><thead><tr><th>Cliente de referencia</th><th>Aseguradora</th><th>Producto</th><th>Estado anterior</th></tr></thead><tbody>{filtered(policies).map(r=><tr key={r.id}><td>{readable(r.clientName)}</td><td>{readable(r.insurer)}</td><td>{readable(r.product)}</td><td>{readable(r.status)}</td></tr>)}</tbody></table></div></details>}
      {section==='equipo'&&<>
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
