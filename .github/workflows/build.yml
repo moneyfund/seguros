@@ -22,5 +22,7 @@ jobs:
           node-version: '22'
       - name: Install dependencies
         run: npm install --no-audit --no-fund
+      - name: Test issuance workflow invariants
+        run: node --experimental-strip-types --test tests/issuance-workflow.test.mjs
       - name: Typecheck and build
         run: npm run typecheck && npm run build
