@@ -311,14 +311,14 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'||section==='solicitudes'||section==='documentos')&&(()=>{
-        const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':section==='finanzas'?'commissions':'documents';
+        const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':'documents';
         const data=filtered(rows[kind]||[]);
         return <div className="data-card live-list"><div className="data-card-head"><div><h3>{displaySection}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
         {data.length===0?<div className="live-empty"><Database size={29}/><strong>Sin registros disponibles</strong><p>Todavía no hay registros para esta sección. Puedes comenzar con una nueva operación cuando tu perfil tenga autorización.</p></div>:<div className="table-wrap"><table><thead><tr><th>REFERENCIA</th><th>DETALLE</th><th>CLASIFICACIÓN</th><th>VALOR / TAMAÑO</th><th>ESTADO</th><th/></tr></thead><tbody>{data.map(record=><tr key={record.id}>
           <td className="td-id">{record.id.slice(0,11)}</td>
           <td className="strong-cell">{readable(record.name||record.clientName||record.subject||record.fileName||record.policyId)}</td>
           <td>{readable(record.product||record.type||record.insurer||record.contentType)}</td>
-          <td>{kind==='leads'?money(Number(record.estimatedPremium)||0):kind==='policies'?money(Number(record.premium)||0):kind==='commissions'?money(Number(record.amount)||0):kind==='documents'?Math.round(Number(record.bytes||0)/1024)+' KB':'—'}</td>
+          <td>{kind==='leads'?money(Number(record.estimatedPremium)||0):kind==='policies'?money(Number(record.premium)||0):kind==='documents'?Math.round(Number(record.bytes||0)/1024)+' KB':'—'}</td>
           <td><span className="live-status">{readable(record.status||'Registrado')}</span></td>
           <td>{kind==='leads'&&canSales&&record.status!=='Ganado'&&<button className="live-row-button" title="Avanzar etapa" onClick={async()=>{try{await advanceLead(record);}catch(e){setError(friendlyError(e));}}}>Siguiente <ArrowRight size={14}/></button>}{kind==='tickets'&&canService&&record.status!=='Resuelto'&&<button className="live-row-button" onClick={async()=>{try{await resolveTicket(record.id);}catch(e){setError(friendlyError(e));}}}>Resolver <Check size={14}/></button>}</td>
          </tr>)}</tbody></table></div>}</div>;
