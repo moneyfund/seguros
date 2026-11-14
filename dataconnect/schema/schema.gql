@@ -11,6 +11,7 @@ type Company @table {
   slug: String! @unique
   legalName: String!
   publicName: String!
+  customerPortalEnabled: Boolean! @default(value: false)
   countryCode: String! @default(value: "NI")
   active: Boolean! @default(value: true)
   createdAt: Timestamp! @default(expr: "request.time")
@@ -144,12 +145,13 @@ type InsuranceQuote @table {
   createdAt: Timestamp! @default(expr: "request.time")
 }
 
-type InsurancePolicy @table @unique(fields: ["company", "policyNumber"]) {
+type InsurancePolicy @table @unique(fields: ["company", "insurer", "policyNumber"]) {
   company: Company!
   customer: Customer!
   insurer: Insurer!
   opportunity: SalesOpportunity
   agent: CompanyMember!
+  issuanceRequest: IssuanceRequest @unique
   policyNumber: String!
   product: String!
   premiumCents: Int64!
@@ -200,6 +202,9 @@ type ManagedDocument @table {
   mimeType: String!
   sizeBytes: Int64!
   documentType: String!
+  supersedes: ManagedDocument
+  checksumSha256: String
+  customerVisible: Boolean! @default(value: false)
   versionNumber: Int! @default(value: 1)
   status: String! @default(value: "ACTIVE")
   uploadedAt: Timestamp! @default(expr: "request.time")
@@ -258,4 +263,170 @@ type OutboundNotification @table {
   status: String! @default(value: "QUEUED")
   createdAt: Timestamp! @default(expr: "request.time")
   deliveredAt: Timestamp
+}
+
+
+# Enterprise operations v2. Proposed schema; validate migrations in SQL Connect emulator.
+# All relationships must be checked against the company and the customer's assigned
+# owner in trusted transactional code; foreign keys alone are NOT authorization.
+
+# Explicit linkage, independent of staff membership. A verified Google email is
+# only used for an approved initial claim. Never grant access on email match alone.
+type CustomerPortalAccess @table @unique(fields: ["company", "customer", "user"]) {
+  company: Company!
+  customer: Customer!
+  user: AppUser!
+  approvedEmail: String!
+  active: Boolean! @default(value: false)
+  approvedBy: AppUser!
+  approvedAt: Timestamp! @default(expr: "request.time")
+  revokedAt: Timestamp
+}
+
+type InsuredVehicle @table {
+  company: Company!
+  customer: Customer!
+  plate: String
+  vin: String
+  make: String
+  model: String
+  modelYear: Int
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Document requirements are configurable by insurer and product; no real
+# identity numbers are needed in this metadata.
+type IssuanceDocumentRequirement @table @unique(fields: ["company", "insurer", "productKey", "documentKind"]) {
+  company: Company!
+  insurer: Insurer!
+  productKey: String!
+  documentKind: String!
+  label: String!
+  required: Boolean! @default(value: true)
+  active: Boolean! @default(value: true)
+}
+
+type IssuanceRequest @table {
+  company: Company!
+  customer: Customer!
+  insurer: Insurer!
+  agent: CompanyMember!
+  vehicle: InsuredVehicle
+  assignedOperator: CompanyMember
+  productKey: String!
+  status: String! @default(value: "DRAFT")
+  notes: String
+  correctionReason: String
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  submittedAt: Timestamp
+  completedAt: Timestamp
+  updatedAt: Timestamp! @default(expr: "request.time")
+  revision: Int! @default(value: 0)
+}
+
+# One current version per request/type; earlier immutable ManagedDocument
+# versions remain linked through supersedes. Policy PDFs use ISSUED_POLICY_PDF.
+type IssuanceAttachment @table @unique(fields: ["request", "documentKind"]) {
+  company: Company!
+  request: IssuanceRequest!
+  document: ManagedDocument!
+  documentKind: String!
+  attachedBy: AppUser!
+  attachedAt: Timestamp! @default(expr: "request.time")
+}
+
+type IssuanceStatusEvent @table @unique(fields: ["request", "revision"]) {
+  company: Company!
+  request: IssuanceRequest!
+  revision: Int!
+  fromStatus: String!
+  toStatus: String!
+  actor: AppUser!
+  note: String
+  occurredAt: Timestamp! @default(expr: "request.time")
+}
+
+# Notifications are per recipient. Create from trusted transaction/outbox
+# only, not from arbitrary client-controlled recipient parameters.
+type InboxNotification @table @unique(fields: ["company", "recipient", "deduplicationKey"]) {
+  company: Company!
+  recipient: AppUser!
+  issuanceRequest: IssuanceRequest
+  kind: String!
+  deduplicationKey: String!
+  createdAt: Timestamp! @default(expr: "request.time")
+  readAt: Timestamp
+}
+
+# Versioned rules: dates, basis and rates await ACOS confirmation.
+# No arbitrary defaults or guessed commissions are used.
+type InsurerCutRule @table @unique(fields: ["company", "insurer", "version"]) {
+  company: Company!
+  insurer: Insurer!
+  version: Int!
+  effectiveFrom: Date!
+  effectiveTo: Date
+  cutoffDay: Int
+  calculationBasis: String!
+  currency: String!
+  active: Boolean! @default(value: false)
+  createdBy: AppUser!
+}
+
+type CommissionPeriod @table @unique(fields: ["company", "insurer", "startsOn", "endsOn", "currency"]) {
+  company: Company!
+  insurer: Insurer!
+  rule: InsurerCutRule!
+  startsOn: Date!
+  endsOn: Date!
+  currency: String!
+  status: String! @default(value: "OPEN")
+  closedAt: Timestamp
+  closedBy: AppUser
+}
+
+type CommissionPeriodItem @table @unique(fields: ["commission"]) {
+  company: Company!
+  period: CommissionPeriod!
+  commission: Commission!
+  approvedCents: Int64!
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type CommissionPayment @table @unique(fields: ["company", "idempotencyKey"]) {
+  company: Company!
+  agent: CompanyMember!
+  currency: String!
+  paidCents: Int64!
+  reference: String!
+  idempotencyKey: String!
+  paidOn: Date!
+  recordedBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+type CommissionPaymentAllocation @table(key: ["payment", "item"]) {
+  company: Company!
+  payment: CommissionPayment!
+  item: CommissionPeriodItem!
+  allocatedCents: Int64!
+}
+
+# Corporate-only mail. External IDs are scoped to mailbox, and content
+# is not collected until the connector has organizational authorization.
+type CorporateMailAudit @table @unique(fields: ["mailbox", "providerMessageId"]) {
+  company: Company!
+  mailbox: Mailbox!
+  actor: CompanyMember
+  customer: Customer
+  issuanceRequest: IssuanceRequest
+  providerMessageId: String!
+  direction: String!
+  recipientAddress: String!
+  subject: String
+  eventAt: Timestamp!
+  recordedAt: Timestamp! @default(expr: "request.time")
 }
