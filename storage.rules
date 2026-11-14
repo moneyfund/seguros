@@ -142,6 +142,48 @@ service firebase.storage {
         (isActiveMember() && request.auth.uid == ownerUid);
     }
 
+
+    function trialEnabled() {
+      return firestore.exists(/databases/(default)/documents/companies/main/settings/enterpriseTrial) &&
+        firestore.get(/databases/(default)/documents/companies/main/settings/enterpriseTrial).data.enabled == true;
+    }
+    function enterpriseRole(roles) {
+      return isOwner() || (isActiveMember() &&
+        (firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid)).data.role in roles ||
+         firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid)).data.get('roles',[]).hasAny(roles)));
+    }
+    function enterpriseView(view) {
+      return isOwner() || (isActiveMember() &&
+        firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid)).data.get('allowedSections',[]).hasAny([view]));
+    }
+    function requestExists(id) {
+      return firestore.exists(/databases/(default)/documents/companies/main/enterpriseIssuance/$(id));
+    }
+    function issuance(id) {
+      return firestore.get(/databases/(default)/documents/companies/main/enterpriseIssuance/$(id)).data;
+    }
+    function enterpriseRead(id) {
+      return verified() && trialEnabled() && requestExists(id) && enterpriseView('clientes') &&
+         (enterpriseRole(['direccion','operaciones','servicio']) ||
+          (enterpriseRole(['ventas']) && issuance(id).agentUid == request.auth.uid));
+    }
+    match /companies/main/enterpriseTrial/{requestId}/{fileName} {
+      // Only synthetic files in this gated validation environment.
+      allow get: if enterpriseRead(requestId);
+      allow list: if false;
+      allow create: if enterpriseRead(requestId) && enterpriseView('polizas') && supportedDocument() &&
+        (
+          (enterpriseRole(['ventas','direccion']) && issuance(requestId).agentUid == request.auth.uid &&
+           issuance(requestId).status in ['DRAFT','NEEDS_CORRECTION'] &&
+           fileName.matches('(front|back|registration)-[0-9a-f-]{36}[.](jpg|png|webp)') &&
+           request.resource.contentType in ['image/jpeg','image/png','image/webp']) ||
+          (enterpriseRole(['direccion','operaciones']) && issuance(requestId).operatorUid == request.auth.uid &&
+           issuance(requestId).status == 'IN_REVIEW' && fileName.matches('policy-[0-9a-f-]{36}[.]pdf') &&
+           request.resource.contentType == 'application/pdf')
+        );
+      allow update, delete: if false;
+    }
+
     // Todo lo demás queda privado.
     match /{allPaths=**} {
       allow read, write: if false;

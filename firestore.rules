@@ -224,7 +224,8 @@ service cloud.firestore {
       // con clientUid = su UID autenticado.
       match /policies/{policyId} {
         allow read: if hasView('polizas') && (
-          hasRole(['direccion','ventas','operaciones','servicio','finanzas','supervision']) ||
+          hasRole(['direccion','operaciones','servicio','finanzas','supervision']) ||
+          (hasRole(['ventas']) && resource.data.get('assignedToUid','') == request.auth.uid) ||
           (isClient() && resource.data.clientUid == request.auth.uid));
 
         allow create: if hasView('polizas') && hasRole(['direccion','operaciones']) &&
@@ -322,6 +323,128 @@ service cloud.firestore {
 
         allow update: if false;
         allow delete: if isOwner();
+      }
+
+
+      // Isolated enterprise validation workflow. Disabled unless the owner
+      // explicitly sets settings/enterpriseTrial.enabled=true in a test project.
+      // Synthetic records ONLY until trusted SQL/Storage backend and QA are approved.
+      function trialEnabled() {
+        return exists(/databases/$(database)/documents/companies/main/settings/enterpriseTrial) &&
+          get(/databases/$(database)/documents/companies/main/settings/enterpriseTrial).data.enabled == true;
+      }
+      function enterpriseWide() {
+        return hasView('clientes') && hasRole(['direccion','operaciones','servicio']);
+      }
+      function enterpriseSales() {
+        return hasView('clientes') && hasRole(['ventas','direccion']);
+      }
+      function enterpriseOperator() {
+        return hasView('clientes') && hasView('polizas') && hasRole(['direccion','operaciones']);
+      }
+      function enterpriseAgent(uid) {
+        return enterpriseSales() && request.auth.uid == uid;
+      }
+      function validString(v, min, max) {
+        return v is string && v.size() >= min && v.size() <= max;
+      }
+      function enterpriseCustomerPath(id) {
+        return /databases/$(database)/documents/companies/main/enterpriseClients/$(id);
+      }
+      function validCustomer(d) {
+        return d.keys().hasOnly(['fullName','email','phone','city','ownerUid','createdAt','trial']) &&
+          d.keys().hasAll(['fullName','email','phone','city','ownerUid','createdAt','trial']) &&
+          validString(d.fullName, 2, 120) && validString(d.email, 0, 150) &&
+          (d.email == '' || d.email.matches('[^@ ]+@[^@ ]+[.][^@ ]+')) &&
+          validString(d.phone, 0, 32) && validString(d.city, 0, 100) &&
+          d.ownerUid == request.auth.uid && d.createdAt == request.time && d.trial == true;
+      }
+      match /settings/enterpriseTrial {
+        allow get: if hasView('clientes') && hasRole(['direccion','ventas','operaciones','servicio']);
+        // Broader existing settings rule gives owners management.
+      }
+      match /enterpriseClients/{clientId} {
+        allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.ownerUid));
+        allow create: if trialEnabled() && enterpriseSales() && validCustomer(request.resource.data);
+        // Ownership and source identity cannot be modified by client-side code.
+        allow update, delete: if false;
+      }
+      function validAttachment(name, kind) {
+        return name is string && (name == '' ||
+          name.matches(kind + '-[0-9a-f-]{36}[.](jpg|png|webp)'));
+      }
+      function validAttachments(d) {
+        return d.files is map && d.files.keys().hasOnly(['front','back','registration']) &&
+          d.files.keys().hasAll(['front','back','registration']) &&
+          validAttachment(d.files.front,'front') && validAttachment(d.files.back,'back') &&
+          validAttachment(d.files.registration,'registration');
+      }
+      function completeAttachments(d) {
+        return validAttachments(d) && d.files.front != '' && d.files.back != '' && d.files.registration != '';
+      }
+      function validDraft(d) {
+        return d.keys().hasAll(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial']) &&
+          d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial']) &&
+          validString(d.clientId,1,80) && exists(enterpriseCustomerPath(d.clientId)) &&
+          get(enterpriseCustomerPath(d.clientId)).data.ownerUid == request.auth.uid &&
+          get(enterpriseCustomerPath(d.clientId)).data.fullName == d.clientName &&
+          d.agentUid == request.auth.uid && d.insurerId in ['iniser','assa','america','lafise','mapfre'] &&
+          d.productKey == 'VEHICLE_MANDATORY' && validString(d.plate,1,24) && d.status == 'DRAFT' &&
+          validAttachments(d) && d.files.front == '' && d.files.back == '' && d.files.registration == '' &&
+          d.pdf == '' && d.policyNumber == '' && d.startDate == '' && d.endDate == '' &&
+          d.premiumCents == 0 && d.currency == 'USD' && d.operatorUid == '' && d.reason == '' &&
+          d.revision == 0 && d.agentSeenRevision == 0 && d.createdAt == request.time &&
+          d.updatedAt == request.time && d.trial == true;
+      }
+      function nextRevision() {
+        return request.resource.data.revision == resource.data.revision + 1 &&
+          request.resource.data.updatedAt == request.time;
+      }
+      function validIssued(d) {
+        return d.pdf is string && d.pdf.matches('policy-[0-9a-f-]{36}[.]pdf') &&
+          validString(d.policyNumber,1,100) &&
+          d.startDate is string && d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+          d.endDate is string && d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+          d.endDate >= d.startDate && d.premiumCents is int && d.premiumCents >= 0 &&
+          d.premiumCents <= 1000000000 && d.currency in ['USD','NIO'];
+      }
+      match /enterpriseIssuance/{requestId} {
+        allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.agentUid));
+        allow create: if trialEnabled() && enterpriseSales() && hasView('polizas') && validDraft(request.resource.data);
+        allow update: if trialEnabled() && (
+          // Agent acknowledgement: current revision only, no status or other changes.
+          (enterpriseAgent(resource.data.agentUid) &&
+           changedOnly(['agentSeenRevision']) &&
+           request.resource.data.agentSeenRevision == resource.data.revision) ||
+          // Attach files during draft/correction. No other fields can change.
+          (enterpriseAgent(resource.data.agentUid) && hasView('polizas') &&
+           resource.data.status in ['DRAFT','NEEDS_CORRECTION'] &&
+           changedOnly(['files','updatedAt']) && validAttachments(request.resource.data) &&
+           request.resource.data.updatedAt == request.time) ||
+          // Submit/re-submit all three attachment references.
+          (enterpriseAgent(resource.data.agentUid) && hasView('polizas') &&
+           resource.data.status in ['DRAFT','NEEDS_CORRECTION'] &&
+           changedOnly(['status','operatorUid','reason','revision','updatedAt']) &&
+           request.resource.data.status == 'SUBMITTED' && request.resource.data.operatorUid == '' &&
+           request.resource.data.reason == '' && completeAttachments(resource.data) && nextRevision()) ||
+          // Exactly one reviewer claims the request.
+          (enterpriseOperator() && resource.data.status == 'SUBMITTED' &&
+           changedOnly(['status','operatorUid','revision','updatedAt']) &&
+           request.resource.data.status == 'IN_REVIEW' &&
+           request.resource.data.operatorUid == request.auth.uid && nextRevision()) ||
+          // The assigned reviewer may request correction, refuse or record externally issued PDF.
+          (enterpriseOperator() && resource.data.status == 'IN_REVIEW' &&
+           resource.data.operatorUid == request.auth.uid && nextRevision() &&
+           (
+             (request.resource.data.status in ['NEEDS_CORRECTION','REJECTED'] &&
+              changedOnly(['status','reason','revision','updatedAt']) &&
+              validString(request.resource.data.reason,2,1000)) ||
+             (request.resource.data.status == 'ISSUED' &&
+              changedOnly(['status','pdf','policyNumber','startDate','endDate','premiumCents','currency','revision','updatedAt']) &&
+              validIssued(request.resource.data))
+           ))
+        );
+        allow delete: if false;
       }
 
       // Colecciones en reserva. Solo gerencia, hasta definir alcance.

@@ -170,6 +170,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
       ? { field: 'clientUid' as const, uid: user.uid }
       : name==='leads'&&!admin&&!grantedRoles.some(r=>r==='direccion'||r==='supervision')
       ? { field: 'assignedToUid' as const, uid: user.uid }
+      : name==='policies'&&!admin&&!([role,...grantedRoles].some(r=>['direccion','operaciones','servicio','finanzas','supervision'].includes(r)))
+      ? { field: 'assignedToUid' as const, uid: user.uid }
       : name==='documents'&&!admin
       ? { field: 'uploaderUid' as const, uid: user.uid }
       : undefined));
