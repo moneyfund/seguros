@@ -50,9 +50,9 @@ try {
     assert.equal(await page.locator('a[href^="tel:"],a[href^="mailto:"],a[href*="wa.me"]').count(), 0);
   });
   await test('Official artwork, local fonts and navy brand identity are present', async () => {
-    assert.match(await page.locator('.ap-brand img').getAttribute('src'), /acos-horizontal-negative\.png$/);
-    assert.match(await page.locator('.ap-footer-brand img').getAttribute('src'), /acos-primary\.png$/);
-    assert.match(await page.locator('link[rel=icon]').getAttribute('href'), /acos-symbol\.png$/);
+    assert.match(await page.locator('.ap-brand img').getAttribute('src'), /acos-horizontal-negative\.svg$/);
+    assert.match(await page.locator('.ap-footer-brand img').getAttribute('src'), /acos-primary\.svg$/);
+    assert.match(await page.locator('link[rel=icon]').getAttribute('href'), /acos-symbol\.svg$/);
     assert.equal(await page.locator('.ap-header').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
     assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /ACOS Lunaquete/);
     assert.equal(await page.evaluate(() => document.fonts.check('16px "ACOS Lunaquete"')), true);

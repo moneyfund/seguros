@@ -19,7 +19,7 @@ import './brand-luminous.css';
 const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 if (iconLink) {
   iconLink.href = ACOS_SYMBOL;
-  iconLink.type = 'image/png';
+  iconLink.type = 'image/svg+xml';
 }
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

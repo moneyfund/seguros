@@ -1,7 +1,7 @@
 /* ACOS November 2026 — luminous blue and gold. Keep transactional tables/forms light,
    with deep blue navigation and dashboard highlights; no invented metrics. */
 :root{--acos-light-blue:#23649e;--acos-mid-blue:#103c66;--acos-dark-blue:#05233f;--acos-glow:rgba(64,141,218,.24)}
-.acos-mark-negative{background:#fff;border-radius:8px;padding:8px 10px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.acos-mark-negative{background:transparent;border:0;border-radius:0;padding:0;box-shadow:none}
 .acos-mark-primary{max-width:100%}
 .live-shell .sidebar,.app-shell .sidebar{
  background-color:#001929;
@@ -32,7 +32,10 @@
 .live-auth-screen .live-auth-brand.acos-auth-logo{display:flex;flex-wrap:wrap;gap:12px;padding-top:12px}
 .acos-auth-logo .acos-mark{width:min(100%,280px)}
 .acos-public .ap-header{background-color:#001929;background-image:linear-gradient(110deg,rgba(30,81,127,.35),transparent 70%)}
-.acos-public .ap-navbar{min-height:100px;padding-block:18px}
+.acos-public .ap-navbar{min-height:88px;padding-block:14px;gap:28px}
+.acos-public .ap-brand .acos-mark{width:clamp(218px,17vw,278px)}
+.acos-public .ap-brand .acos-mark img{display:block;width:100%;height:auto;object-fit:contain;filter:none}
+.acos-public .ap-header{border-bottom:1px solid rgba(219,178,82,.22)}
 .acos-public .ap-footer-main .ap-footer-brand>a{padding:16px 0;width:260px;margin:0}
-@media(max-width:580px){.acos-public .ap-navbar{min-height:80px;padding-block:16px}.acos-public .ap-brand .acos-mark{padding:5px;width:48px}.acos-public .ap-brand .acos-mark img{width:100%;aspect-ratio:128/112}.live-shell .live-home-intro{padding:18px}.live-shell .live-metric-button{padding:14px 11px}.live-shell .live-metric-button>strong{font-size:clamp(19px,6vw,29px)}.live-shell .live-home-security{max-width:100%}}
+@media(max-width:580px){.acos-public .ap-navbar{min-height:80px;padding-block:16px}.acos-public .ap-brand .acos-mark{padding:0;width:48px}.acos-public .ap-brand .acos-mark img{width:100%;aspect-ratio:440/385}.live-shell .live-home-intro{padding:18px}.live-shell .live-metric-button{padding:14px 11px}.live-shell .live-metric-button>strong{font-size:clamp(19px,6vw,29px)}.live-shell .live-home-security{max-width:100%}}
 @media(prefers-reduced-motion:reduce){.live-shell .sidebar-item,.live-shell .live-metric-button{transition:none}.live-shell .live-metric-button:hover{transform:none}}
