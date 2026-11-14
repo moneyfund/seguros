@@ -7,7 +7,7 @@ on:
 permissions:
   contents: read
 jobs:
-  firestore:
+  firebase-rules:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -24,4 +24,4 @@ jobs:
       - run: npm install --no-audit --no-fund
       - run: npm install --no-save --no-audit --no-fund @firebase/rules-unit-testing@5
       - name: Test isolated demo project (no cloud credentials)
-        run: npx --yes firebase-tools emulators:exec --only firestore --config firebase.rules-test.json --project demo-acos-enterprise "node --test tests/enterprise-firestore.rules.test.mjs"
+        run: npx --yes firebase-tools emulators:exec --only firestore,storage --config firebase.rules-test.json --project demo-acos-enterprise "node --test --test-concurrency=1 tests/enterprise-firestore.rules.test.mjs tests/enterprise-storage.rules.test.mjs"
