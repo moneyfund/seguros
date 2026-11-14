@@ -1,7 +1,7 @@
 import {after,before,test} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {collection,doc,getDoc,getDocs,query,setDoc,updateDoc,where,serverTimestamp} from 'firebase/firestore';
+import {collection,doc,getDoc,getDocs,query,setDoc,updateDoc,deleteDoc,where,serverTimestamp} from 'firebase/firestore';
 let env; const projectId='demo-acos-enterprise';
 const base='companies/main/';
 const aUid='agent-a',bUid='agent-b',oUid='operator-a',serviceUid='service-a',financeUid='finance-a';
@@ -58,4 +58,13 @@ test('Expediente y emisión: aislamiento, permisos, transiciones y revisión',as
  await env.withSecurityRulesDisabled(async c=>{await updateDoc(d(c.firestore(),'settings/enterpriseTrial'),{enabled:false});});
  await assertFails(getDoc(d(a,'enterpriseClients/a')));
  await assertFails(getDoc(d(o,'enterpriseIssuance/a')));
+});
+
+test('Laboratorio: no se permite borrar registros sin ser propietario verificado',async()=>{
+ await env.withSecurityRulesDisabled(async c=>setDoc(d(c.firestore(),'pilotClients/fixture'),{isPilot:true}));
+ const anon=env.unauthenticatedContext().firestore();
+ await assertFails(deleteDoc(d(anon,'pilotClients/fixture')));
+ await assertFails(deleteDoc(d(ctx(aUid),'pilotClients/fixture')));
+ const owner=env.authenticatedContext('owner-test',{email:'amyblandon171@gmail.com',email_verified:true}).firestore();
+ await assertSucceeds(deleteDoc(d(owner,'pilotClients/fixture')));
 });

@@ -479,7 +479,7 @@ service cloud.firestore {
         allow delete: if pilotCollection in [
           'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
           'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
-        ];
+        ] && isOwner();
       }
 
       match /auditLogs/{auditId} {
