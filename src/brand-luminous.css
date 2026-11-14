@@ -1,0 +1,38 @@
+/* ACOS November 2026 — luminous blue and gold. Keep transactional tables/forms light,
+   with deep blue navigation and dashboard highlights; no invented metrics. */
+:root{--acos-light-blue:#23649e;--acos-mid-blue:#103c66;--acos-dark-blue:#05233f;--acos-glow:rgba(64,141,218,.24)}
+.acos-mark-negative{background:#fff;border-radius:8px;padding:8px 10px;box-shadow:0 2px 12px rgba(0,0,0,.12)}
+.acos-mark-primary{max-width:100%}
+.live-shell .sidebar,.app-shell .sidebar{
+ background-color:#001929;
+ background-image:radial-gradient(ellipse at 5% 8%,rgba(40,103,163,.48),transparent 40%),radial-gradient(ellipse at 110% 94%,rgba(25,91,156,.46),transparent 44%),linear-gradient(155deg,rgba(8,41,77,.7),transparent 55%);
+ border-right:1px solid rgba(117,167,217,.32);box-shadow:6px 0 28px rgba(3,27,48,.12);
+}
+.live-shell .sidebar .acos-sidebar-brand{padding:10px 4px 0;gap:16px;margin-bottom:24px}
+.live-shell .acos-sidebar-brand .acos-mark{width:min(100%,240px)}
+.live-shell .sidebar-item{border:1px solid transparent;transition:background .18s ease,box-shadow .18s ease}
+.live-shell .sidebar-item.active{background:linear-gradient(125deg,#f4df9e,#d0a440);border-color:#f5de9d;color:#06233d;box-shadow:0 4px 18px rgba(202,160,48,.22)}
+.live-shell .sidebar-item:hover:not(.active){background:linear-gradient(110deg,rgba(71,134,194,.29),rgba(13,43,74,.62));border-color:rgba(144,185,230,.18)}
+.live-shell .workspace-profile{background:linear-gradient(135deg,rgba(110,169,226,.15),rgba(6,35,63,.4));border-color:rgba(170,198,235,.23)}
+.live-shell .app-topbar{background:linear-gradient(98deg,#fff,#f4f8fc 75%,#eaf2fa);box-shadow:0 2px 16px rgba(5,35,63,.045)}
+.live-shell .live-workspace{background:radial-gradient(ellipse at top right,#e4eefb 0%,transparent 46%),linear-gradient(180deg,#f3f7fb,#f8f9fb 80%)}
+.live-shell .live-home-intro{padding:24px 26px;border-radius:15px;background:radial-gradient(ellipse at 95% 0%,rgba(66,147,226,.44),transparent 55%),linear-gradient(115deg,#082b4d,#061f37);border:1px solid #1e5485;box-shadow:0 10px 28px rgba(7,45,82,.17);color:#fff}
+.live-shell .live-home-intro h2,.live-shell .live-home-intro p{color:#fff}
+.live-shell .live-home-intro .live-home-eyebrow{color:#f0d88f}
+.live-shell .live-home-intro .live-home-security{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.24);color:#fff}
+.live-shell .live-metric-button{background:radial-gradient(ellipse at 95% 0%,rgba(61,144,228,.55),transparent 59%),linear-gradient(132deg,#143e67,#072640 77%);border:1px solid #3975a8;box-shadow:inset 0 1px 0 rgba(193,225,255,.2),0 8px 22px rgba(5,39,75,.16);color:#fff;transition:transform .2s ease,box-shadow .2s ease}
+.live-shell .live-metric-button>strong,.live-shell .live-metric-button .live-metric-label,.live-shell .live-metric-button>small{color:#fff}
+.live-shell .live-metric-button .live-metric-label>svg{background:rgba(240,216,143,.13);color:#f0d88f}
+.live-shell .live-metric-button:hover{transform:translateY(-2px);border-color:#cfad59;box-shadow:inset 0 1px 0 rgba(193,225,255,.25),0 9px 26px rgba(5,39,75,.24)}
+.live-shell .live-work-panels .data-card{border:1px solid #d4e2ee;box-shadow:0 8px 24px rgba(5,35,63,.08)}
+.live-shell .data-card-head{border-bottom-color:#dce6ef}
+.live-shell .ins-live-entry{background:radial-gradient(ellipse at 95% 0%,rgba(61,144,228,.38),transparent 56%),linear-gradient(135deg,#103c66,#06233d);border:1px solid #2d6191}
+.live-auth-screen{background:radial-gradient(ellipse at 17% 15%,#1b527f,transparent 56%),radial-gradient(ellipse at 90% 88%,#123e6a,transparent 45%),#001929}
+.live-auth-screen .live-auth-card{border-radius:15px;border-top-color:#caa030}
+.live-auth-screen .live-auth-brand.acos-auth-logo{display:flex;flex-wrap:wrap;gap:12px;padding-top:12px}
+.acos-auth-logo .acos-mark{width:min(100%,280px)}
+.acos-public .ap-header{background-color:#001929;background-image:linear-gradient(110deg,rgba(30,81,127,.35),transparent 70%)}
+.acos-public .ap-navbar{min-height:100px;padding-block:18px}
+.acos-public .ap-footer-main .ap-footer-brand>a{padding:16px 0;width:260px;margin:0}
+@media(max-width:580px){.acos-public .ap-navbar{min-height:80px;padding-block:16px}.acos-public .ap-brand .acos-mark{padding:5px;width:48px}.acos-public .ap-brand .acos-mark img{width:100%;aspect-ratio:128/112}.live-shell .live-home-intro{padding:18px}.live-shell .live-metric-button{padding:14px 11px}.live-shell .live-metric-button>strong{font-size:clamp(19px,6vw,29px)}.live-shell .live-home-security{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.live-shell .sidebar-item,.live-shell .live-metric-button{transition:none}.live-shell .live-metric-button:hover{transform:none}}

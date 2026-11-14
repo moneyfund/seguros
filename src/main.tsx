@@ -14,6 +14,7 @@ import './admin-parity.css';
 import './insurance-operations.css';
 import './pilot.css';
 import './brand-identity.css';
+import './brand-luminous.css';
 
 const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 if (iconLink) {

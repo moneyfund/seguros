@@ -8,11 +8,11 @@
 @font-face{font-family:'ACOS Lunaquete';font-style:normal;font-weight:400;font-display:swap;src:url('/fonts/lunaquete-regular-latin.woff') format('woff');unicode-range:U+20-21,U+24-26,U+2C,U+2F-39,U+3F-5A,U+61-7A,U+A1,U+B7,U+BF,U+CD,U+D1,U+E1,U+E9,U+ED,U+F1,U+F3,U+FA}
 :root{
   --brand-navy:#001929;
-  --brand-navy-raised:#163747;
-  --brand-champagne:#DABB83;
-  --brand-gold:#CFA76F;
+  --brand-navy-raised:#113c62;
+  --brand-champagne:#E7CB80;
+  --brand-gold:#CAA030;
   --brand-copper:#D4A06C;
-  --brand-bronze:#B28648;
+  --brand-bronze:#A67C24;
   --brand-gold-strong:#DB9D23;
   --brand-ivory:#F3EEEA;
   --brand-mist:#F2F3F4;
@@ -24,5 +24,5 @@
   --brand-line:#DCE1E5;
   --brand-sans:'ACOS Poppins',Arial,sans-serif;
   --brand-display:'ACOS Lunaquete',Georgia,serif;
-  --brand-gold-gradient:linear-gradient(135deg,#DABB83,#B28648);
+  --brand-gold-gradient:linear-gradient(135deg,#F1DB9B,#CAA030);
 }
