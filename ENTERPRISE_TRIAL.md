@@ -3,7 +3,7 @@
 Implementación funcional conectada a Firebase SDK. PostgreSQL / SQL Connect sigue siendo el destino definitivo. La colección temporal está aislada de las colecciones legacy y de las de laboratorio; no se migran datos reales hasta aprobar políticas de conservación, backend y pruebas.
 
 ## Activación controlada
-1. Utilizar un proyecto Firebase de prueba separado y configurar las variables VITE_FIREBASE_* de una rama de validación, no sustituir credenciales reales.
+1. Utilizar un proyecto Firebase de prueba separado y configurar las variables VITE_FIREBASE_* de una rama de validación y VITE_ACOS_ENTERPRISE_TRIAL=true. La compilación permanece bloqueada si usa seguros-d1a86 o falta la variable. No sustituir credenciales reales.
 2. Publicar y verificar firestore.rules y storage.rules en ese proyecto. Las reglas del repositorio **no** se publican por GitHub/Vercel. Verificar permisos de Storage para consultar Firestore y CORS de descargas autenticadas (getBlob).
 3. Crear mediante la consola el documento companies/main/settings/enterpriseTrial con enabled (boolean) = true. Sin este documento, no hay lecturas/escrituras de expedientes ni solicitudes nuevas. No habilitarlo en el proyecto productivo.
 4. Crear cuentas de prueba verificadas y membresías con clientes y polizas: dos ventas, un operador, atención al cliente, dirección. La vista general corresponde a dirección/operaciones/servicio; ventas filtra ownerUid/agentUid en la consulta y en reglas.
@@ -26,3 +26,6 @@ Pruebas negativas de lectura por ID, listados, archivos y transición; desactiva
 El centro documental consolida los adjuntos ya registrados por expediente, aseguradora y tipo. Las vistas de finanzas solo suman registros explícitos por corte, fechas, agente y moneda con campos agentUid, policyId, insurerId, cutId, periodStart, periodEnd, currency, amountCents y paidCents. No inferir pagos ni generar reglas faltantes. Finanzas/Dirección consultan todos los registros permitidos; ventas consulta únicamente agentUid propio si se le habilita la vista finanzas. Antes de otorgar datos reales, pruebas de emulador obligatorias y conciliación del modelo SQL.
 
 La CI de seguridad utiliza proyecto demo-acos-enterprise, sin acceso a recursos cloud. Las pruebas Firestore usan referencias sintéticas de adjuntos; no certifican la existencia de archivos ni reglas Storage, que aún deben probarse en emulador e integración.
+
+## Publicación de interfaz
+La interfaz puede desplegarse en el proyecto Vercel original, pero su flujo experimental queda bloqueado por defecto hasta que exista un entorno de prueba separado y se validen las reglas. La primera CI de seguridad excedió 1.000 expresiones de Rules; se refactorizaron las transiciones para ejecutar únicamente la rama aplicable. Aún no se certifica el acceso ni se publican reglas cloud.

@@ -3,6 +3,8 @@ import { collection,doc,onSnapshot,query,where,addDoc,runTransaction,serverTimes
 import { ref,uploadBytes,getBlob,getMetadata } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { db,storage,companyId } from './firebase';
+// Never enable the experimental data collection on the established production backend.
+const trialBuild = import.meta.env.VITE_ACOS_ENTERPRISE_TRIAL === 'true' && db.app.options.projectId !== 'seguros-d1a86';
 import type { EnterpriseRole } from './backend';
 import type { Section } from './data';
 import {validateIssuanceTransition,mandatoryVehicleDocuments,type IssuanceStatus} from './issuanceWorkflow';
@@ -26,7 +28,7 @@ export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean){
  const [clients,setClients]=useState<Customer[]>([]),[requests,setRequests]=useState<RequestRecord[]>([]);
  useEffect(()=>{
   setEnabled(false);setClients([]);setRequests([]);setLoading(true);setError('');
-  if(!canView||companyId!=='main'){setLoading(false);return;}
+  if(!canView||companyId!=='main'||!trialBuild){setLoading(false);return;}
   let live=true;
   const stop=onSnapshot(feature(),s=>{if(live){setEnabled(s.data()?.enabled===true);setLoading(false);setError('');}},()=>{if(live){setEnabled(false);setLoading(false);setError('El entorno de validación aún no está habilitado o sus reglas no se han publicado.');}});
   return()=>{live=false;stop();};

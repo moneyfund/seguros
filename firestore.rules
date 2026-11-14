@@ -344,7 +344,7 @@ service cloud.firestore {
         return hasView('clientes') && hasView('polizas') && hasRole(['direccion','operaciones']);
       }
       function enterpriseAgent(uid) {
-        return enterpriseSales() && request.auth.uid == uid;
+        return verified() && request.auth.uid == uid && enterpriseSales();
       }
       function validString(v, min, max) {
         return v is string && v.size() >= min && v.size() <= max;
@@ -412,39 +412,39 @@ service cloud.firestore {
       match /enterpriseIssuance/{requestId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.agentUid));
         allow create: if trialEnabled() && enterpriseSales() && hasView('polizas') && validDraft(request.resource.data);
-        allow update: if trialEnabled() && (
-          // Agent acknowledgement: current revision only, no status or other changes.
-          (enterpriseAgent(resource.data.agentUid) &&
-           changedOnly(['agentSeenRevision']) &&
-           request.resource.data.agentSeenRevision == resource.data.revision) ||
-          // Attach files during draft/correction. No other fields can change.
-          (enterpriseAgent(resource.data.agentUid) && hasView('polizas') &&
-           resource.data.status in ['DRAFT','NEEDS_CORRECTION'] &&
-           changedOnly(['files','updatedAt']) && validAttachments(request.resource.data) &&
-           request.resource.data.updatedAt == request.time) ||
-          // Submit/re-submit all three attachment references.
-          (enterpriseAgent(resource.data.agentUid) && hasView('polizas') &&
-           resource.data.status in ['DRAFT','NEEDS_CORRECTION'] &&
-           changedOnly(['status','operatorUid','reason','revision','updatedAt']) &&
-           request.resource.data.status == 'SUBMITTED' && request.resource.data.operatorUid == '' &&
-           request.resource.data.reason == '' && completeAttachments(resource.data) && nextRevision()) ||
-          // Exactly one reviewer claims the request.
-          (enterpriseOperator() && resource.data.status == 'SUBMITTED' &&
-           changedOnly(['status','operatorUid','revision','updatedAt']) &&
-           request.resource.data.status == 'IN_REVIEW' &&
-           request.resource.data.operatorUid == request.auth.uid && nextRevision()) ||
-          // The assigned reviewer may request correction, refuse or record externally issued PDF.
-          (enterpriseOperator() && resource.data.status == 'IN_REVIEW' &&
-           resource.data.operatorUid == request.auth.uid && nextRevision() &&
-           (
-             (request.resource.data.status in ['NEEDS_CORRECTION','REJECTED'] &&
-              changedOnly(['status','reason','revision','updatedAt']) &&
-              validString(request.resource.data.reason,2,1000)) ||
-             (request.resource.data.status == 'ISSUED' &&
-              changedOnly(['status','pdf','policyNumber','startDate','endDate','premiumCents','currency','revision','updatedAt']) &&
-              validIssued(request.resource.data))
-           ))
-        );
+        // Evaluate only the relevant action. Avoid exceeding the Rules engine's
+        // 1,000-expression budget by repeatedly expanding authorization helpers.
+        function agentEdit(old, next, keys) {
+          return old.status in ['DRAFT','NEEDS_CORRECTION'] &&
+            (next.status == old.status
+              ? keys.hasOnly(['files','updatedAt']) && validAttachments(next) && next.updatedAt == request.time
+              : next.status == 'SUBMITTED' && keys.hasOnly(['status','operatorUid','reason','revision','updatedAt']) &&
+                next.operatorUid == '' && next.reason == '' && completeAttachments(old) && nextRevision()) &&
+            hasView('polizas') && enterpriseAgent(old.agentUid);
+        }
+        function operatorEdit(old, next, keys) {
+          return nextRevision() &&
+            (old.status == 'SUBMITTED'
+              ? next.status == 'IN_REVIEW' && keys.hasOnly(['status','operatorUid','revision','updatedAt']) &&
+                next.operatorUid == request.auth.uid
+              : old.status == 'IN_REVIEW' && old.operatorUid == request.auth.uid &&
+                (next.status == 'ISSUED'
+                  ? keys.hasOnly(['status','pdf','policyNumber','startDate','endDate','premiumCents','currency','revision','updatedAt']) && validIssued(next)
+                  : next.status in ['NEEDS_CORRECTION','REJECTED'] &&
+                    keys.hasOnly(['status','reason','revision','updatedAt']) && validString(next.reason,2,1000))) &&
+            enterpriseOperator();
+        }
+        function authorizedChange() {
+          let old = resource.data;
+          let next = request.resource.data;
+          let keys = next.diff(old).affectedKeys();
+          return keys.hasOnly(['agentSeenRevision'])
+            ? next.agentSeenRevision == old.revision && enterpriseAgent(old.agentUid)
+            : old.status in ['DRAFT','NEEDS_CORRECTION']
+              ? agentEdit(old,next,keys)
+              : operatorEdit(old,next,keys);
+        }
+        allow update: if verified() && trialEnabled() && authorizedChange();
         allow delete: if false;
       }
 
@@ -468,15 +468,15 @@ service cloud.firestore {
       // Dedicated fictitious-data laboratory, readable and writable ONLY by verified owners.
       // These collections never authorize normal employees and never alter live CRM records.
       match /{pilotCollection}/{pilotRecordId} {
-        allow read: if isOwner() && pilotCollection in [
+        allow read: if pilotCollection in [
           'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
           'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
-        ];
-        allow create, update: if isOwner() && pilotCollection in [
+        ] && isOwner();
+        allow create, update: if pilotCollection in [
           'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
           'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
-        ] && request.resource.data.isPilot == true;
-        allow delete: if isOwner() && pilotCollection in [
+        ] && isOwner() && request.resource.data.isPilot == true;
+        allow delete: if pilotCollection in [
           'pilotClients','pilotLeads','pilotPolicies','pilotTickets',
           'pilotCommissions','pilotDocuments','pilotActivities','pilotMeta'
         ];
