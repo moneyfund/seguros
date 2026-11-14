@@ -143,10 +143,6 @@ service firebase.storage {
     }
 
 
-    function trialEnabled() {
-      return firestore.exists(/databases/(default)/documents/companies/main/settings/enterpriseTrial) &&
-        firestore.get(/databases/(default)/documents/companies/main/settings/enterpriseTrial).data.enabled == true;
-    }
     function enterpriseRole(roles) {
       return isOwner() || (isActiveMember() &&
         (firestore.get(/databases/(default)/documents/companies/main/members/$(request.auth.uid)).data.role in roles ||
@@ -163,7 +159,7 @@ service firebase.storage {
       return firestore.get(/databases/(default)/documents/companies/main/enterpriseIssuance/$(id)).data;
     }
     function enterpriseRead(id) {
-      return verified() && trialEnabled() && requestExists(id) && enterpriseView('clientes') &&
+      return verified() && requestExists(id) && issuance(id).trial == true && enterpriseView('clientes') &&
          (enterpriseRole(['direccion','operaciones','servicio']) ||
           (enterpriseRole(['ventas']) && issuance(id).agentUid == request.auth.uid));
     }

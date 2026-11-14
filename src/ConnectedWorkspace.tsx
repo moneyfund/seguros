@@ -16,6 +16,8 @@ import {
 import { money, navigationByRole, roles, type Section } from './data';
 import { nicaraguanInsurers } from './insurers';
 import CarrierOverview from './CarrierOverview';
+import EnterpriseDesk from './EnterpriseDesk';
+import {permissions,useEnterpriseRecords,unseen} from './enterpriseTrial';
 import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
 import type { StaffMember } from './staff';
 import PilotWorkspace from './PilotWorkspace';
@@ -152,6 +154,10 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const fileInput=useRef<HTMLInputElement>(null);
  const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
+ const enterpriseAccess=permissions(admin,grantedRoles.length?grantedRoles:[role],activeTabs);
+ const enterprise=useEnterpriseRecords(user.uid,enterpriseAccess.canView,enterpriseAccess.wide);
+ const enterpriseMode=route==='modulo/clientes/emision'?'issuance':'clients';
+ const enterpriseCount=enterprise.requests.filter(r=>unseen(r,user.uid)||(enterpriseAccess.operator&&r.status==='SUBMITTED')).length;
  const collections=useMemo(()=>{
    const viewFor:Partial<Record<LiveCollection,Section>>={
      leads:'prospectos',policies:'polizas',tickets:'solicitudes',
@@ -164,6 +170,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    });
  },[role,admin,grantedRoles,activeTabs]);
  useEffect(()=>{
+   setRows({});
    const cleanups=collections.map(name=>subscribeRecords(name, data=>{
      setRows(prev=>({...prev,[name]:data}));
    },e=>setError('No pudimos consultar '+name+': '+friendlyError(e)),role==='cliente'&&['policies','tickets','documents'].includes(name)
@@ -188,7 +195,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const displaySection=section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
+ const displaySection=section==='clientes'&&enterpriseMode==='issuance'?'Emisión de pólizas':section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
  const canSales=activeTabs.includes('prospectos')&&hasStaffRole(['direccion','ventas','supervision']);
  const canOperate=activeTabs.includes('polizas')&&hasStaffRole(['direccion','operaciones']);
@@ -213,6 +220,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    if(!admin && route.startsWith('direccion/')){setSection('sin-acceso');return;}
    if(admin && route==='registro'){setSection('registro-preview');return;}
    if(admin && route==='laboratorio'){setSection('piloto');return;}
+   if(route==='modulo/clientes/emision'){setSection(activeTabs.includes('clientes')?'clientes':activeTabs[0]||'resumen');return;}
    if(route.startsWith('modulo/')){
      const tab=route.slice('modulo/'.length) as Section;
      setSection(activeTabs.includes(tab)?tab:activeTabs[0]||'resumen');return;
@@ -248,7 +256,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span>{admin&&<small className="acos-owner-state">ADMINISTRACIÓN GENERAL · ACCESO COMPLETO</small>}</div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
-   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{admin&&<>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.map(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?policies.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:0;return <button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;})}{enterpriseAccess.canView&&enterpriseAccess.issuance&&<button className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Emisión de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>}{admin&&<>
     <div className="sidebar-group-label">CONTROL DE ACCESOS</div>
     <button className={'sidebar-item '+(route==='direccion/solicitudes'?'active':'')} onClick={()=>special('direccion/solicitudes')}><UserRound size={18}/><span>Solicitudes de personal</span></button>
     <button className={'sidebar-item '+(route==='direccion/vistas'?'active':'')} onClick={()=>special('direccion/vistas')}><LayoutDashboard size={18}/><span>Vista de colaboradores</span></button>
@@ -312,7 +320,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
          </tr>)}</tbody></table></div>}</div>;
       })()}
      </>}
-     {section==='clientes'&&<div className="data-card live-narrow"><div className="live-empty"><Users size={30}/><strong>Directorio centralizado de clientes</strong><p>La colección de clientes se habilitará tras aprobar los campos, el consentimiento y las reglas de acceso. Por seguridad, todavía no se recopilan cédulas ni datos de salud.</p></div></div>}
+     {section==='clientes'&&(enterpriseAccess.canView?<EnterpriseDesk user={user} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
      {section==='equipo'&&<>
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
