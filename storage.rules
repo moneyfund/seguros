@@ -164,10 +164,11 @@ service firebase.storage {
           (enterpriseRole(['ventas']) && issuance(id).agentUid == request.auth.uid));
     }
     match /companies/main/enterpriseTrial/{requestId}/{fileName} {
-      // Only synthetic files in this gated validation environment.
+      // Only synthetic files; resource == null explicitly rejects overwrites.
+      // Do not use download-token URLs for actual identity documents.
       allow get: if enterpriseRead(requestId);
       allow list: if false;
-      allow create: if enterpriseRead(requestId) && enterpriseView('polizas') && supportedDocument() &&
+      allow create: if resource == null && enterpriseRead(requestId) && enterpriseView('polizas') && supportedDocument() &&
         (
           (enterpriseRole(['ventas','direccion']) && issuance(requestId).agentUid == request.auth.uid &&
            issuance(requestId).status in ['DRAFT','NEEDS_CORRECTION'] &&

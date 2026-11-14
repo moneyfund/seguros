@@ -3,20 +3,21 @@ import type {User} from 'firebase/auth';
 import {Bell,Camera,CheckCircle2,Download,FileText,FolderOpen,Plus,Search,ShieldCheck,Users,X} from 'lucide-react';
 import InsurerLogo from './InsurerLogo';
 import {nicaraguanInsurers,insurerById} from './insurers';
-import {attachDocument,claimRequest,createCustomer,createRequest,documentSlots,downloadAttachment,issueRequest,markSeen,returnRequest,slotLabels,statusLabels,submitRequest,unseen,type Customer,type EnterpriseRecords,type RequestRecord,type Slot} from './enterpriseTrial';
+import {attachDocument,claimRequest,createCustomer,createRequest,documentSlots,downloadAttachment,issueRequest,markSeen,returnRequest,slotLabels,statusLabels,submitRequest,unseen,setEnterpriseTrialEnabled,type Customer,type EnterpriseRecords,type RequestRecord,type Slot} from './enterpriseTrial';
 import './enterprise-desk.css';
 
 const emptyClient={fullName:'',email:'',phone:'',city:''};
 const emptyPolicy={policyNumber:'',startDate:'',endDate:'',premium:'',currency:'USD' as 'USD'|'NIO'};
 const editable=(r:RequestRecord,uid:string)=>r.agentUid===uid&&['DRAFT','NEEDS_CORRECTION'].includes(r.status);
 function price(cents:number,currency:string){return new Intl.NumberFormat('es-NI',{style:'currency',currency}).format(cents/100);}
-export default function EnterpriseDesk({user,records,access,mode,onChangeMode,search}:{user:User;records:EnterpriseRecords;access:{canView:boolean;wide:boolean;sales:boolean;operator:boolean;issuance:boolean};mode:'clients'|'issuance';onChangeMode:(value:'clients'|'issuance')=>void;search:string}){
+export default function EnterpriseDesk({user,records,access,mode,onChangeMode,search,admin}:{user:User;admin:boolean;records:EnterpriseRecords;access:{canView:boolean;wide:boolean;sales:boolean;operator:boolean;issuance:boolean};mode:'clients'|'issuance';onChangeMode:(value:'clients'|'issuance')=>void;search:string}){
  const [clientId,setClientId]=useState(''),[requestId,setRequestId]=useState(''),[carrier,setCarrier]=useState<string|null>(null);
  const [newClient,setNewClient]=useState(false),[clientForm,setClientForm]=useState(emptyClient);
  const [newRequest,setNewRequest]=useState(false),[insurer,setInsurer]=useState('iniser'),[plate,setPlate]=useState('');
  const [policy,setPolicy]=useState(emptyPolicy),[pdf,setPdf]=useState<File|null>(null),[reason,setReason]=useState('');
  const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
  const [filter,setFilter]=useState('all');
+ const [accepted,setAccepted]=useState(false);
  const client=records.clients.find(x=>x.id===clientId);
  const req=records.requests.find(x=>x.id===requestId);
  useEffect(()=>{setPolicy(emptyPolicy);setPdf(null);setReason('');setError('');setNotice('');},[requestId]);
@@ -36,8 +37,10 @@ export default function EnterpriseDesk({user,records,access,mode,onChangeMode,se
  if(!access.canView)return null;
  return <section className="enterprise-desk">
   <div className="data-card ed-toolbar"><div><strong>Centro de expedientes y emisión</strong><small>Entorno de validación con datos ficticios. No ingresar información personal real.</small></div><div className="ed-tabs"><button type="button" aria-pressed={mode==='clients'} onClick={()=>onChangeMode('clients')}><Users size={16}/> Expedientes</button>{access.issuance&&<button type="button" aria-pressed={mode==='issuance'} onClick={()=>onChangeMode('issuance')}><Bell size={16}/> Emisión <b>{pending+notifications.length}</b></button>}</div></div>
-  {records.loading?<div className="data-card ed-note">Comprobando autorización del entorno…</div>:!records.enabled?<div className="data-card ed-note"><ShieldCheck size={22}/><div><strong>Entorno de validación pendiente de habilitar</strong><p>Las funciones nuevas están protegidas por reglas de Firebase y solo se habilitan en un entorno de pruebas autorizado. {records.error}</p></div></div>:<>
-  {records.error&&<p className="live-error" role="alert">{records.error}</p>}{error&&<p className="live-error" role="alert">{error}</p>}{notice&&<p role="status" className="ed-success"><CheckCircle2 size={17}/> {notice}</p>}
+  {admin&&!records.loading&&<div className="data-card ed-block"><div className="ed-head"><div><h3>{records.enabled?'Modo de pruebas activo':'Activación del modo de pruebas'}</h3><p>Los registros se almacenan en colecciones experimentales separadas. No son pólizas reales ni forman parte del futuro PostgreSQL.</p></div>{records.enabled?<button type="button" className="btn btn-soft" disabled={busy} onClick={()=>void action(()=>setEnterpriseTrialEnabled(user,false),'Modo de pruebas desactivado.')}>Desactivar pruebas</button>:<button type="button" className="btn btn-dark" disabled={busy||!accepted} onClick={()=>void action(()=>setEnterpriseTrialEnabled(user,true),'Modo de pruebas habilitado.')}>Habilitar pruebas</button>}</div>{!records.enabled&&<label style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'13px'}}><input type="checkbox" checked={accepted} onChange={e=>setAccepted(e.target.checked)}/> Confirmo que usaré exclusivamente datos ficticios y documentos simulados o anonimizados.</label>}</div>}
+  {error&&<p className="live-error" role="alert">{error}</p>}{notice&&<p role="status" className="ed-success"><CheckCircle2 size={17}/> {notice}</p>}
+  {records.loading?<div className="data-card ed-note">Comprobando autorización del entorno…</div>:!records.enabled?<div className="data-card ed-note"><ShieldCheck size={22}/><div><strong>Modo de pruebas deshabilitado</strong><p>Dirección debe habilitarlo. {records.error||'No se permiten registros nuevos mientras esté desactivado.'}</p></div></div>:<>
+  {records.error&&<p className="live-error" role="alert">{records.error}</p>}
   {mode==='clients'&&<>
     <div className="data-card ed-block"><div className="ed-head"><div><h3>Directorio de clientes</h3><p>{access.wide?'Cartera general autorizada':'Tu cartera individual'} · {clients.length} registros</p></div>{access.sales&&<button className="btn btn-dark" disabled={busy} onClick={()=>setNewClient(!newClient)}><Plus size={17}/> Registrar cliente</button>}</div>
     {newClient&&<form className="ed-form" onSubmit={e=>void addClient(e)}><label>Nombre completo<input required minLength={2} maxLength={120} value={clientForm.fullName} onChange={e=>setClientForm(v=>({...v,fullName:e.target.value}))}/></label><label>Correo (futuro portal Google)<input type="email" maxLength={150} value={clientForm.email} onChange={e=>setClientForm(v=>({...v,email:e.target.value}))}/></label><label>Teléfono<input maxLength={32} value={clientForm.phone} onChange={e=>setClientForm(v=>({...v,phone:e.target.value}))}/></label><label>Ciudad<input maxLength={100} value={clientForm.city} onChange={e=>setClientForm(v=>({...v,city:e.target.value}))}/></label><button className="btn btn-dark" disabled={busy}>Guardar expediente</button></form>}

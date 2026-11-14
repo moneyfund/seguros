@@ -1,10 +1,8 @@
 import { useEffect,useState } from 'react';
-import { collection,doc,onSnapshot,query,where,addDoc,runTransaction,serverTimestamp, type DocumentReference } from 'firebase/firestore';
+import { collection,doc,onSnapshot,query,where,addDoc,setDoc,runTransaction,serverTimestamp, type DocumentReference } from 'firebase/firestore';
 import { ref,uploadBytes,getBlob,getMetadata } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { db,storage,companyId } from './firebase';
-// Never enable the experimental data collection on the established production backend.
-const trialBuild = import.meta.env.VITE_ACOS_ENTERPRISE_TRIAL === 'true' && db.app.options.projectId !== 'seguros-d1a86';
 import type { EnterpriseRole } from './backend';
 import type { Section } from './data';
 import {validateIssuanceTransition,mandatoryVehicleDocuments,type IssuanceStatus} from './issuanceWorkflow';
@@ -19,6 +17,10 @@ const root=(name:string)=>collection(db,'companies',companyId,name);
 const requestDoc=(id:string)=>doc(root('enterpriseIssuance'),id);
 const path=(id:string,name:string)=>'companies/'+companyId+'/enterpriseTrial/'+id+'/'+name;
 const feature=()=>doc(db,'companies',companyId,'settings','enterpriseTrial');
+// Firebase enforces owner-only writes to settings; never trust the UI for authorization.
+export async function setEnterpriseTrialEnabled(user:User,enabled:boolean){
+ await setDoc(feature(),{enabled,updatedAt:serverTimestamp(),updatedBy:user.uid},{merge:true});
+}
 export function permissions(admin:boolean,roles:EnterpriseRole[],sections:Section[]){
  const canView=admin||(sections.includes('clientes')&&roles.some(r=>['direccion','ventas','operaciones','servicio'].includes(r)));
  return {canView,wide:canView&&(admin||roles.some(r=>['direccion','operaciones','servicio'].includes(r))),sales:canView&&(admin||roles.some(r=>['direccion','ventas'].includes(r))),operator:canView&&(admin||(sections.includes('polizas')&&roles.some(r=>['direccion','operaciones'].includes(r)))),issuance:canView&&(admin||sections.includes('polizas'))};
@@ -28,7 +30,7 @@ export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean){
  const [clients,setClients]=useState<Customer[]>([]),[requests,setRequests]=useState<RequestRecord[]>([]);
  useEffect(()=>{
   setEnabled(false);setClients([]);setRequests([]);setLoading(true);setError('');
-  if(!canView||companyId!=='main'||!trialBuild){setLoading(false);return;}
+  if(!canView||companyId!=='main'){setLoading(false);return;}
   let live=true;
   const stop=onSnapshot(feature(),s=>{if(live){setEnabled(s.data()?.enabled===true);setLoading(false);setError('');}},()=>{if(live){setEnabled(false);setLoading(false);setError('El entorno de validación aún no está habilitado o sus reglas no se han publicado.');}});
   return()=>{live=false;stop();};
