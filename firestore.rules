@@ -225,7 +225,7 @@ service cloud.firestore {
       match /policies/{policyId} {
         allow read: if hasView('polizas') && (
           hasRole(['direccion','operaciones','servicio','finanzas','supervision']) ||
-          (hasRole(['ventas']) && resource.data.get('assignedToUid','') == request.auth.uid) ||
+          (hasRole(['ventas']) && resource.data.assignedToUid == request.auth.uid) ||
           (isClient() && resource.data.clientUid == request.auth.uid));
 
         allow create: if hasView('polizas') && hasRole(['direccion','operaciones']) &&
@@ -286,7 +286,8 @@ service cloud.firestore {
       // Liquidaciones: lectura restringida a finanzas y direccion.
       // Hasta definir conciliacion, solo propietarios pueden escribir.
       match /commissions/{commissionId} {
-        allow read: if hasView('finanzas') && hasRole(['direccion','finanzas']);
+        allow read: if hasView('finanzas') && (hasRole(['direccion','finanzas']) ||
+          (hasRole(['ventas']) && resource.data.agentUid == request.auth.uid));
         allow create, update, delete: if isOwner();
       }
 

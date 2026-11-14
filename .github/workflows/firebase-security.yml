@@ -1,0 +1,25 @@
+name: ACOS Firebase security emulator
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  firestore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund @firebase/rules-unit-testing@5
+      - name: Test isolated demo project (no cloud credentials)
+        run: npx --yes firebase-tools emulators:exec --only firestore --config firebase.rules-test.json --project demo-acos-enterprise "node --test tests/enterprise-firestore.rules.test.mjs"

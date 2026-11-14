@@ -17,10 +17,10 @@ export const roles: {id:Role;label:string;short:string;description:string;}[] = 
   {id:'cliente',label:'Portal del asegurado',short:'Cliente',description:'Mis pólizas y solicitudes'}
 ];
 export const navigationByRole: Record<Role,Section[]> = {
-  direccion:['resumen','prospectos','polizas','clientes','solicitudes','finanzas','equipo','documentos','configuracion'],
-  ventas:['resumen','prospectos','clientes','polizas','documentos'],
-  operaciones:['resumen','polizas','clientes','documentos','solicitudes'],
-  servicio:['resumen','solicitudes','clientes','polizas','documentos'],
+  direccion:['resumen','clientes','prospectos','polizas','solicitudes','documentos','finanzas','equipo','configuracion'],
+  ventas:['resumen','clientes','prospectos','polizas','documentos','finanzas'],
+  operaciones:['resumen','clientes','polizas','documentos','solicitudes'],
+  servicio:['resumen','clientes','solicitudes','polizas','documentos'],
   finanzas:['resumen','finanzas','polizas','documentos'],
   supervision:['resumen','prospectos','clientes','equipo','solicitudes','documentos'],
   cliente:['resumen','polizas','solicitudes','documentos']

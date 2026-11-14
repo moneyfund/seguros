@@ -21,3 +21,8 @@ Implementación funcional conectada a Firebase SDK. PostgreSQL / SQL Connect sig
 
 ## Antes de producción
 Pruebas negativas de lectura por ID, listados, archivos y transición; desactivación de rol; dos revisores simultáneos; MIME alterado y referencia inexistente; CORS y captura móvil; duplicado de póliza; verificación de historial, auditoría y recuperación. Migrar al backend de SQL Connect y probar las transacciones, nunca presentar esta fase como autorizada para datos reales.
+
+## Cortes y documentos
+El centro documental consolida los adjuntos ya registrados por expediente, aseguradora y tipo. Las vistas de finanzas solo suman registros explícitos por corte, fechas, agente y moneda con campos agentUid, policyId, insurerId, cutId, periodStart, periodEnd, currency, amountCents y paidCents. No inferir pagos ni generar reglas faltantes. Finanzas/Dirección consultan todos los registros permitidos; ventas consulta únicamente agentUid propio si se le habilita la vista finanzas. Antes de otorgar datos reales, pruebas de emulador obligatorias y conciliación del modelo SQL.
+
+La CI de seguridad utiliza proyecto demo-acos-enterprise, sin acceso a recursos cloud. Las pruebas Firestore usan referencias sintéticas de adjuntos; no certifican la existencia de archivos ni reglas Storage, que aún deben probarse en emulador e integración.

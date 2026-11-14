@@ -73,7 +73,7 @@ export async function approveRequest(item: AccessRequest, role: EnterpriseRole) 
   await updateDoc(requestRef(item.id), { status: 'approved', reviewedAt: serverTimestamp() });
 }
 export type RecordScope = {
-  field: 'clientUid' | 'uploaderUid' | 'assignedToUid';
+  field: 'clientUid' | 'uploaderUid' | 'assignedToUid' | 'agentUid';
   uid: string;
 };
 export function subscribeRecords(
