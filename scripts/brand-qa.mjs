@@ -8,7 +8,7 @@ const { chromium } = require(resolve(process.env.ACOS_QA_MODULES, 'playwright'))
 const axePath = require.resolve(resolve(process.env.ACOS_QA_MODULES, 'axe-core'));
 const fixture = resolve('tests/brand/rendered'), assets = resolve('public'), dist = resolve('dist'), output = resolve('brand-qa');
 await mkdir(output, { recursive:true });
-const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.webp':'image/webp','.woff':'font/woff','.woff2':'font/woff2'};
+const mime = {'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.svg':'image/svg+xml','.webp':'image/webp','.woff':'font/woff','.woff2':'font/woff2'};
 const server = createServer(async (req,res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   const root = pathname.startsWith('/built/') ? dist : pathname.startsWith('/fonts/') || pathname.startsWith('/brand/') || /^\/[^/]+\.(png|webp|svg)$/.test(pathname) ? assets : fixture;

@@ -54,6 +54,8 @@ try {
     assert.match(await page.locator('.ap-footer-brand img').getAttribute('src'), /acos-primary\.svg$/);
     assert.match(await page.locator('link[rel=icon]').getAttribute('href'), /acos-symbol\.svg$/);
     assert.equal(await page.locator('.ap-header').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
+    assert.equal(await page.locator('.ap-brand .acos-mark').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
+    assert.ok(await page.locator('.ap-brand img').evaluate(el=>el.complete && el.naturalWidth>0));
     assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /ACOS Lunaquete/);
     assert.equal(await page.evaluate(() => document.fonts.check('16px "ACOS Lunaquete"')), true);
   });
