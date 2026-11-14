@@ -1,0 +1,7 @@
+.dossier-carriers{margin:18px 0;padding:16px;border:1px solid #dce6e1;border-radius:14px;background:#fff;color:#193a30}
+.dossier-carriers-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.dossier-carriers-heading h4{margin:0;font-size:14px}
+.dossier-carrier-reset{background:transparent;border:0;color:#21654e;font:inherit;font-size:12px;cursor:pointer;text-decoration:underline}
+.dossier-carrier-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(124px,1fr));gap:8px}
+.dossier-carrier-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border:1px solid #dce6e1;border-radius:10px;background:#f7f9f8;color:#344842;font:inherit;cursor:pointer;min-width:0;text-align:center}
+.dossier-carrier-card strong{font-size:12px;overflow-wrap:anywhere}.dossier-carrier-card span:not(.insurer-brand-mark){font-size:11px}.dossier-carrier-card.has-policies{background:#eff8f2;border-color:#a9cdb8}.dossier-carrier-card[aria-pressed=true]{outline:2px solid #21654e;outline-offset:1px}.dossier-carrier-card:focus-visible,.dossier-carrier-reset:focus-visible{outline:2px solid #21654e;outline-offset:2px}.dossier-carrier-card .insurer-brand-mark{width:94px;max-width:100%;height:38px}.dossier-carrier-card .insurer-brand-mark img{object-fit:contain;width:100%;height:100%}
