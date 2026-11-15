@@ -19,6 +19,8 @@ import { nicaraguanInsurers } from './insurers';
 import EnterpriseDesk from './EnterpriseDesk';
 import EnterpriseDocumentCenter from './EnterpriseDocumentCenter';
 import CommissionCutDesk from './CommissionCutDesk';
+import TrialFinance from './TrialFinance';
+import {OperationOverview,ServiceDesk} from './OperationModules';
 import {permissions,useEnterpriseRecords,unseen} from './enterpriseTrial';
 import { StaffApplicationForm, StaffApprovalCenter, StaffMembersCenter } from './StaffExperience';
 import type { StaffMember } from './staff';
@@ -158,7 +160,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
  const enterpriseAccess=permissions(admin,grantedRoles.length?grantedRoles:[role],activeTabs);
  const enterprise=useEnterpriseRecords(user.uid,enterpriseAccess.canView,enterpriseAccess.wide);
- const enterpriseMode=route==='modulo/clientes/emision'?'issuance':route==='modulo/polizas'?'policies':'clients';
+ const enterpriseMode=route==='modulo/clientes/emision'?'issuance':route==='modulo/polizas/renovaciones'?'renewals':route==='modulo/polizas'?'policies':'clients';
  const enterpriseCount=enterprise.requests.filter(r=>unseen(r,user.uid)||(enterpriseAccess.operator&&r.status==='SUBMITTED')).length;
  const collections=useMemo(()=>{
    const viewFor:Partial<Record<LiveCollection,Section>>={
@@ -199,7 +201,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const displaySection=section==='clientes'&&enterpriseMode==='issuance'?'Emisión de pólizas':section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
+ const displaySection=section==='polizas'&&enterpriseMode==='renewals'?'Vigencias y renovaciones':section==='clientes'&&enterpriseMode==='issuance'?'Emisión de pólizas':section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
  const canSales=activeTabs.includes('prospectos')&&hasStaffRole(['direccion','ventas','supervision']);
  const canOperate=activeTabs.includes('polizas')&&hasStaffRole(['direccion','operaciones']);
@@ -224,13 +226,14 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    if(!admin && route.startsWith('direccion/')){setSection('sin-acceso');return;}
    if(admin && route==='registro'){setSection('registro-preview');return;}
    if(admin && route==='laboratorio'){setSection('piloto');return;}
+   if(route==='modulo/polizas/renovaciones'){setSection(activeTabs.includes('polizas')&&enterpriseAccess.canView?'polizas':activeTabs[0]||'resumen');return;}
    if(route==='modulo/clientes/emision'){setSection(activeTabs.includes('clientes')?'clientes':activeTabs[0]||'resumen');return;}
    if(route.startsWith('modulo/')){
      const tab=route.slice('modulo/'.length) as Section;
      setSection(activeTabs.includes(tab)?tab:activeTabs[0]||'resumen');return;
    }
    setSection(activeTabs.includes('resumen')?'resumen':activeTabs[0]||'resumen');
- },[route,admin,activeTabs]);
+ },[route,admin,activeTabs,enterpriseAccess.canView]);
  function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});setModal(null);}
  async function submit(e:FormEvent) {
    e.preventDefault();setSubmitting(true);setError('');
@@ -287,18 +290,19 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
       <div className="metric-grid live-metric-grid">
        {[
          {label:role==='cliente'?'Mis pólizas':'Oportunidades',count:role==='cliente'?policies.length:leads.length,sub:role==='cliente'?'Coberturas asociadas':'Prospectos registrados',icon:Activity,tab:(role==='cliente'?'polizas':'prospectos') as Section},
-         {label:'Pólizas en cartera',count:policies.length,sub:'Expedientes visibles',icon:ShieldCheck,tab:'polizas' as Section},
+         {label:'Pólizas en cartera',count:enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length,sub:enterpriseAccess.canView?'Emitidas en pruebas':'Expedientes visibles',icon:ShieldCheck,tab:'polizas' as Section},
          {label:'Solicitudes abiertas',count:tickets.filter(t=>t.status!=='Resuelto').length,sub:'En seguimiento',icon:Headphones,tab:'solicitudes' as Section},
-         {label:'Archivos digitales',count:documents.length,sub:'Documentos disponibles',icon:FileText,tab:'documentos' as Section}
+         {label:'Archivos digitales',count:documents.length+(enterpriseAccess.canView?enterprise.requests.reduce((n,r)=>n+Object.values(r.files).filter(Boolean).length+(r.pdf?1:0),0):0),sub:'Documentos disponibles',icon:FileText,tab:'documentos' as Section}
        ].filter(metric=>activeTabs.includes(metric.tab)).map(metric=><button key={metric.label} className="metric live-metric-button" onClick={()=>go(metric.tab)}><span className="live-metric-label">{metric.label}<metric.icon size={19}/></span><strong>{metric.count}</strong><small>{metric.sub}<ArrowRight size={13}/></small></button>)}
       </div>
+      {enterpriseAccess.canView&&<OperationOverview records={enterprise} canIssue={enterpriseAccess.issuance} canRenew={enterpriseAccess.issuance} open={special}/>}
       {admin&&<div className="ins-live-entry">
         <div><span className="ins-eyebrow"><ShieldCheck size={14}/> ACOS · CARTERA OPERATIVA</span><strong>Explorá el flujo completo de aseguradoras, pólizas, comisiones y renovaciones.</strong><small>Datos ficticios, persistentes y separados de los registros empresariales.</small></div>
         <button onClick={()=>special('laboratorio')}>Abrir centro operativo <ArrowRight size={16}/></button>
       </div>}
       <div className="live-work-panels"><section className="data-card live-workqueue"><div className="data-card-head"><div><span className="live-card-eyebrow">PRIORIDADES</span><h3>Actividad de la operación</h3><p>Seguimiento sobre registros existentes, sin indicadores inventados.</p></div><Clock3 size={18}/></div><div className="live-work-items">
        {([
-         {key:'polizas' as Section,icon:ShieldCheck,label:'Pólizas en seguimiento',detail:policies.length?policies.length+' expedientes disponibles':'Comienza registrando tus expedientes',count:policies.length},
+         {key:'polizas' as Section,icon:ShieldCheck,label:'Pólizas en seguimiento',detail:enterpriseAccess.canView?'Cartera emitida durante pruebas':policies.length?'Expedientes disponibles':'Sin expedientes',count:enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length},
          {key:'solicitudes' as Section,icon:Headphones,label:'Atención al asegurado',detail:tickets.length?tickets.filter(t=>t.status!=='Resuelto').length+' casos pendientes':'Ninguna solicitud pendiente',count:tickets.filter(t=>t.status!=='Resuelto').length},
          {key:'documentos' as Section,icon:FileText,label:'Centro documental',detail:documents.length?documents.length+' archivos cargados':'Documentos privados y organizados',count:documents.length}
        ]).filter(item=>activeTabs.includes(item.key)).map(item=><button key={item.key} onClick={()=>go(item.key)}><span className="live-work-icon"><item.icon size={18}/></span><span><strong>{item.label}</strong><small>{item.detail}</small></span><span className="live-work-count">{item.count.toString().padStart(2,'0')}</span><ChevronRight size={17}/></button>)}
@@ -310,8 +314,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      
      {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
-      {(section==='prospectos'||section==='polizas'&&!enterpriseAccess.canView||section==='solicitudes'||section==='documentos')&&(()=>{
-        const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':section==='solicitudes'?'tickets':'documents';
+      {(section==='prospectos'||section==='polizas'&&!enterpriseAccess.canView||section==='documentos')&&(()=>{
+        const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':'documents';
         const data=filtered(rows[kind]||[]);
         return <div className="data-card live-list"><div className="data-card-head"><div><h3>{displaySection}</h3><p>Registros asociados a tu nivel de acceso.</p></div><span className="table-count">{data.length} registros</span></div>
         {data.length===0?<div className="live-empty"><Database size={29}/><strong>Sin registros disponibles</strong><p>Todavía no hay registros para esta sección. Puedes comenzar con una nueva operación cuando tu perfil tenga autorización.</p></div>:<div className="table-wrap"><table><thead><tr><th>REFERENCIA</th><th>DETALLE</th><th>CLASIFICACIÓN</th><th>VALOR / TAMAÑO</th><th>ESTADO</th><th/></tr></thead><tbody>{data.map(record=><tr key={record.id}>
@@ -320,14 +324,15 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
           <td>{readable(record.product||record.type||record.insurer||record.contentType)}</td>
           <td>{kind==='leads'?money(Number(record.estimatedPremium)||0):kind==='policies'?money(Number(record.premium)||0):kind==='documents'?Math.round(Number(record.bytes||0)/1024)+' KB':'—'}</td>
           <td><span className="live-status">{readable(record.status||'Registrado')}</span></td>
-          <td>{kind==='leads'&&canSales&&record.status!=='Ganado'&&<button className="live-row-button" title="Avanzar etapa" onClick={async()=>{try{await advanceLead(record);}catch(e){setError(friendlyError(e));}}}>Siguiente <ArrowRight size={14}/></button>}{kind==='tickets'&&canService&&record.status!=='Resuelto'&&<button className="live-row-button" onClick={async()=>{try{await resolveTicket(record.id);}catch(e){setError(friendlyError(e));}}}>Resolver <Check size={14}/></button>}</td>
+          <td>{kind==='leads'&&canSales&&record.status!=='Ganado'&&<button className="live-row-button" title="Avanzar etapa" onClick={async()=>{try{await advanceLead(record);}catch(e){setError(friendlyError(e));}}}>Siguiente <ArrowRight size={14}/></button>}</td>
          </tr>)}</tbody></table></div>}</div>;
       })()}
      </>}
      {section==='documentos'&&enterpriseAccess.canView&&<EnterpriseDocumentCenter records={enterprise} search={search}/>}
-     {section==='finanzas'&&<CommissionCutDesk rows={filtered(commissions)} own={!admin&&!([role,...grantedRoles].some(r=>['direccion','finanzas'].includes(r)))}/>}
-     {(section==='clientes'||section==='polizas'&&enterpriseAccess.canView)&&(enterpriseAccess.canView?<EnterpriseDesk user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
-     {section==='polizas'&&enterpriseAccess.canView&&policies.length>0&&<details className="data-card ed-block"><summary>Registros preliminares anteriores ({policies.length}) · no son pólizas emitidas</summary><div className="table-wrap"><table><thead><tr><th>Cliente de referencia</th><th>Aseguradora</th><th>Producto</th><th>Estado anterior</th></tr></thead><tbody>{filtered(policies).map(r=><tr key={r.id}><td>{readable(r.clientName)}</td><td>{readable(r.insurer)}</td><td>{readable(r.product)}</td><td>{readable(r.status)}</td></tr>)}</tbody></table></div></details>}
+     {section==='solicitudes'&&<ServiceDesk rows={filtered(tickets)} canResolve={canService} onResolve={resolveTicket}/>}
+     {section==='finanzas'&&<><TrialFinance rows={filtered(commissions)} records={enterprise} user={user} admin={admin}/><CommissionCutDesk rows={filtered(commissions)} own={!admin&&!([role,...grantedRoles].some(r=>['direccion','finanzas'].includes(r)))}/></>}
+     {(section==='clientes'||section==='polizas'&&enterpriseAccess.canView)&&(enterpriseAccess.canView?<EnterpriseDesk user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':mode==='renewals'?'modulo/polizas/renovaciones':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
+     {section==='polizas'&&enterpriseMode==='policies'&&enterpriseAccess.canView&&policies.length>0&&<details className="data-card ed-block"><summary>Registros preliminares anteriores ({policies.length}) · no son pólizas emitidas</summary><div className="table-wrap"><table><thead><tr><th>Cliente de referencia</th><th>Aseguradora</th><th>Producto</th><th>Estado anterior</th></tr></thead><tbody>{filtered(policies).map(r=><tr key={r.id}><td>{readable(r.clientName)}</td><td>{readable(r.insurer)}</td><td>{readable(r.product)}</td><td>{readable(r.status)}</td></tr>)}</tbody></table></div></details>}
      {section==='equipo'&&<>
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
