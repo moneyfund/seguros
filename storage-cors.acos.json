@@ -1,0 +1,20 @@
+[
+  {
+    "origin": [
+      "https://seguros-green.vercel.app"
+    ],
+    "method": [
+      "GET",
+      "HEAD"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Length",
+      "Authorization",
+      "X-Firebase-Storage-Version",
+      "X-Goog-Upload-Protocol",
+      "Range"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]

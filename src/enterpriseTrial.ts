@@ -5,6 +5,7 @@ import type { User } from 'firebase/auth';
 import { db,storage,companyId } from './firebase';
 import type { EnterpriseRole } from './backend';
 import type { Section } from './data';
+import {withDeadline} from './attachmentDeadline';
 import {validateIssuanceTransition,mandatoryVehicleDocuments,type IssuanceStatus} from './issuanceWorkflow';
 
 export const documentSlots=['front','back','registration'] as const;
@@ -105,8 +106,9 @@ async function preparePhoto(file:File):Promise<Blob>{
 export function attachmentError(error:unknown){
  const code=typeof error==='object'&&error!==null&&'code' in error?String(error.code):'';
  const message=error instanceof Error?error.message:String(error);
- if(code==='storage/unauthorized')return 'Storage rechazó la carga. Comprueba tu acceso y las reglas publicadas. ('+code+')';
- if(code==='storage/retry-limit-exceeded')return 'La conexión tardó demasiado. Intenta de nuevo con una red estable. ('+code+')';
+ if(code==='storage/unauthorized')return 'Storage rechazó la operación. Comprueba los permisos y las reglas publicadas. ('+code+')';
+ if(code==='storage/object-not-found')return 'El archivo no existe en Storage. Solicita que se adjunte de nuevo. ('+code+')';
+ if(code==='storage/retry-limit-exceeded')return 'Storage agotó el tiempo de conexión. Revisa la red y, si falla al leer, la configuración CORS del bucket. ('+code+')';
  if(code==='storage/quota-exceeded')return 'Storage alcanzó su cuota de uso. ('+code+')';
  if(code==='storage/canceled')return 'Carga cancelada. Puedes reintentar.';
  return message+(code&&!message.includes(code)?' ('+code+')':'');
@@ -137,7 +139,11 @@ export async function attachDocument(user:User,record:RequestRecord,slot:Slot,fi
  await change(record.id,current=>{if(current.agentUid!==user.uid||!['DRAFT','NEEDS_CORRECTION'].includes(current.status))throw Error('La solicitud cambió.');return {files:{...current.files,[slot]:name},updatedAt:serverTimestamp()};});
 }
 async function verifyDocuments(r:RequestRecord){
- for(const slot of documentSlots){if(!r.files[slot])throw Error('Falta: '+slotLabels[slot]);const m=await getMetadata(ref(storage,path(r.id,r.files[slot])));if(!m.size||!m.contentType?.startsWith('image/'))throw Error('No se pudo verificar '+slotLabels[slot]);}
+ await Promise.all(documentSlots.map(async slot=>{
+  if(!r.files[slot])throw Error('Falta: '+slotLabels[slot]);
+  const m=await withDeadline(getMetadata(ref(storage,path(r.id,r.files[slot]))),20000,'No se pudo verificar '+slotLabels[slot]+' a tiempo. Revisa la conexión e intenta nuevamente.');
+  if(!m.size||!m.contentType?.startsWith('image/'))throw Error('No se pudo verificar '+slotLabels[slot]);
+ }));
 }
 const sameFiles=(a:RequestRecord,b:RequestRecord)=>documentSlots.every(s=>a.files[s]===b.files[s]);
 export async function submitRequest(user:User,r:RequestRecord){
@@ -151,19 +157,28 @@ export async function returnRequest(user:User,r:RequestRecord,reason:string,reje
  const clean=reason.trim();if(clean.length<2||clean.length>1000)throw Error('Indica el motivo de 2 a 1000 caracteres.');
  await change(r.id,c=>{if(c.operatorUid!==user.uid)throw Error('No eres el revisor asignado.');const status=reject?'REJECTED':'NEEDS_CORRECTION';const revision=validateIssuanceTransition({from:c.status,to:status,actor:'OPERATOR',expectedRevision:r.revision,currentRevision:c.revision,requiredKinds:[],verifiedKinds:[],reason:clean});return {status,reason:clean,revision,updatedAt:serverTimestamp()};});
 }
-export async function issueRequest(user:User,r:RequestRecord,details:{policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO'},file:File){
+export async function issueRequest(user:User,r:RequestRecord,details:{policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO'},file:File,onProgress?:ProgressCallback){
  const policyNumber=details.policyNumber.trim();if(r.operatorUid!==user.uid||r.status!=='IN_REVIEW'||!policyNumber||policyNumber.length>100||!details.startDate||!details.endDate||details.endDate<details.startDate||!Number.isSafeInteger(details.premiumCents)||details.premiumCents<0||details.premiumCents>1000000000)throw Error('Revisa los datos de la póliza.');
- const pdf=await upload(r.id,'policy',file);const m=await getMetadata(ref(storage,path(r.id,pdf)));if(m.contentType!=='application/pdf'||!m.size)throw Error('PDF no verificado.');
+ const pdf=await upload(r.id,'policy',file,onProgress);const m=await withDeadline(getMetadata(ref(storage,path(r.id,pdf))),20000,'No se pudo verificar el PDF a tiempo. Revisa la conexión.');if(m.contentType!=='application/pdf'||!m.size)throw Error('PDF no verificado.');
  await change(r.id,c=>{if(c.operatorUid!==user.uid)throw Error('No eres el revisor asignado.');const revision=validateIssuanceTransition({from:c.status,to:'ISSUED',actor:'OPERATOR',expectedRevision:r.revision,currentRevision:c.revision,requiredKinds:[],verifiedKinds:['ISSUED_POLICY_PDF']});return {...details,policyNumber,pdf,status:'ISSUED',revision,updatedAt:serverTimestamp()};});
 }
 export async function markSeen(user:User,r:RequestRecord){
  await change(r.id,c=>{if(c.agentUid!==user.uid)throw Error('No autorizado.');return {agentSeenRevision:c.revision};});
 }
-export async function downloadAttachment(r:RequestRecord,name:string){
+// Authenticated reads only. No download-token URLs or persistent document cache.
+export async function readAttachment(r:RequestRecord,name:string){
  if(!name||![...Object.values(r.files),r.pdf].includes(name))throw Error('Archivo no asociado a la solicitud.');
- const blob=await getBlob(ref(storage,path(r.id,name)),8*1024*1024);
- const url=URL.createObjectURL(blob);try{const a=document.createElement('a');a.href=url;a.download=name;a.click();}finally{setTimeout(()=>URL.revokeObjectURL(url),30000);}
+ const blob=await withDeadline(getBlob(ref(storage,path(r.id,name)),maxUploadBytes),25000,'La lectura excedió 25 segundos. Revisa la conexión y la configuración CORS de Storage; puedes reintentar sin cerrar el expediente.');
+ if(!blob.size)throw Error('El documento está vacío.');
+ if(name===r.pdf){if(blob.type!=='application/pdf')throw Error('El archivo no es un PDF válido.');}
+ else if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw Error('El archivo no es una fotografía compatible.');
+ return blob;
 }
+export function saveAttachment(blob:Blob,name:string){
+ const url=URL.createObjectURL(blob);
+ try{const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();}finally{setTimeout(()=>URL.revokeObjectURL(url),30000);}
+}
+export async function downloadAttachment(r:RequestRecord,name:string){saveAttachment(await readAttachment(r,name),name);}
 export function unseen(r:RequestRecord,uid:string){return r.agentUid===uid&&r.agentSeenRevision<r.revision&&['ISSUED','NEEDS_CORRECTION','REJECTED'].includes(r.status);}
 
-export async function readImageAttachment(r:RequestRecord,slot:Slot){const name=r.files[slot];if(!name)throw Error('Documento no disponible.');const blob=await getBlob(ref(storage,path(r.id,name)),8*1024*1024);if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw Error('No es una imagen compatible.');return blob;}
+export async function readImageAttachment(r:RequestRecord,slot:Slot){return readAttachment(r,r.files[slot]);}

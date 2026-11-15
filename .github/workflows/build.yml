@@ -23,6 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Issuance workflow unit tests
-        run: node --experimental-strip-types --test tests/issuance-workflow.test.mjs
+        run: node --experimental-strip-types --test tests/issuance-workflow.test.mjs tests/attachment-deadline.test.mjs
       - name: Typecheck and build
         run: npm run typecheck && npm run build
