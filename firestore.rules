@@ -500,6 +500,27 @@ service cloud.firestore {
         ] && isOwner();
       }
 
+      // ACOS Mail: append-only supervision records. No mailbox credentials or content.
+      match /mailAudit/{auditId} {
+        allow get, list: if isOwner();
+        allow create: if isOwner() &&
+          request.resource.data.keys().hasOnly(['actorUid','mailboxId','department','action','folder','messageUid','reason','createdAt']) &&
+          request.resource.data.keys().hasAll(['actorUid','mailboxId','department','action','folder','messageUid','reason','createdAt']) &&
+          request.resource.data.actorUid == request.auth.uid &&
+          request.resource.data.mailboxId is string &&
+          request.resource.data.mailboxId.matches('[A-Za-z0-9_-]{1,128}') &&
+          request.resource.data.department in ['direccion','ventas','operaciones','servicio','finanzas','supervision'] &&
+          request.resource.data.action in ['list','read','attachment'] &&
+          request.resource.data.folder in ['inbox','sent','drafts','archive','trash','spam'] &&
+          request.resource.data.messageUid is string &&
+          request.resource.data.messageUid.size() <= 10 &&
+          request.resource.data.reason is string &&
+          request.resource.data.reason.size() >= 8 &&
+          request.resource.data.reason.size() <= 250 &&
+          request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+
       match /auditLogs/{auditId} {
         allow read: if isOwner();
         allow write: if false;

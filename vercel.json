@@ -4,5 +4,11 @@
     "deploymentEnabled": {
       "internal-*": false
     }
+  },
+  "functions": {
+    "api/acos-mail.py": {
+      "maxDuration": 60,
+      "excludeFiles": "{tests/**,public/**,dist/**,src/**,node_modules/**,scripts/**,brand-qa/**,public-site-qa/**}"
+    }
   }
 }
