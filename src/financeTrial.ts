@@ -3,7 +3,7 @@ import type {User} from 'firebase/auth';
 import {db,companyId} from './firebase';
 import {dateOnly,validatePayment} from './operationMath';
 const root='companies/'+companyId;
-const trialRef=doc(db,root,'settings','enterpriseTrial');
+const trialRef=()=>doc(db,root,'settings','enterpriseTrial');
 const commissionRef=(id:string)=>doc(db,root,'commissions',id);
 export type Payment={id:string;amountCents:number;date:string;reference:string;recordedBy:string};
 export async function createTrialCommission(user:User,input:{policyId:string;cutId:string;periodStart:string;periodEnd:string;amountCents:number}){
@@ -11,7 +11,7 @@ export async function createTrialCommission(user:User,input:{policyId:string;cut
  if(!/^[A-Za-z0-9_-]{1,50}$/.test(cut)||!input.policyId||dateOnly(input.periodStart)===null||dateOnly(input.periodEnd)===null||input.periodEnd<input.periodStart||!Number.isSafeInteger(input.amountCents)||input.amountCents<1||input.amountCents>1000000000)throw Error('Revisa el identificador del corte, período e importe.');
  const id='trial-'+input.policyId+'-'+cut;
  await runTransaction(db,async tx=>{
-  const flag=await tx.get(trialRef);
+  const flag=await tx.get(trialRef());
   const policy=await tx.get(doc(db,root,'enterpriseIssuance',input.policyId));
   const existing=await tx.get(commissionRef(id));
   if(flag.data()?.enabled!==true)throw Error('Habilita el modo de pruebas desde Clientes.');
@@ -25,7 +25,7 @@ export async function registerTrialPayment(user:User,id:string,input:{amountCent
  const reference=input.reference.trim();if(dateOnly(input.date)===null||!reference||reference.length>120)throw Error('Indica fecha y referencia del pago.');
  const payment:Payment={id:crypto.randomUUID(),amountCents:input.amountCents,date:input.date,reference,recordedBy:user.uid};
  await runTransaction(db,async tx=>{
-  const flag=await tx.get(trialRef),snap=await tx.get(commissionRef(id)),r=snap.data();
+  const flag=await tx.get(trialRef()),snap=await tx.get(commissionRef(id)),r=snap.data();
   if(flag.data()?.enabled!==true)throw Error('El modo de pruebas está desactivado.');
   if(!r||r.trial!==true||r.source!=='MANUAL_TRIAL'||!Array.isArray(r.payments))throw Error('Registro no habilitado para pagos de prueba.');
   if(r.payments.length>=100)throw Error('Se alcanzó el límite de movimientos de esta prueba.');

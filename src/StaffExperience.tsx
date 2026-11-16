@@ -1,3 +1,4 @@
+import {SlideConfirm} from './MobileControls';
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import type { User } from 'firebase/auth';
 import { Check, FileBadge2, ImagePlus, LockKeyhole, RefreshCw, ShieldCheck, UserRoundCheck } from 'lucide-react';
@@ -121,7 +122,7 @@ function ApprovalEntry({item,onProcessed}:{item:StaffApplication;onProcessed:()=
     <div className="staff-code">Código de empleado: <strong>{employeeCodeFor(department,item.id)}</strong></div>
     {error&&<p className="live-error">{error}</p>}{notice&&<p>{notice}</p>}
     <div className="staff-actions">
-      <button disabled={busy} className="btn btn-dark" onClick={()=>void execute(()=>approveStaffApplication(item,department,selectedRoles,sections))}><UserRoundCheck size={16}/> Aprobar y asignar</button>
+      <SlideConfirm disabled={busy} label="Aprobar y asignar" onConfirm={()=>void execute(()=>approveStaffApplication(item,department,selectedRoles,sections))}/>
       <button disabled={busy} className="btn btn-soft" onClick={()=>void execute(()=>rejectStaffApplication(item))}>Rechazar</button>
     </div>
   </article>;

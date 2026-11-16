@@ -15,6 +15,7 @@ import './insurance-operations.css';
 import './pilot.css';
 import './brand-identity.css';
 import './brand-luminous.css';
+import './mobile-workspace.css';
 
 const iconLink = document.querySelector<HTMLLinkElement>('link[rel="icon"]');
 if (iconLink) {

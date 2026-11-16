@@ -1,4 +1,6 @@
 import BrandLogo from './BrandLogo';
+import {MobileHeader,MobileHome,MobileNavigation,buildActivity,useMobileTableLabels,type MobileItem} from './MobileWorkspace';
+import type {RequestRecord} from './enterpriseTrial';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User } from 'firebase/auth';
 import { getDoc, onSnapshot } from 'firebase/firestore';
@@ -147,6 +149,10 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
 }) {
  const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'|'sin-acceso'>('resumen');
  const [mobile,setMobile]=useState(false);
+ const [sheet,setSheet]=useState<'more'|'activity'|null>(null);
+ const [focusRequest,setFocusRequest]=useState<{id:string}|null>(null);
+ const shellRef=useRef<HTMLDivElement>(null);
+ useMobileTableLabels(shellRef);
  const [search,setSearch]=useState('');
  const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
  const [pending,setPending]=useState<AccessRequest[]>([]);
@@ -210,12 +216,14 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const canManage=admin;
  const go=(tab:Section)=>{
    if(!admin&&!activeTabs.includes(tab))return;
-   setSection(tab);setMobile(false);setSearch('');setError('');
+   setSection(tab);setMobile(false);setSheet(null);setSearch('');setError('');
+   if(window.matchMedia('(max-width:760px)').matches)window.scrollTo(0,0);
    window.location.hash='#/modulo/'+tab;
  };
  const special=(destination:string)=>{
-   setMobile(false);setError('');setNotice('');
+   setMobile(false);setSheet(null);setError('');setNotice('');setSearch('');
    window.location.hash='#/'+destination;
+   if(window.matchMedia('(max-width:760px)').matches)window.scrollTo(0,0);
  };
  useEffect(()=>{
    if(admin && route==='direccion/solicitudes'){setSection('equipo');return;}
@@ -227,7 +235,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    if(admin && route==='registro'){setSection('registro-preview');return;}
    if(admin && route==='laboratorio'){setSection('piloto');return;}
    if(route==='modulo/polizas/renovaciones'){setSection(activeTabs.includes('polizas')&&enterpriseAccess.canView?'polizas':activeTabs[0]||'resumen');return;}
-   if(route==='modulo/clientes/emision'){setSection(activeTabs.includes('clientes')?'clientes':activeTabs[0]||'resumen');return;}
+   if(route==='modulo/clientes/nuevo'||route==='modulo/clientes/emision'){setSection(activeTabs.includes('clientes')?'clientes':activeTabs[0]||'resumen');return;}
    if(route.startsWith('modulo/')){
      const tab=route.slice('modulo/'.length) as Section;
      setSection(activeTabs.includes(tab)?tab:activeTabs[0]||'resumen');return;
@@ -256,7 +264,35 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    try{await approveRequest(item,roleSelections[item.id]||'ventas');setNotice('Perfil autorizado. El usuario debe actualizar su sesión.');await refreshRequests();}
    catch(e){setError(friendlyError(e));}finally{setSubmitting(false);}
  }
- return <div className="app-shell live-shell">
+ const openFromActivity=(r:RequestRecord)=>{setFocusRequest({id:r.id});special('modulo/clientes/emision');};
+ const activityRows=buildActivity({records:enterprise,uid:user.uid,canIssue:enterpriseAccess.issuance,operator:enterpriseAccess.operator,tickets:activeTabs.includes('solicitudes')?tickets:[],leads:activeTabs.includes('prospectos')?leads:[],go,openRequest:openFromActivity});
+ const attention=activityRows.filter(r=>r.attention).length;
+ const mobileCount=(tab:Section)=>tab==='clientes'?enterprise.clients.length:tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='polizas'?(enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length):0;
+ const menuItems:MobileItem[]=activeTabs.map(tab=>({key:tab,label:sections[tab].label,icon:sections[tab].icon,onClick:()=>go(tab),count:mobileCount(tab),active:section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')}));
+ if(enterpriseAccess.issuance){menuItems.push({key:'emision',label:'Emisión de pólizas',icon:Bell,onClick:()=>special('modulo/clientes/emision'),count:enterpriseCount},{key:'renovaciones',label:'Vigencias y renovaciones',icon:CalendarClock,onClick:()=>special('modulo/polizas/renovaciones')});}
+ if(admin)menuItems.push({key:'aprobaciones',label:'Solicitudes de personal',icon:UserRound,onClick:()=>special('direccion/solicitudes')},{key:'vistas',label:'Vista de colaboradores',icon:LayoutDashboard,onClick:()=>special('direccion/vistas')},{key:'registro',label:'Ver proceso de registro',icon:ShieldCheck,onClick:()=>special('registro')},{key:'laboratorio',label:'Laboratorio operativo',icon:FlaskConical,onClick:()=>special('laboratorio')});
+ menuItems.push({key:'guia',label:'Guía de accesos',icon:LockKeyhole,onClick:()=>special('accesos')});
+ const preferred:Section[]=role==='finanzas'?['resumen','finanzas','polizas']:role==='servicio'?['resumen','clientes','solicitudes']:role==='cliente'?['resumen','polizas','solicitudes']:['resumen','clientes','polizas'];
+ const navTabs=[...new Set([...preferred,...activeTabs])].filter(tab=>activeTabs.includes(tab)).slice(0,3);
+ const shortLabels:Partial<Record<Section,string>>={resumen:'Inicio',clientes:'Clientes',polizas:'Pólizas',finanzas:'Comisiones',solicitudes:'Solicitudes',prospectos:'Ventas',documentos:'Archivos',equipo:'Equipo',configuracion:'Ajustes'};
+ const bottomItems:MobileItem[]=navTabs.map(tab=>({...menuItems.find(item=>item.key===tab)!,label:shortLabels[tab]||sections[tab].label}));
+ const quickItems:MobileItem[]=[];
+ if(enterpriseAccess.sales)quickItems.push({key:'new-client',label:'Registrar cliente',icon:Plus,onClick:()=>special('modulo/clientes/nuevo')});
+ if(enterpriseAccess.issuance)quickItems.push({key:'emision',label:enterpriseAccess.operator?'Revisar emisión':'Mis solicitudes',icon:FileText,onClick:()=>special('modulo/clientes/emision')});
+ if(canSales)quickItems.push({key:'new-lead',label:'Nueva oportunidad',icon:Plus,onClick:()=>{go('prospectos');setModal('lead');}});
+ if(activeTabs.includes('solicitudes'))quickItems.push({key:'new-ticket',label:'Nueva solicitud',icon:Headphones,onClick:()=>{go('solicitudes');setModal('ticket');}});
+ const quickOrder=role==='finanzas'?['finanzas','polizas','documentos']:['clientes','polizas','finanzas','documentos','solicitudes','renovaciones','equipo'];
+ quickOrder.forEach(key=>{const item=menuItems.find(m=>m.key===key);if(item&&!quickItems.some(q=>q.key===item.key))quickItems.push({...item,label:key==='polizas'?'Pólizas':item.label});});
+ const metrics:{label:string;value:number|string;onClick:()=>void}[]=[];
+ const trialReady=enterprise.enabled&&!enterprise.loading&&!enterprise.error;
+ if(enterpriseAccess.canView)metrics.push({label:'Clientes',value:trialReady?enterprise.clients.length:'—',onClick:()=>go('clientes')});
+ if(activeTabs.includes('polizas'))metrics.push({label:'Pólizas',value:enterpriseAccess.canView?(trialReady?enterprise.requests.filter(r=>r.status==='ISSUED').length:'—'):(rows.policies?policies.length:'—'),onClick:()=>go('polizas')});
+ if(enterpriseAccess.issuance)metrics.push({label:'En gestión',value:trialReady?enterprise.requests.filter(r=>['SUBMITTED','IN_REVIEW','NEEDS_CORRECTION'].includes(r.status)).length:'—',onClick:()=>special('modulo/clientes/emision')});
+ else if(activeTabs.includes('finanzas'))metrics.push({label:'Comisiones',value:rows.commissions?commissions.length:'—',onClick:()=>go('finanzas')});
+ else if(activeTabs.includes('solicitudes'))metrics.push({label:'Pendientes',value:rows.tickets?tickets.filter(t=>t.status!=='Resuelto').length:'—',onClick:()=>go('solicitudes')});
+ if(!metrics.length&&activeTabs.includes('prospectos'))metrics.push({label:'Oportunidades',value:rows.leads?leads.length:'—',onClick:()=>go('prospectos')});
+ const firstName=(user.displayName||user.email?.split('@')[0]||'bienvenido').trim().split(/\s+/)[0];
+ return <div className="app-shell live-shell" ref={shellRef}>
   {mobile&&<button className="sidebar-scrim" onClick={()=>setMobile(false)} aria-label="Cerrar menú"/>}
   <aside className={'sidebar '+(mobile?'sidebar-open':'')}>
    <div className="sidebar-top"><div className="acos-sidebar-brand"><BrandLogo variant="negative" /><span>GESTIÓN DE SEGUROS</span></div><button className="mobile-close" onClick={()=>setMobile(false)} aria-label="Cerrar menú"><X size={19}/></button></div>
@@ -275,10 +311,11 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY XARCON</strong><small>Gestión profesional de seguros</small></div></div>
   </aside>
   <div className="app-main">
+   <MobileHeader title={displaySection} home={section==='resumen'} initials={(user.displayName||user.email||'AC').slice(0,2).toUpperCase()} attention={attention} onActivity={()=>setSheet('activity')} onMore={()=>setSheet('more')}/>
    <header className="app-topbar"><div className="breadcrumbs"><button className="mobile-menu" onClick={()=>setMobile(true)} aria-label="Abrir menú"><Menu size={23}/></button><span>Empresa</span><ChevronRight size={14}/><strong>{displaySection}</strong></div><div className="topbar-right"><span className="demo-top-note"><span/> SESIÓN VERIFICADA</span><button className="live-top-docs" title="Ir al centro documental" onClick={()=>go('documentos')}><FileText size={16}/><span>Documentos</span></button><button className="live-top-signout" title="Cerrar sesión" onClick={()=>void signOut(auth)}><LogOut size={15}/></button><span className="topbar-avatar">{(user.displayName||user.email||'US').slice(0,2).toUpperCase()}</span></div></header>
    <main className="workspace live-workspace">
     <div className="date-line"><CalendarClock size={15}/> ACOS · PLATAFORMA EMPRESARIAL <span className="live-crumb-separator">/</span> {name.toUpperCase()} <span className="live-crumb-separator">/</span> {displaySection.toUpperCase()}</div>
-    <div className="live-title-row"><div><h1>{displaySection}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
+    <div className={"live-title-row "+(section==="resumen"?"acos-home-title":"")}><div><h1>{displaySection}</h1><p>Registros sincronizados con tu espacio privado. Acceso y operaciones sujetos a permisos.</p></div><div className="live-actions">{section==='prospectos'&&canSales&&<button className="btn btn-dark" onClick={()=>setModal('lead')}><Plus size={16}/> Nueva oportunidad</button>}{section==='solicitudes'&&<button className="btn btn-dark" onClick={()=>setModal('ticket')}><Plus size={16}/> Nueva solicitud</button>}{section==='documentos'&&canUpload&&<button className="btn btn-dark" onClick={()=>setModal('file')}><CloudUpload size={16}/> Subir archivo</button>}</div></div>
     {error&&<div className="live-error-banner"><LockKeyhole size={16}/><span>{error}</span><button onClick={()=>setError('')} aria-label="Cerrar error"><X size={16}/></button></div>}
     {notice&&<div className="live-success-banner"><CheckCircle2 size={17}/><span>{notice}</span><button onClick={()=>setNotice('')} aria-label="Cerrar aviso"><X size={16}/></button></div>}
     <div className="live-body">
@@ -286,7 +323,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      {section==='roles-preview'&&admin&&<RoleViewPreview/>}
      {section==='registro-preview'&&admin&&<RegistrationPreview/>}
      {section==='sin-acceso'&&!admin&&<div className="data-card live-narrow"><div className="live-empty"><LockKeyhole size={32}/><strong>Acceso reservado a Dirección</strong><p>Esta cuenta no tiene permisos administrativos. Tu panel muestra únicamente las vistas aprobadas para tu usuario.</p><button className="btn btn-dark" onClick={()=>special('mi-panel')}>Abrir mi panel <ArrowRight size={16}/></button></div></div>}
-     {section==='resumen'&&<><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
+     {section==='resumen'&&<><MobileHome name={firstName} role={name} items={quickItems} metrics={metrics} rows={activityRows} loading={enterpriseAccess.canView&&enterprise.loading} onActivity={()=>setSheet('activity')}/><div className="acos-desktop-home" style={{display:'contents'}}><div className="live-home-intro"><div><span className="live-home-eyebrow">CENTRO DE OPERACIONES / {name.toUpperCase()}</span><h2>{role==='cliente'?'Tu protección, organizada.':'Tu operación, a primera vista.'}</h2><p>Consulta la información disponible para tu perfil y continúa tus gestiones desde un solo lugar.</p></div><span className="live-home-security"><ShieldCheck size={16}/> Acceso controlado</span></div>
       <div className="metric-grid live-metric-grid">
        {[
          {label:role==='cliente'?'Mis pólizas':'Oportunidades',count:role==='cliente'?policies.length:leads.length,sub:role==='cliente'?'Coberturas asociadas':'Prospectos registrados',icon:Activity,tab:(role==='cliente'?'polizas':'prospectos') as Section},
@@ -310,7 +347,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
        <section className="data-card live-quick-panel"><div className="data-card-head"><div><span className="live-card-eyebrow">ACCESOS RÁPIDOS</span><h3>Tu espacio de trabajo</h3><p>Herramientas disponibles según tus permisos.</p></div></div><div className="live-quick-grid">
        {activeTabs.filter(x=>x!=='resumen'&&x!=='configuracion').slice(0,6).map(x=>{const Icon=sections[x].icon;return <button key={x} onClick={()=>go(x)}><Icon size={20}/><span>{sections[x].label}</span><ArrowRight size={14}/></button>})}
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
-      </div></>}
+      </div></div></>}
      
      {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
@@ -331,7 +368,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      {section==='documentos'&&enterpriseAccess.canView&&<EnterpriseDocumentCenter records={enterprise} search={search}/>}
      {section==='solicitudes'&&<ServiceDesk rows={filtered(tickets)} canResolve={canService} onResolve={resolveTicket}/>}
      {section==='finanzas'&&<><TrialFinance rows={filtered(commissions)} records={enterprise} user={user} admin={admin}/><CommissionCutDesk rows={filtered(commissions)} own={!admin&&!([role,...grantedRoles].some(r=>['direccion','finanzas'].includes(r)))}/></>}
-     {(section==='clientes'||section==='polizas'&&enterpriseAccess.canView)&&(enterpriseAccess.canView?<EnterpriseDesk user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':mode==='renewals'?'modulo/polizas/renovaciones':'modulo/clientes')} search={search}/>:<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>)}
+     {enterpriseAccess.canView&&<div className="acos-enterprise-pane" hidden={section!=='clientes'&&section!=='polizas'}><EnterpriseDesk key={user.uid} user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} openNewClient={route==='modulo/clientes/nuevo'} focusRequest={focusRequest} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':mode==='renewals'?'modulo/polizas/renovaciones':'modulo/clientes')} search={search}/></div>}
+     {section==='clientes'&&!enterpriseAccess.canView&&<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>}
      {section==='polizas'&&enterpriseMode==='policies'&&enterpriseAccess.canView&&policies.length>0&&<details className="data-card ed-block"><summary>Registros preliminares anteriores ({policies.length}) · no son pólizas emitidas</summary><div className="table-wrap"><table><thead><tr><th>Cliente de referencia</th><th>Aseguradora</th><th>Producto</th><th>Estado anterior</th></tr></thead><tbody>{filtered(policies).map(r=><tr key={r.id}><td>{readable(r.clientName)}</td><td>{readable(r.insurer)}</td><td>{readable(r.product)}</td><td>{readable(r.status)}</td></tr>)}</tbody></table></div></details>}
      {section==='equipo'&&<>
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
@@ -341,6 +379,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
     </div><footer className="workspace-footer"><span>ACOS · SISTEMA DE GESTIÓN EMPRESARIAL</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
    </main>
   </div>
+  <MobileNavigation items={bottomItems} moreItems={menuItems} activity={activityRows} attention={attention} sheet={sheet} setSheet={setSheet} onPublic={onPublic} onSignOut={()=>void signOut(auth)}/>
   {modal&&<div className="modal-backdrop" onMouseDown={e=>{if(e.target===e.currentTarget)clearForm();}}><div className="modal" role="dialog" aria-modal="true"><div className="modal-header"><div><span className="eyebrow">REGISTRO FIREBASE</span><h2>{modal==='lead'?'Nueva oportunidad':modal==='ticket'?'Nueva solicitud':modal==='policy'?'Expediente preliminar':'Adjuntar documento'}</h2><p>Registro interno en Firestore. No genera una póliza emitida por una aseguradora.</p></div><button className="icon-btn" onClick={clearForm} aria-label="Cerrar"><X size={18}/></button></div>{modal==='file'?<div className="live-file-form"><p>Se subirán documentos PDF o imágenes (máximo 8 MB), sujetos a las reglas privadas de Cloud Storage.</p><button className="btn btn-dark full" disabled={submitting} onClick={()=>fileInput.current?.click()}><CloudUpload size={16}/> {submitting?'Subiendo…':'Elegir desde el dispositivo'}</button><input ref={fileInput} hidden type="file" accept=".pdf,image/jpeg,image/png,image/webp" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/><button className="btn btn-soft full" disabled={submitting} onClick={()=>document.getElementById('live-camera-input')?.click()}><Camera size={16}/> Abrir cámara</button><input hidden id="live-camera-input" type="file" accept="image/*" capture="environment" onChange={e=>{void pickFile(e.target.files);e.target.value='';}}/></div>:<form className="modal-form" onSubmit={e=>void submit(e)}>
       <label>{modal==='lead'?'Nombre del prospecto':modal==='policy'?'Nombre de referencia del cliente':'Asunto de la solicitud'}<input required minLength={2} value={form.name} onChange={e=>setForm(s=>({...s,name:e.target.value}))} placeholder={modal==='ticket'?'Ej. Solicitud de seguimiento':'Nombre de ejemplo'}/></label>
       {modal==='ticket'?<><label>Tipo<select value={form.type} onChange={e=>setForm(s=>({...s,type:e.target.value}))}><option>Consulta</option><option>Modificación</option><option>Renovación</option><option>Siniestro</option></select></label><label>Detalle<textarea required maxLength={2000} rows={4} value={form.detail} onChange={e=>setForm(s=>({...s,detail:e.target.value}))}/></label></>:<><label>Producto<select value={form.product} onChange={e=>setForm(s=>({...s,product:e.target.value}))}><option>Seguro de vida</option><option>Seguro vehicular</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></label>{modal==='policy'&&<><label>Aseguradora registrada ante SIBOIF<select required value={form.insurer} onChange={e=>setForm(s=>({...s,insurer:e.target.value}))}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.displayName}>{i.displayName}</option>)}</select></label><p className="ins-policy-ref"><ShieldCheck size={15}/> Registro interno de referencia. No emite pólizas oficiales ni consulta aseguradoras.</p></>}{modal==='lead'&&<label>Origen<select value={form.channel} onChange={e=>setForm(s=>({...s,channel:e.target.value}))}><option>Web</option><option>WhatsApp</option><option>Referido</option><option>Redes</option></select></label>}<label>{modal==='lead'?'Prima estimada (USD)':'Prima de referencia (USD)'}<input type="number" min={0} required value={form.amount} onChange={e=>setForm(s=>({...s,amount:e.target.value}))}/></label></>}
@@ -350,6 +389,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  </div>;
 }
 export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
+ useEffect(()=>{const link=document.createElement('link');link.rel='manifest';link.href='/private.webmanifest';document.head.appendChild(link);const viewport=document.querySelector<HTMLMetaElement>('meta[name=viewport]');const original=viewport?.content;if(viewport&&original&&!original.includes('viewport-fit'))viewport.content=original+', viewport-fit=cover';return()=>{link.remove();if(viewport&&original)viewport.content=original;};},[]);
  const [user,setUser]=useState<User|null>(null);
  const [route,setRoute]=useState(readRoute);
  useEffect(()=>{
@@ -416,6 +456,6 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  }
  if(route==='accesos')return <AccessFlowGuide onPublic={onPublic}/>;
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
- :stage==='active'&&user?<LivePanel user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic} route={route}/>
+ :stage==='active'&&user?<LivePanel key={user.uid} user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic} route={route}/>
  :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'} adminRouteBlocked={route.startsWith('direccion/')}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
