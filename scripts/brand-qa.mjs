@@ -81,7 +81,7 @@ try {
       await audit(profile+'-mobile-menu');
       await sheet.getByRole('button',{name:'Cerrar',exact:true}).click();
       await sheet.waitFor({state:'hidden'});
-      await nav.getByRole('button',{name:'Actividad',exact:true}).click();
+      await nav.getByRole('button',{name:/Actividad/}).click();
       await page.getByRole('dialog',{name:'Actividad'}).waitFor();
       await page.getByRole('dialog',{name:'Actividad'}).getByRole('button',{name:'Cerrar',exact:true}).click();
       await page.getByRole('dialog').waitFor({state:'hidden'});

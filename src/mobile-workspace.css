@@ -42,3 +42,5 @@
 @media(max-width:760px) and (prefers-reduced-motion:reduce){.live-shell *,.live-shell *:before,.live-shell *:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
 
 .live-shell .acos-skeleton{display:grid;gap:8px;flex:1}.live-shell .acos-skeleton small{color:var(--brand-muted);font-size:12px}
+
+@media(max-width:760px){.live-shell[data-keyboard-open] .acos-bottom-nav{display:none}.live-shell[data-keyboard-open] .live-workspace{padding-bottom:24px}.live-shell .ed-form input:focus,.live-shell .ed-form textarea:focus,.live-shell .modal input:focus,.live-shell .modal textarea:focus{scroll-margin-top:80px;scroll-margin-bottom:90px}.live-shell .staff-selector,.live-shell .staff-form,.live-shell .staff-grid{min-width:0;max-width:100%}.live-shell .ed-upload-progress{height:10px}.live-shell .ed-success{line-height:1.5}}

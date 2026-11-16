@@ -1,5 +1,5 @@
 import BrandLogo from './BrandLogo';
-import {MobileHeader,MobileHome,MobileNavigation,buildActivity,useMobileTableLabels,type MobileItem} from './MobileWorkspace';
+import {MobileHeader,MobileHome,MobileNavigation,buildActivity,useMobileTableLabels,useMobileKeyboard,type MobileItem} from './MobileWorkspace';
 import type {RequestRecord} from './enterpriseTrial';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { createUserWithEmailAndPassword, GoogleAuthProvider, onAuthStateChanged, reload, sendEmailVerification, signInWithEmailAndPassword, signInWithPopup, signOut, updateProfile, type User } from 'firebase/auth';
@@ -153,6 +153,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const [focusRequest,setFocusRequest]=useState<{id:string}|null>(null);
  const shellRef=useRef<HTMLDivElement>(null);
  useMobileTableLabels(shellRef);
+ useMobileKeyboard(shellRef);
  const [search,setSearch]=useState('');
  const [rows,setRows]=useState<Partial<Record<LiveCollection,LiveRecord[]>>>({});
  const [pending,setPending]=useState<AccessRequest[]>([]);
@@ -368,7 +369,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      {section==='documentos'&&enterpriseAccess.canView&&<EnterpriseDocumentCenter records={enterprise} search={search}/>}
      {section==='solicitudes'&&<ServiceDesk rows={filtered(tickets)} canResolve={canService} onResolve={resolveTicket}/>}
      {section==='finanzas'&&<><TrialFinance rows={filtered(commissions)} records={enterprise} user={user} admin={admin}/><CommissionCutDesk rows={filtered(commissions)} own={!admin&&!([role,...grantedRoles].some(r=>['direccion','finanzas'].includes(r)))}/></>}
-     {enterpriseAccess.canView&&<div className="acos-enterprise-pane" hidden={section!=='clientes'&&section!=='polizas'}><EnterpriseDesk key={user.uid} user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} openNewClient={route==='modulo/clientes/nuevo'} focusRequest={focusRequest} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':mode==='renewals'?'modulo/polizas/renovaciones':'modulo/clientes')} search={search}/></div>}
+     {enterpriseAccess.canView&&<div className="acos-enterprise-pane" hidden={section!=='clientes'&&section!=='polizas'}><EnterpriseDesk key={user.uid} visible={section==='clientes'||section==='polizas'} user={user} admin={admin} records={enterprise} access={enterpriseAccess} mode={enterpriseMode} openNewClient={route==='modulo/clientes/nuevo'} focusRequest={focusRequest} onChangeMode={mode=>special(mode==='issuance'?'modulo/clientes/emision':mode==='policies'?'modulo/polizas':mode==='renewals'?'modulo/polizas/renovaciones':'modulo/clientes')} search={search}/></div>}
      {section==='clientes'&&!enterpriseAccess.canView&&<div className="data-card ed-note">Este perfil no tiene acceso al expediente general.</div>}
      {section==='polizas'&&enterpriseMode==='policies'&&enterpriseAccess.canView&&policies.length>0&&<details className="data-card ed-block"><summary>Registros preliminares anteriores ({policies.length}) · no son pólizas emitidas</summary><div className="table-wrap"><table><thead><tr><th>Cliente de referencia</th><th>Aseguradora</th><th>Producto</th><th>Estado anterior</th></tr></thead><tbody>{filtered(policies).map(r=><tr key={r.id}><td>{readable(r.clientName)}</td><td>{readable(r.insurer)}</td><td>{readable(r.product)}</td><td>{readable(r.status)}</td></tr>)}</tbody></table></div></details>}
      {section==='equipo'&&<>
