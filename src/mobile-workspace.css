@@ -40,3 +40,5 @@
  @keyframes acos-sheet-in{from{transform:translateY(22px);opacity:.7}to{transform:translateY(0);opacity:1}}@keyframes acos-pulse{to{opacity:.5}}
 }
 @media(max-width:760px) and (prefers-reduced-motion:reduce){.live-shell *,.live-shell *:before,.live-shell *:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+.live-shell .acos-skeleton{display:grid;gap:8px;flex:1}.live-shell .acos-skeleton small{color:var(--brand-muted);font-size:12px}

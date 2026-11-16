@@ -11,6 +11,7 @@ await build({
   external: ['/fonts/*'],
   plugins: [{ name: 'offline-brand-fixture', setup(builder) {
     builder.onResolve({ filter: /^\.\/(backend|staff|firebase|pilotData|insuranceSeed)$/ }, () => ({ path: resolve('tests/brand/mock-services.ts') }));
+    builder.onResolve({ filter: /^\.\/enterpriseTrial$/ }, () => ({ path: resolve('tests/brand/mock-enterprise.ts') }));
   } }],
 });
 await writeFile(resolve(output, 'index.html'), '<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>ACOS · Prueba visual aislada</title><link rel="stylesheet" href="./fixture.css"></head><body><div id="root"></div><script type="module" src="./fixture.js"></script></body></html>');

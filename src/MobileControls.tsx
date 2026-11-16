@@ -26,14 +26,14 @@ export function GuidedForm({id,steps,onSubmit,onClose,busy,submitLabel}:{id:stri
 }
 export function SlideConfirm({label,disabled,onConfirm}:{label:string;disabled?:boolean;onConfirm:()=>void}){
  const mobile=useMobileViewport(),[value,setValue]=useState(0),[armed,setArmed]=useState(false);
- const valueRef=useRef(0),lock=useRef(false);
+ const valueRef=useRef(0),lock=useRef(false),started=useRef(false);
  const reset=()=>{valueRef.current=0;setValue(0);};
  useEffect(()=>{if(disabled){reset();setArmed(false);}else lock.current=false;},[disabled]);
  function execute(){if(disabled||lock.current)return;lock.current=true;reset();setArmed(false);try{onConfirm();}finally{queueMicrotask(()=>{lock.current=false;});}}
  if(!mobile)return <button type="button" className="btn btn-dark" disabled={disabled} onClick={onConfirm}>{label}</button>;
  return <div className="acos-slide-confirm"><div className={'acos-slide-track '+(disabled?'acos-slide-disabled':'')}>
    <span className="acos-slide-fill" style={{width:value+'%'}}/><span className="acos-slide-thumb" style={{left:'calc('+value*.8+'% + 5px)'}}><ChevronRight size={23}/></span><span className="acos-slide-label">{disabled?'Completa los requisitos':value>=95?'Suelta para confirmar':'Desliza para confirmar'}</span>
-   <input type="range" min={0} max={100} step={1} value={value} disabled={disabled} aria-label={'Deslizar para '+label} onChange={e=>{valueRef.current=Number(e.target.value);setValue(valueRef.current);}} onPointerUp={()=>{if(valueRef.current>=95)execute();else reset();}} onPointerCancel={reset} onKeyDown={e=>{if((e.key==='Enter'||e.key===' ')&&valueRef.current>=95){e.preventDefault();execute();}}} onBlur={reset}/>
+   <input type="range" min={0} max={100} step={1} value={value} disabled={disabled} aria-label={'Deslizar para '+label} onChange={e=>{valueRef.current=Number(e.target.value);setValue(valueRef.current);}} onPointerDown={e=>{const b=e.currentTarget.getBoundingClientRect();started.current=e.clientX-b.left<=Math.max(60,b.width*.18);if(!started.current)e.preventDefault();}} onPointerUp={()=>{if(started.current&&valueRef.current>=95)execute();else reset();started.current=false;}} onPointerCancel={()=>{started.current=false;reset();}} onKeyDown={e=>{if((e.key==='Enter'||e.key===' ')&&valueRef.current>=95){e.preventDefault();execute();}}} onBlur={reset}/>
   </div>{!armed?<button type="button" className="acos-confirm-alternative" disabled={disabled} onClick={()=>setArmed(true)}>{label} con botón</button>:<div className="acos-confirm-prompt"><span>¿Confirmar esta operación?</span><button type="button" className="btn btn-soft" onClick={()=>setArmed(false)}>Cancelar</button><button type="button" className="btn btn-dark" disabled={disabled} onClick={execute}><Check size={16}/> Confirmar</button></div>}</div>;
 }
 export function PrivateSkeleton(){return <div className="acos-skeleton" role="status" aria-label="Cargando información"><span/><span/><span/><small>Consultando información autorizada…</small></div>;}

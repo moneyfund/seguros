@@ -59,7 +59,7 @@ try {
     await check(profile + ': navigation and opportunity form remain usable', async () => {
       await page.locator('.sidebar-nav').getByRole('button',{name:/^Oportunidades/}).click();
       await page.getByRole('heading',{name:'Oportunidades',level:1,exact:true}).waitFor();
-      assert.equal(await page.locator('tbody tr').count(),1);
+      assert.equal(await page.locator('tbody tr:visible').count(),1);
       await page.getByRole('button',{name:'Nueva oportunidad'}).click();
       await page.getByRole('dialog').waitFor();
       await page.screenshot({path:resolve(output,profile+'-form.png')});
@@ -68,20 +68,61 @@ try {
       assert.equal(await page.getByRole('dialog').count(),0);
     });
     await page.setViewportSize({width:390,height:844});
-    await check(profile + ': mobile menu opens and closes', async () => {
-      await page.getByRole('button',{name:'Abrir menú',exact:true}).click();
-      await page.locator('.sidebar-open').waitFor();
-      await page.waitForFunction(() => {
-        const menu = document.querySelector('.sidebar-open');
-        if (!menu) return false;
-        const rect = menu.getBoundingClientRect();
-        return rect.left >= -1 && rect.right <= innerWidth;
-      });
+    await check(profile + ': bottom navigation, sheets and permissions', async () => {
+      const nav=page.getByRole('navigation',{name:'Navegación móvil'});
+      assert.equal(await nav.locator('button').count(),5);
+      await nav.getByRole('button',{name:'Inicio',exact:true}).click();
+      await page.getByRole('heading',{name:/Hola,/}).waitFor();
+      await nav.getByRole('button',{name:'Más',exact:true}).click();
+      const sheet=page.getByRole('dialog',{name:'Más opciones'});
+      await sheet.waitFor();
+      assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),profile==='admin'?1:0);
       await page.screenshot({path:resolve(output,profile+'-mobile-menu.png'),animations:'disabled'});
       await audit(profile+'-mobile-menu');
-      await page.locator('.sidebar .mobile-close').click();
-      assert.equal(await page.locator('.sidebar-open').count(),0);
+      await sheet.getByRole('button',{name:'Cerrar',exact:true}).click();
+      await sheet.waitFor({state:'hidden'});
+      await nav.getByRole('button',{name:'Actividad',exact:true}).click();
+      await page.getByRole('dialog',{name:'Actividad'}).waitFor();
+      await page.getByRole('dialog',{name:'Actividad'}).getByRole('button',{name:'Cerrar',exact:true}).click();
+      await page.getByRole('dialog').waitFor({state:'hidden'});
     });
+    await check(profile + ': mobile client wizard validates and preserves draft', async()=>{
+      const nav=page.getByRole('navigation',{name:'Navegación móvil'});
+      await page.locator('.acos-mobile-quick').getByRole('button',{name:'Registrar cliente'}).click();
+      const form=page.locator('#acos-client-form');
+      await form.waitFor();
+      await form.getByRole('button',{name:'Continuar'}).click();
+      assert.equal(await form.locator('.acos-form-progress strong').innerText(),'Paso 1 de 2');
+      await form.getByLabel('Nombre completo').fill('Cliente de prueba temporal');
+      await form.getByRole('button',{name:'Continuar'}).click();
+      await form.getByLabel(/Correo electrónico/).fill('prueba@example.invalid');
+      await page.screenshot({path:resolve(output,profile+'-wizard.png'),animations:'disabled'});
+      await nav.getByRole('button',{name:'Inicio',exact:true}).click();
+      await nav.getByRole('button',{name:/^Clientes/}).click();
+      await form.waitFor();
+      if(await form.getByLabel('Nombre completo').isVisible())assert.equal(await form.getByLabel('Nombre completo').inputValue(),'Cliente de prueba temporal');
+      else {await form.getByRole('button',{name:'Atrás'}).click();assert.equal(await form.getByLabel('Nombre completo').inputValue(),'Cliente de prueba temporal');}
+      await form.getByRole('button',{name:'Continuar'}).click();
+      assert.equal(await form.getByLabel(/Correo electrónico/).inputValue(),'prueba@example.invalid');
+      await form.getByRole('button',{name:'Cerrar formulario'}).click();
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Client page overflow');
+    });
+    await check(profile + ': emission opens from activity and accessible alternative works', async()=>{
+      await page.getByRole('navigation',{name:'Navegación móvil'}).getByRole('button',{name:/Actividad/}).click();
+      const sheet=page.getByRole('dialog',{name:'Actividad'});
+      await sheet.getByRole('button',{name:/Cliente de ensayo/}).click();
+      const detail=page.locator('#ed-request-detail');
+      await detail.waitFor();
+      await detail.getByRole('button',{name:'Enviar a emisión con botón'}).click();
+      await detail.getByRole('button',{name:'Cancelar',exact:true}).click();
+      assert.equal(await detail.getByRole('slider',{name:'Deslizar para Enviar a emisión'}).count(),1);
+      await page.screenshot({path:resolve(output,profile+'-issuance.png'),animations:'disabled'});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Issuance overflow');
+    });
+  }
+  for(const profile of ['operations','finance','service','client']){
+    await page.setViewportSize({width:360,height:800});await page.goto(base+'?profile='+profile+'#/mi-panel');await ready();
+    await check(profile+': mobile permission-specific navigation',async()=>{const nav=page.getByRole('navigation',{name:'Navegación móvil'});await nav.getByRole('button',{name:'Más',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Más opciones'});await sheet.waitFor();assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),0);if(profile==='client'||profile==='finance')assert.equal(await sheet.getByRole('button',{name:'Emisión de pólizas',exact:true}).count(),0);await sheet.getByRole('button',{name:'Cerrar',exact:true}).click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:resolve(output,profile+'-360.png'),animations:'disabled'});});
   }
   await check('No runtime errors in the offline private visual fixture', async()=>assert.deepEqual(errors,[]));
   await writeFile(resolve(output,'contrast.json'),JSON.stringify(contrast,null,2));

@@ -1,4 +1,4 @@
-name: Public website browser checks
+name: ACOS public and private browser checks
 
 on:
   pull_request:
