@@ -7,6 +7,7 @@ before any access to another corporate mailbox.
 import base64
 import datetime
 import email
+import email.message
 import email.policy
 import email.utils
 import html.parser
@@ -119,7 +120,7 @@ def configuration():
         uids=box.get('uids',[])
         if not isinstance(boxid,str) or not ID.fullmatch(boxid) or boxid in seen or not isinstance(address,str) or not ADDR.fullmatch(address) or address.lower().split('@')[-1]!=domain or address.lower() in addresses or box.get('department') not in DEPTS or not isinstance(box.get('password'),str) or not box['password'] or not isinstance(uids,list) or not uids or any(not isinstance(u,str) or not ID.fullmatch(u) for u in uids):
             fail(503,'Registro de buzón inválido.')
-        if not isinstance(box.get('label',address),str): fail(503,'Etiqueta de buzón inválida.')
+        if not isinstance(box.get('label',address),str) or len(box.get('label',address))>120 or not isinstance(box.get('folders',{}),dict): fail(503,'Configuración del buzón inválida.')
         seen.add(boxid);addresses.add(address.lower())
     return True,domain,registry
 
@@ -318,6 +319,7 @@ def send_mail(box,data):
 def dispatch(session,data):
     if not isinstance(data,dict): fail(400,'Solicitud inválida.')
     action=data.get('action')
+    if not isinstance(action,str): fail(400,'Operación inválida.')
     enabled,domain,registry=configuration()
     if action=='status':
         return {'enabled':enabled,'domain':domain,'admin':session['admin'],'mailboxes':[safe_box(b,session) for b in registry if session['admin'] or session['uid'] in b['uids']]}
@@ -328,7 +330,8 @@ def dispatch(session,data):
     box=authorize_box(session,registry,data.get('mailbox'),action,oversight)
     folder=data.get('folder','inbox')
     if not isinstance(folder,str) or folder not in FOLDERS: fail(400,'Carpeta inválida.')
-    if oversight: audit(session,box,action,folder,data.get('uid'),data.get('reason'))
+    if action in {'read','attachment','markRead'}: message_uid(data)
+    if oversight: audit(session,box,action,folder,data.get('uid') if action!='list' else '',data.get('reason'))
     if action=='send': return send_mail(box,data)
     with connect(box) as client:
         if action=='list': return list_mail(client,box,folder,data)

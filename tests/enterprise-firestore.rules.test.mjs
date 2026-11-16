@@ -72,3 +72,21 @@ test('Laboratorio: no se permite borrar registros sin ser propietario verificado
  const owner=env.authenticatedContext('owner-test',{email:'amyblandon171@gmail.com',email_verified:true}).firestore();
  await assertSucceeds(deleteDoc(d(owner,'pilotClients/fixture')));
 });
+
+test('ACOS Mail audit: only verified owners may append/read, never alter or delete',async()=>{
+ const owner=env.authenticatedContext('owner-mail',{email:'amyblandon171@gmail.com',email_verified:true}).firestore();
+ const unverified=env.authenticatedContext('owner-unverified',{email:'amyblandon171@gmail.com',email_verified:false}).firestore();
+ const anon=env.unauthenticatedContext().firestore();
+ const record={actorUid:'owner-mail',mailboxId:'ventas-1',department:'ventas',action:'read',folder:'inbox',messageUid:'123',reason:'Seguimiento de prueba',createdAt:serverTimestamp()};
+ await assertSucceeds(setDoc(d(owner,'mailAudit/one'),record));
+ await assertSucceeds(getDoc(d(owner,'mailAudit/one')));
+ await assertSucceeds(getDocs(collection(owner,base+'mailAudit')));
+ await assertFails(setDoc(d(owner,'mailAudit/fake'),{...record,actorUid:aUid}));
+ await assertFails(setDoc(d(owner,'mailAudit/content'),{...record,body:'message content'}));
+ await assertFails(updateDoc(d(owner,'mailAudit/one'),{reason:'alterado'}));
+ await assertFails(deleteDoc(d(owner,'mailAudit/one')));
+ await assertFails(getDoc(d(ctx(aUid),'mailAudit/one')));
+ await assertFails(setDoc(d(ctx(aUid),'mailAudit/agent'),{...record,actorUid:aUid}));
+ await assertFails(getDoc(d(unverified,'mailAudit/one')));
+ await assertFails(getDoc(d(anon,'mailAudit/one')));
+});

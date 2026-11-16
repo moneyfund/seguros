@@ -25,6 +25,14 @@ const errors = [], results = [], contrast = [];
 page.on('pageerror', e => errors.push(e.message));
 // The private fixture must never access a real backend.
 await page.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());
+// Only simulated API responses here; the production gateway is tested separately.
+await page.route('**/api/acos-mail',async route=>{
+ const data=route.request().postDataJSON();
+ const profile=new URL(page.url()).searchParams.get('profile');
+ if(data.action==='status')return route.fulfill({json:{enabled:false,domain:'',admin:profile==='admin',mailboxes:[]}});
+ if(data.action==='audit'&&profile==='admin')return route.fulfill({json:{entries:[]}});
+ return route.fulfill({status:403,json:{error:'Operación no habilitada en la prueba.'}});
+});
 const base = 'http://127.0.0.1:4176/';
 const ready = async () => {
   await page.locator('.live-shell').waitFor();
@@ -125,6 +133,29 @@ try {
     await page.setViewportSize({width:360,height:800});await page.goto(base+'?profile='+profile+'#/mi-panel');await ready();
     await check(profile+': mobile permission-specific navigation',async()=>{const nav=page.getByRole('navigation',{name:'Navegación móvil'});await nav.getByRole('button',{name:'Más',exact:true}).click();const sheet=page.getByRole('dialog',{name:'Más opciones'});await sheet.waitFor();assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),0);if(profile==='client'||profile==='finance')assert.equal(await sheet.getByRole('button',{name:'Emisión de pólizas',exact:true}).count(),0);await sheet.getByRole('button',{name:'Cerrar',exact:true}).click();assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));await page.screenshot({path:resolve(output,profile+'-360.png'),animations:'disabled'});});
   }
+  for(const profile of ['admin','agent','client']){
+    await page.setViewportSize({width:1440,height:1000});
+    await page.goto(base+'?profile='+profile+'#/modulo/correo');await ready();
+    await check(profile+': corporate mail disconnected and private',async()=>{
+      if(profile==='client'){await page.getByText('Acceso reservado a Dirección',{exact:true}).waitFor();assert.equal(await page.locator('.am-shell').count(),0);return;}
+      await page.getByText('Conexión pendiente',{exact:true}).waitFor();
+      assert.ok(await page.getByRole('button',{name:'Redactar',exact:true}).isDisabled());
+      assert.equal(await page.locator('.sidebar').getByRole('button',{name:'Supervisión de correo',exact:true}).count(),profile==='admin'?1:0);
+      await page.screenshot({path:resolve(output,profile+'-mail-desktop.png'),animations:'disabled'});
+      await page.setViewportSize({width:360,height:800});
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Mail overflow');
+      await page.screenshot({path:resolve(output,profile+'-mail-mobile.png'),animations:'disabled'});
+    });
+  }
+  await page.setViewportSize({width:1440,height:1000});
+  await page.goto(base+'?profile=admin#/direccion/correo');await ready();
+  await check('Direction: departments and audit navigation',async()=>{
+    await page.getByRole('heading',{name:'Departamentos'}).waitFor();
+    await page.getByRole('button',{name:/Comercial y ventas/}).click();
+    await page.getByRole('button',{name:'Auditoría',exact:true}).click();
+    await page.getByRole('heading',{name:'Consultas registradas'}).waitFor();
+    await page.screenshot({path:resolve(output,'admin-mail-supervision.png'),animations:'disabled'});
+  });
   await check('No runtime errors in the offline private visual fixture', async()=>assert.deepEqual(errors,[]));
   await writeFile(resolve(output,'contrast.json'),JSON.stringify(contrast,null,2));
   await check('No text contrast violations in the reviewed private surfaces',async()=>assert.equal(contrast.flatMap(x=>x.violations).length,0,JSON.stringify(contrast.filter(x=>x.violations.length))));

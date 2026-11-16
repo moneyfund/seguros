@@ -23,7 +23,7 @@ const admin=profile==='admin';
 const roleMap={admin:'direccion',agent:'ventas',operations:'operaciones',finance:'finanzas',service:'servicio',client:'cliente'} as const;
 const role=roleMap[profile as keyof typeof roleMap]||'ventas';
 const roles=[role];
-const user = { uid: 'visual-fixture', email: 'revision@example.invalid', displayName: admin ? 'Dirección · prueba visual' : 'Agente · prueba visual' } as User;
+const user = { uid: 'visual-fixture', email: 'revision@example.invalid', displayName: admin ? 'Dirección · prueba visual' : 'Agente · prueba visual', getIdToken: async ()=>'isolated-visual-fixture-token' } as unknown as User;
 function Fixture() {
   const [route, setRoute] = useState(() => location.hash.replace(/^#\/?/, '') || 'mi-panel');
   useEffect(() => {

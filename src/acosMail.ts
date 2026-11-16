@@ -14,6 +14,7 @@ export async function mailCall<T>(user:User,data:Record<string,unknown>,signal?:
  try{
   const res=await fetch('/api/acos-mail',{method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(data),cache:'no-store',signal:controller.signal});
   const result=await res.json().catch(()=>({error:'El servidor de correo no está disponible.'}));
+  if(result?.error)throw Error(String(result.error));
   if(!res.ok)throw Error(typeof result.error==='string'?result.error:'No se pudo completar la operación.');
   return result as T;
  }catch(e){if(controller.signal.aborted)throw Error('La conexión tardó demasiado. Si estabas enviando, revisa Enviados antes de reintentar.');throw e;}
