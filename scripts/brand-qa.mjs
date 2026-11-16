@@ -71,6 +71,7 @@ try {
     await check(profile + ': bottom navigation, sheets and permissions', async () => {
       const nav=page.getByRole('navigation',{name:'Navegación móvil'});
       assert.equal(await nav.locator('button').count(),5);
+      assert.match(await page.locator('.acos-mobile-hero').evaluate(el=>getComputedStyle(el).backgroundImage),/radial-gradient/);
       await nav.getByRole('button',{name:'Inicio',exact:true}).click();
       await page.getByRole('heading',{name:/Hola,/}).waitFor();
       await nav.getByRole('button',{name:'Más',exact:true}).click();
@@ -98,7 +99,7 @@ try {
       await form.getByLabel(/Correo electrónico/).fill('prueba@example.invalid');
       await page.screenshot({path:resolve(output,profile+'-wizard.png'),animations:'disabled'});
       await nav.getByRole('button',{name:'Inicio',exact:true}).click();
-      await nav.getByRole('button',{name:/^Clientes/}).click();
+      await nav.getByRole('button',{name:'Clientes',exact:true}).click();
       await form.waitFor();
       if(await form.getByLabel('Nombre completo').isVisible())assert.equal(await form.getByLabel('Nombre completo').inputValue(),'Cliente de prueba temporal');
       else {await form.getByRole('button',{name:'Atrás'}).click();assert.equal(await form.getByLabel('Nombre completo').inputValue(),'Cliente de prueba temporal');}
