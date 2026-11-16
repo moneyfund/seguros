@@ -1,4 +1,6 @@
 import BrandLogo from './BrandLogo';
+import AcosMail from './AcosMail';
+import {Mail,MailCheck} from 'lucide-react';
 import {MobileHeader,MobileHome,MobileNavigation,buildActivity,useMobileTableLabels,useMobileKeyboard,type MobileItem} from './MobileWorkspace';
 import type {RequestRecord} from './enterpriseTrial';
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
@@ -147,7 +149,7 @@ function accessibleCollections(role:EnterpriseRole,admin:boolean):LiveCollection
 export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic,route}:{
  user:User;role:EnterpriseRole;admin:boolean;grantedRoles:EnterpriseRole[];grantedSections:Section[]|null;onPublic:()=>void;route:string;
 }) {
- const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'|'sin-acceso'>('resumen');
+ const [section,setSection]=useState<Section|'piloto'|'roles-preview'|'registro-preview'|'sin-acceso'|'mail'|'mail-supervision'>('resumen');
  const [mobile,setMobile]=useState(false);
  const [sheet,setSheet]=useState<'more'|'activity'|null>(null);
  const [focusRequest,setFocusRequest]=useState<{id:string}|null>(null);
@@ -164,6 +166,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const [roleSelections,setRoleSelections]=useState<Record<string,EnterpriseRole>>({});
  const fileInput=useRef<HTMLInputElement>(null);
  const [form,setForm]=useState({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});
+ const canMail=admin||role!=='cliente';
  const activeTabs=admin?navigationByRole.direccion:(grantedSections!==null?grantedSections:navigationByRole[role]);
  const enterpriseAccess=permissions(admin,grantedRoles.length?grantedRoles:[role],activeTabs);
  const enterprise=useEnterpriseRecords(user.uid,enterpriseAccess.canView,enterpriseAccess.wide);
@@ -208,7 +211,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const matches=(row:LiveRecord)=>JSON.stringify(row).toLowerCase().includes(search.toLowerCase());
  const filtered=(items:LiveRecord[])=>items.filter(matches);
  const name=roles.find(r=>r.id===role)?.label||role;
- const displaySection=section==='polizas'&&enterpriseMode==='renewals'?'Vigencias y renovaciones':section==='clientes'&&enterpriseMode==='issuance'?'Emisión de pólizas':section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
+ const displaySection=section==='mail'?'ACOS Mail':section==='mail-supervision'?'Supervisión de correo':section==='polizas'&&enterpriseMode==='renewals'?'Vigencias y renovaciones':section==='clientes'&&enterpriseMode==='issuance'?'Emisión de pólizas':section==='piloto'?'Laboratorio operativo':section==='roles-preview'?'Vista de colaboradores':section==='registro-preview'?'Registro de empleados':section==='sin-acceso'?'Acceso restringido':section==='equipo'&&route==='direccion/solicitudes'?'Solicitudes de incorporación':sections[section].label;
  const hasStaffRole=(allowed:EnterpriseRole[])=>admin||grantedRoles.some(r=>allowed.includes(r));
  const canSales=activeTabs.includes('prospectos')&&hasStaffRole(['direccion','ventas','supervision']);
  const canOperate=activeTabs.includes('polizas')&&hasStaffRole(['direccion','operaciones']);
@@ -227,6 +230,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    if(window.matchMedia('(max-width:760px)').matches)window.scrollTo(0,0);
  };
  useEffect(()=>{
+   if(route==='modulo/correo'){setSection(canMail?'mail':'sin-acceso');return;}
+   if(route==='direccion/correo'){setSection(admin?'mail-supervision':'sin-acceso');return;}
    if(admin && route==='direccion/solicitudes'){setSection('equipo');return;}
    // Both founders must land on the actual dashboard through #/mi-panel.
    // The role simulation is *only* at #/direccion/vistas.
@@ -242,7 +247,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
      setSection(activeTabs.includes(tab)?tab:activeTabs[0]||'resumen');return;
    }
    setSection(activeTabs.includes('resumen')?'resumen':activeTabs[0]||'resumen');
- },[route,admin,activeTabs,enterpriseAccess.canView]);
+ },[route,admin,activeTabs,enterpriseAccess.canView,canMail]);
  function clearForm(){setForm({name:'',product:'Seguro de vida',amount:'',channel:'Web',type:'Consulta',detail:'',insurer:'INISER'});setModal(null);}
  async function submit(e:FormEvent) {
    e.preventDefault();setSubmitting(true);setError('');
@@ -272,12 +277,15 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const menuItems:MobileItem[]=activeTabs.map(tab=>({key:tab,label:sections[tab].label,icon:sections[tab].icon,onClick:()=>go(tab),count:mobileCount(tab),active:section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')}));
  if(enterpriseAccess.issuance){menuItems.push({key:'emision',label:'Emisión de pólizas',icon:Bell,onClick:()=>special('modulo/clientes/emision'),count:enterpriseCount},{key:'renovaciones',label:'Vigencias y renovaciones',icon:CalendarClock,onClick:()=>special('modulo/polizas/renovaciones')});}
  if(admin)menuItems.push({key:'aprobaciones',label:'Solicitudes de personal',icon:UserRound,onClick:()=>special('direccion/solicitudes')},{key:'vistas',label:'Vista de colaboradores',icon:LayoutDashboard,onClick:()=>special('direccion/vistas')},{key:'registro',label:'Ver proceso de registro',icon:ShieldCheck,onClick:()=>special('registro')},{key:'laboratorio',label:'Laboratorio operativo',icon:FlaskConical,onClick:()=>special('laboratorio')});
+ if(canMail)menuItems.push({key:'correo',label:'ACOS Mail',icon:Mail,onClick:()=>special('modulo/correo'),active:section==='mail'});
+ if(admin)menuItems.push({key:'correo-supervision',label:'Supervisión de correo',icon:MailCheck,onClick:()=>special('direccion/correo'),active:section==='mail-supervision'});
  menuItems.push({key:'guia',label:'Guía de accesos',icon:LockKeyhole,onClick:()=>special('accesos')});
  const preferred:Section[]=role==='finanzas'?['resumen','finanzas','polizas']:role==='servicio'?['resumen','clientes','solicitudes']:role==='cliente'?['resumen','polizas','solicitudes']:['resumen','clientes','polizas'];
  const navTabs=[...new Set([...preferred,...activeTabs])].filter(tab=>activeTabs.includes(tab)).slice(0,3);
  const shortLabels:Partial<Record<Section,string>>={resumen:'Inicio',clientes:'Clientes',polizas:'Pólizas',finanzas:'Comisiones',solicitudes:'Solicitudes',prospectos:'Ventas',documentos:'Archivos',equipo:'Equipo',configuracion:'Ajustes'};
  const bottomItems:MobileItem[]=navTabs.map(tab=>({...menuItems.find(item=>item.key===tab)!,label:shortLabels[tab]||sections[tab].label}));
  const quickItems:MobileItem[]=[];
+ if(canMail)quickItems.push({key:'correo',label:'ACOS Mail',icon:Mail,onClick:()=>special('modulo/correo')});
  if(enterpriseAccess.sales)quickItems.push({key:'new-client',label:'Registrar cliente',icon:Plus,onClick:()=>special('modulo/clientes/nuevo')});
  if(enterpriseAccess.issuance)quickItems.push({key:'emision',label:enterpriseAccess.operator?'Revisar emisión':'Mis solicitudes',icon:FileText,onClick:()=>special('modulo/clientes/emision')});
  if(canSales)quickItems.push({key:'new-lead',label:'Nueva oportunidad',icon:Plus,onClick:()=>{go('prospectos');setModal('lead');}});
@@ -300,7 +308,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <div className="workspace-title">MI ESPACIO <span className="workspace-demo live-environment">FIREBASE</span></div>
    <div className="workspace-profile"><span className="workspace-avatar">{user.email?.slice(0,2).toUpperCase()}</span><div className="workspace-profile-copy"><strong>{user.displayName||user.email?.split('@')[0]}</strong><span>{name}</span>{admin&&<small className="acos-owner-state">ADMINISTRACIÓN GENERAL · ACCESO COMPLETO</small>}</div><ShieldCheck size={15}/></div>
    <div className="sidebar-group-label">MÓDULOS AUTORIZADOS</div>
-   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.flatMap(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?(enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length):tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:tab==='clientes'?enterprise.clients.length:0;const item=<button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;return tab==='clientes'&&enterpriseAccess.canView&&enterpriseAccess.issuance?[item,<button key="emision" className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Emisión de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>]:[item];})}{admin&&<>
+   <nav className="sidebar-nav" aria-label="Áreas del sistema">{activeTabs.flatMap(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?(enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length):tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:tab==='clientes'?enterprise.clients.length:0;const item=<button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;return tab==='clientes'&&enterpriseAccess.canView&&enterpriseAccess.issuance?[item,<button key="emision" className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Emisión de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>]:[item];})}{canMail&&<button className={'sidebar-item '+(section==='mail'?'active':'')} onClick={()=>special('modulo/correo')}><Mail size={18}/><span>ACOS Mail</span></button>}{admin&&<><button className={'sidebar-item '+(section==='mail-supervision'?'active':'')} onClick={()=>special('direccion/correo')}><MailCheck size={18}/><span>Supervisión de correo</span></button>
     <div className="sidebar-group-label">CONTROL DE ACCESOS</div>
     <button className={'sidebar-item '+(route==='direccion/solicitudes'?'active':'')} onClick={()=>special('direccion/solicitudes')}><UserRound size={18}/><span>Solicitudes de personal</span></button>
     <button className={'sidebar-item '+(route==='direccion/vistas'?'active':'')} onClick={()=>special('direccion/vistas')}><LayoutDashboard size={18}/><span>Vista de colaboradores</span></button>
@@ -350,7 +358,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
        </div><div className="live-quick-footer"><LockKeyhole size={14}/><span>La plataforma consulta Firestore según tus permisos.</span></div></section>
       </div></div></>}
      
-     {section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
+     {section!=='mail'&&section!=='mail-supervision'&&section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'&&!enterpriseAccess.canView||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':'documents';
@@ -376,6 +384,8 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
       {canManage?<><StaffApprovalCenter user={user}/>{route!=='direccion/solicitudes'&&<StaffMembersCenter members={members as unknown as StaffMember[]}/>}</>:<div className="data-card live-list"><div className="data-card-head"><div><h3>Equipo autorizado</h3><p>Consulta de miembros según tu nivel de acceso.</p></div></div>
       {members.length===0?<div className="live-empty"><Users size={28}/><strong>Sin miembros disponibles</strong></div>:<div className="table-wrap"><table><thead><tr><th>COLABORADOR</th><th>ÁREA</th><th>ESTADO</th></tr></thead><tbody>{filtered(members).map(m=><tr key={m.id}><td>{readable(m.displayName)}</td><td>{readable(m.department||m.role)}</td><td>{m.active===true?'Activo':'Inactivo'}</td></tr>)}</tbody></table></div>}</div>}
      </>}
+     {section==='mail'&&canMail&&<AcosMail key={user.uid+':mail'} user={user} admin={admin} members={[]} oversight={false}/>}
+     {section==='mail-supervision'&&admin&&<AcosMail key={user.uid+':supervision'} user={user} admin={admin} members={members} oversight/>}
      {section==='configuracion'&&<div className="data-card live-narrow"><div className="live-feature-details"><h3>Sesión ACOS autorizada</h3>{admin&&<p><ShieldCheck size={16}/> Administración general · Acceso completo</p>}<p><LockKeyhole size={16}/> {user.email}</p><p><ShieldCheck size={16}/> {name}</p><p><Database size={16}/> Proyecto Firebase: seguros-d1a86</p><p><CheckCircle2 size={16}/> Correo verificado</p><small>Las reglas de Firestore y Storage deben desplegarse desde Firebase. Un rol mostrado aquí nunca sustituye la validación en el servidor.</small></div></div>}
     </div><footer className="workspace-footer"><span>ACOS · SISTEMA DE GESTIÓN EMPRESARIAL</span><span>Acceso por rol validado con Firebase Authentication</span></footer>
    </main>
