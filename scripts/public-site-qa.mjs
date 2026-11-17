@@ -60,7 +60,7 @@ try {
     const loadingContext=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'no-preference'});
     try{const p=await loadingContext.newPage();await p.route('**/assets/*.js',async route=>{await new Promise(r=>setTimeout(r,650));await route.continue();});
       await p.goto(base+'#/inicio',{waitUntil:'commit'});const loader=p.locator('#acos-public-loader');await loader.waitFor({state:'visible'});
-      assert.match(await loader.innerText(),/Aseguramos tu futuro/);assert.match(await loader.locator('img').getAttribute('src'),/acos-horizontal-negative\.svg/);
+      assert.equal(await loader.locator('.acos-loading-atmosphere,.acos-loading-divider').count(),0);assert.match(await loader.innerText(),/Aseguramos tu futuro/);assert.match(await loader.locator('img').getAttribute('src'),/acos-horizontal-negative\.svg/);
       await p.screenshot({path:resolve(output,'acos-loading.png')});
       await p.waitForFunction(()=>document.getElementById('acos-public-loader')?.classList.contains('acos-loading-exit'));
       const fade=await loader.evaluate(el=>({elapsed:performance.now()-Number(el.dataset.started),duration:getComputedStyle(el).transitionDuration,visibility:getComputedStyle(el).visibility}));
