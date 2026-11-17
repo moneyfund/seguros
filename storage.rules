@@ -170,6 +170,15 @@ service firebase.storage {
       allow list: if false;
       allow create: if resource == null && enterpriseRead(requestId) && enterpriseView('polizas') && supportedDocument() &&
         (
+          (issuance(requestId).get('source','') == 'EXTERNAL' && issuance(requestId).status == 'ISSUED' &&
+            issuance(requestId).get('archived',false) == false &&
+            (isOwner() || enterpriseRole(['ventas']) && issuance(requestId).agentUid == request.auth.uid) &&
+            ((fileName.matches('front-[0-9a-f-]{36}[.](jpg|png|webp)') && issuance(requestId).files.front == '' ||
+              fileName.matches('back-[0-9a-f-]{36}[.](jpg|png|webp)') && issuance(requestId).files.back == '' ||
+              fileName.matches('registration-[0-9a-f-]{36}[.](jpg|png|webp)') && issuance(requestId).files.registration == '') &&
+             request.resource.contentType in ['image/jpeg','image/png','image/webp'] ||
+             fileName.matches('policy-[0-9a-f-]{36}[.]pdf') && issuance(requestId).pdf == '' &&
+             request.resource.contentType == 'application/pdf')) ||
           (enterpriseRole(['ventas','direccion']) && issuance(requestId).agentUid == request.auth.uid &&
            issuance(requestId).status in ['DRAFT','NEEDS_CORRECTION'] &&
            fileName.matches('(front|back|registration)-[0-9a-f-]{36}[.](jpg|png|webp)') &&
@@ -178,7 +187,8 @@ service firebase.storage {
            issuance(requestId).status == 'IN_REVIEW' && fileName.matches('policy-[0-9a-f-]{36}[.]pdf') &&
            request.resource.contentType == 'application/pdf')
         );
-      allow update, delete: if false;
+      allow update: if false;
+      allow delete: if isOwner() && requestExists(requestId);
     }
 
     // Todo lo demás queda privado.

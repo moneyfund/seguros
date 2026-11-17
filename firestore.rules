@@ -376,7 +376,35 @@ service cloud.firestore {
           validString(d.fullName, 2, 120) && validString(d.email, 0, 150) &&
           (d.email == '' || d.email.matches('[^@ ]+@[^@ ]+[.][^@ ]+')) &&
           validString(d.phone, 0, 32) && validString(d.city, 0, 100) &&
-          d.ownerUid == request.auth.uid && d.createdAt == request.time && d.trial == true;
+          assignedSales(d.ownerUid) && d.createdAt == request.time && d.trial == true;
+      }
+      function assignedSales(uid) {
+        return uid == request.auth.uid && enterpriseSales() ||
+          isOwner() && exists(/databases/$(database)/documents/companies/main/members/$(uid)) &&
+          get(/databases/$(database)/documents/companies/main/members/$(uid)).data.active == true &&
+          (get(/databases/$(database)/documents/companies/main/members/$(uid)).data.role == 'ventas' ||
+           get(/databases/$(database)/documents/companies/main/members/$(uid)).data.get('roles',[]).hasAny(['ventas']));
+      }
+      function correctionMetadata(d) {
+        return d.adminUpdatedBy == request.auth.uid && d.adminUpdatedAt == request.time &&
+          validString(d.adminReason,3,500);
+      }
+      function customerFields(d) {
+        return validString(d.fullName,2,120) && validString(d.email,0,150) &&
+          (d.email == '' || d.email.matches('[^@ ]+@[^@ ]+[.][^@ ]+')) &&
+          validString(d.phone,0,32) && validString(d.city,0,100) &&
+          (!d.keys().hasAny(['profile']) || validProfile(d.profile));
+      }
+      match /enterpriseAdminAudit/{auditId} {
+        allow read: if isOwner();
+        allow create: if isOwner() && request.resource.data.keys().hasOnly(['targetType','targetId','action','reason','actorUid','createdAt']) &&
+          request.resource.data.keys().hasAll(['targetType','targetId','action','reason','actorUid','createdAt']) &&
+          request.resource.data.targetType in ['enterpriseClients','enterpriseIssuance'] &&
+          validString(request.resource.data.targetId,1,100) &&
+          request.resource.data.action in ['EDIT_CLIENT','EDIT_POLICY','ARCHIVE','RESTORE','DELETE_ATTACHMENT'] &&
+          validString(request.resource.data.reason,3,500) && request.resource.data.actorUid == request.auth.uid &&
+          request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
       }
       match /settings/enterpriseTrial {
         allow get: if hasView('clientes') && hasRole(['direccion','ventas','operaciones','servicio']);
@@ -385,8 +413,10 @@ service cloud.firestore {
       match /enterpriseClients/{clientId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.ownerUid));
         allow create: if trialEnabled() && enterpriseSales() && validCustomer(request.resource.data);
-        // Ownership and source identity cannot be modified by client-side code.
-        allow update, delete: if false;
+        allow update: if trialEnabled() && isOwner() && correctionMetadata(request.resource.data) &&
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','email','phone','city','profile','archived','adminUpdatedAt','adminUpdatedBy','adminReason']) &&
+          customerFields(request.resource.data) && request.resource.data.get('archived',false) is bool;
+        allow delete: if false;
       }
       function validAttachment(name, kind) {
         return name is string && (name == '' ||
@@ -427,9 +457,53 @@ service cloud.firestore {
           d.endDate >= d.startDate && d.premiumCents is int && d.premiumCents >= 0 &&
           d.premiumCents <= 1000000000 && d.currency in ['USD','NIO'];
       }
+      function validPolicyFields(d) {
+        return d.insurerId in ['iniser','assa','america','lafise','mapfre'] &&
+          validString(d.plate,1,24) && validVehicle(d.vehicle) &&
+          validString(d.policyNumber,1,100) &&
+          d.startDate is string && d.startDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+          d.endDate is string && d.endDate.matches('[0-9]{4}-[0-9]{2}-[0-9]{2}') &&
+          d.endDate >= d.startDate && d.premiumCents is int && d.premiumCents >= 0 &&
+          d.premiumCents <= 1000000000 && d.currency in ['USD','NIO'];
+      }
+      function externalRecord(d) {
+        let cp = enterpriseCustomerPath(d.clientId);
+        return d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','vehicle','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial','source','registeredBy']) &&
+          d.source == 'EXTERNAL' && d.registeredBy == request.auth.uid && d.status == 'ISSUED' &&
+          validString(d.clientId,1,80) && existsAfter(cp) && getAfter(cp).data.ownerUid == d.agentUid &&
+          getAfter(cp).data.get('archived',false) == false && getAfter(cp).data.fullName == d.clientName &&
+          assignedSales(d.agentUid) && d.productKey == 'VEHICLE_MANDATORY' && validPolicyFields(d) &&
+          validAttachments(d) && d.files.front == '' && d.files.back == '' && d.files.registration == '' &&
+          d.pdf == '' && d.operatorUid == '' && d.reason == '' && d.revision == 0 && d.agentSeenRevision == 0 &&
+          d.createdAt == request.time && d.updatedAt == request.time && d.trial == true;
+      }
+      function appendExternal(old,next,keys) {
+        return old.get('source','') == 'EXTERNAL' && old.get('archived',false) == false &&
+          old.status == 'ISSUED' && next.updatedAt == request.time && hasView('polizas') &&
+          (isOwner() || enterpriseAgent(old.agentUid)) &&
+          (keys.hasOnly(['files','updatedAt']) && validAttachments(next) &&
+            (old.files.front == '' || old.files.front == next.files.front) &&
+            (old.files.back == '' || old.files.back == next.files.back) &&
+            (old.files.registration == '' || old.files.registration == next.files.registration) ||
+           keys.hasOnly(['pdf','updatedAt']) && old.pdf == '' && next.pdf.matches('policy-[0-9a-f-]{36}[.]pdf'));
+      }
+      function adminPolicyChange(old,next,keys) {
+        return isOwner() && correctionMetadata(next) &&
+          keys.hasOnly(['insurerId','plate','vehicle','policyNumber','startDate','endDate','premiumCents','currency','files','pdf','archived','updatedAt','adminUpdatedAt','adminUpdatedBy','adminReason']) &&
+          next.get('archived',false) is bool &&
+          (!keys.hasAny(['insurerId','plate','vehicle','policyNumber','startDate','endDate','premiumCents','currency']) ||
+            old.status == 'ISSUED' && validPolicyFields(next)) &&
+          validAttachments(next) &&
+          (next.files.front == old.files.front || next.files.front == '') &&
+          (next.files.back == old.files.back || next.files.back == '') &&
+          (next.files.registration == old.files.registration || next.files.registration == '') &&
+          (next.pdf == old.pdf || next.pdf == '') &&
+          (!keys.hasAny(['updatedAt']) || next.updatedAt == request.time);
+      }
       match /enterpriseIssuance/{requestId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.agentUid));
-        allow create: if trialEnabled() && enterpriseSales() && hasView('polizas') && validDraft(request.resource.data);
+        allow create: if trialEnabled() && enterpriseSales() && hasView('polizas') &&
+          (request.resource.data.get('source','') == 'EXTERNAL' ? externalRecord(request.resource.data) : validDraft(request.resource.data));
         // Evaluate only the relevant action. Avoid exceeding the Rules engine's
         // 1,000-expression budget by repeatedly expanding authorization helpers.
         function agentEdit(old, next, keys) {
@@ -456,7 +530,10 @@ service cloud.firestore {
           let old = resource.data;
           let next = request.resource.data;
           let keys = next.diff(old).affectedKeys();
-          return keys.hasOnly(['agentSeenRevision'])
+          return keys.hasAny(['adminUpdatedAt','adminUpdatedBy','adminReason']) ? adminPolicyChange(old,next,keys) :
+            old.get('source','') == 'EXTERNAL' ? appendExternal(old,next,keys) :
+            old.get('archived',false) == true ? false :
+            keys.hasOnly(['agentSeenRevision'])
             ? next.agentSeenRevision == old.revision && enterpriseAgent(old.agentUid)
             : old.status in ['DRAFT','NEEDS_CORRECTION']
               ? agentEdit(old,next,keys)

@@ -1,10 +1,11 @@
 import { useEffect,useState } from 'react';
-import { collection,doc,onSnapshot,query,where,addDoc,setDoc,runTransaction,serverTimestamp, type DocumentReference } from 'firebase/firestore';
-import { ref,uploadBytesResumable,getBlob,getMetadata } from 'firebase/storage';
+import { collection,doc,onSnapshot,query,where,addDoc,setDoc,runTransaction,writeBatch,serverTimestamp, type DocumentReference } from 'firebase/firestore';
+import { ref,uploadBytesResumable,getBlob,getMetadata,deleteObject } from 'firebase/storage';
 import type { User } from 'firebase/auth';
 import { db,storage,companyId } from './firebase';
 import type { EnterpriseRole } from './backend';
 import type { Section } from './data';
+import {dateOnly} from './operationMath';
 import {withDeadline} from './attachmentDeadline';
 import {validateIssuanceTransition,mandatoryVehicleDocuments,type IssuanceStatus} from './issuanceWorkflow';
 
@@ -16,8 +17,8 @@ export type CustomerProfile={documentType:string;documentNumber:string;birthDate
 export type VehicleDetails={make:string;model:string;year:string;color:string;vin:string;use:string};
 export const emptyProfile:CustomerProfile={documentType:'CEDULA',documentNumber:'',birthDate:'',nationality:'',occupation:'',department:'',address:'',alternatePhone:''};
 export const emptyVehicle:VehicleDetails={make:'',model:'',year:'',color:'',vin:'',use:'Particular'};
-export type Customer={id:string;fullName:string;email:string;phone:string;city:string;profile?:CustomerProfile;ownerUid:string;trial:true};
-export type RequestRecord={id:string;clientId:string;clientName:string;agentUid:string;insurerId:string;productKey:string;plate:string;vehicle?:VehicleDetails;status:IssuanceStatus;files:Record<Slot,string>;pdf:string;policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO';operatorUid:string;reason:string;revision:number;agentSeenRevision:number;trial:true};
+export type Customer={id:string;fullName:string;email:string;phone:string;city:string;profile?:CustomerProfile;ownerUid:string;trial:true;archived?:boolean};
+export type RequestRecord={id:string;clientId:string;clientName:string;agentUid:string;insurerId:string;productKey:string;plate:string;vehicle?:VehicleDetails;status:IssuanceStatus;files:Record<Slot,string>;pdf:string;policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO';operatorUid:string;reason:string;revision:number;agentSeenRevision:number;trial:true;source?:'EXTERNAL';registeredBy?:string;archived?:boolean};
 const root=(name:string)=>collection(db,'companies',companyId,name);
 const requestDoc=(id:string)=>doc(root('enterpriseIssuance'),id);
 const path=(id:string,name:string)=>'companies/'+companyId+'/enterpriseTrial/'+id+'/'+name;
@@ -50,15 +51,20 @@ export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean){
   const b=onSnapshot(scoped('enterpriseIssuance','agentUid'),s=>{if(live)setRequests(s.docs.map(d=>({...d.data(),id:d.id} as RequestRecord)));},fail);
   return()=>{live=false;a();b();};
  },[uid,enabled,canView,wide]);
- return {enabled,loading,error,clients,requests};
+ const visibleClients=clients.filter(c=>!c.archived);
+ const visibleRequests=requests.filter(r=>!r.archived).map(r=>({...r,clientName:clients.find(c=>c.id===r.clientId)?.fullName||r.clientName}));
+ return {enabled,loading,error,clients:visibleClients,requests:visibleRequests,archivedClients:clients.filter(c=>c.archived),archivedRequests:requests.filter(r=>r.archived)};
 }
 export type EnterpriseRecords=ReturnType<typeof useEnterpriseRecords>;
-export async function createCustomer(user:User,values:Omit<Customer,'id'|'ownerUid'|'trial'>){
+function cleanCustomer(values:Omit<Customer,'id'|'ownerUid'|'trial'>){
  const fullName=values.fullName.trim(),email=values.email.trim().toLowerCase(),phone=values.phone.trim(),city=values.city.trim();
  if(fullName.length<2||fullName.length>120||email.length>150||(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))||phone.length>32||city.length>100)throw Error('Revisa los datos del cliente.');
  const profile=values.profile?Object.fromEntries(Object.entries(values.profile).map(([key,value])=>[key,value.trim()])) as CustomerProfile:undefined;
  if(profile&&(profile.documentNumber.length>40||profile.birthDate&&!/^\d{4}-\d{2}-\d{2}$/.test(profile.birthDate)||profile.nationality.length>60||profile.occupation.length>100||profile.department.length>80||profile.address.length>240||profile.alternatePhone.length>32||!['CEDULA','PASAPORTE','RESIDENCIA','RUC','OTRO'].includes(profile.documentType)))throw Error('Revisa los datos adicionales del expediente.');
- const d=await addDoc(root('enterpriseClients'),{fullName,email,phone,city,...(profile?{profile}:{}),ownerUid:user.uid,trial:true,createdAt:serverTimestamp()});
+ return {fullName,email,phone,city,...(profile?{profile}:{})};
+}
+export async function createCustomer(user:User,values:Omit<Customer,'id'|'ownerUid'|'trial'>){
+ const d=await addDoc(root('enterpriseClients'),{...cleanCustomer(values),ownerUid:user.uid,trial:true,createdAt:serverTimestamp()});
  return d.id;
 }
 export async function createRequest(user:User,client:Customer,insurerId:string,plate:string,vehicle?:VehicleDetails){
@@ -182,3 +188,61 @@ export async function downloadAttachment(r:RequestRecord,name:string){saveAttach
 export function unseen(r:RequestRecord,uid:string){return r.agentUid===uid&&r.agentSeenRevision<r.revision&&['ISSUED','NEEDS_CORRECTION','REJECTED'].includes(r.status);}
 
 export async function readImageAttachment(r:RequestRecord,slot:Slot){return readAttachment(r,r.files[slot]);}
+
+export type PolicyDetails={insurerId:string;plate:string;vehicle:VehicleDetails;policyNumber:string;startDate:string;endDate:string;premiumCents:number;currency:'USD'|'NIO'};
+function cleanPolicy(values:PolicyDetails){
+ const plate=values.plate.trim().toUpperCase(),policyNumber=values.policyNumber.trim();
+ const vehicle=Object.fromEntries(Object.entries(values.vehicle).map(([k,v])=>[k,v.trim()])) as VehicleDetails;
+ if(!['iniser','assa','america','lafise','mapfre'].includes(values.insurerId)||!plate||plate.length>24||!policyNumber||policyNumber.length>100||dateOnly(values.startDate)===null||dateOnly(values.endDate)===null||values.endDate<values.startDate||!Number.isSafeInteger(values.premiumCents)||values.premiumCents<0||values.premiumCents>1000000000||!['USD','NIO'].includes(values.currency))throw Error('Revisa los datos de la póliza.');
+ if(vehicle.make.length>60||vehicle.model.length>80||vehicle.year&&!/^\d{4}$/.test(vehicle.year)||vehicle.color.length>40||vehicle.vin.length>40||!['Particular','Comercial','Taxi','Motocicleta','Otro'].includes(vehicle.use))throw Error('Revisa los datos del vehículo.');
+ return {...values,plate,policyNumber,vehicle};
+}
+export async function registerExternalPolicy(user:User,customer:Omit<Customer,'id'|'ownerUid'|'trial'>|Customer,agentUid:string,details:PolicyDetails){
+ const values=cleanPolicy(details);
+ const existing='id' in customer;
+ if(existing&& (customer.ownerUid!==agentUid||customer.archived))throw Error('La póliza debe asociarse al agente del expediente activo.');
+ const clientRef=existing?doc(root('enterpriseClients'),customer.id):doc(root('enterpriseClients'));
+ const policyRef=doc(root('enterpriseIssuance'));
+ const batch=writeBatch(db);
+ const personal=cleanCustomer(customer);
+ if(!existing)batch.set(clientRef,{...personal,ownerUid:agentUid,trial:true,createdAt:serverTimestamp()});
+ batch.set(policyRef,{...values,clientId:clientRef.id,clientName:personal.fullName,agentUid,productKey:'VEHICLE_MANDATORY',status:'ISSUED',files:{front:'',back:'',registration:''},pdf:'',operatorUid:'',reason:'',revision:0,agentSeenRevision:0,trial:true,source:'EXTERNAL',registeredBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
+ await batch.commit();return {clientId:clientRef.id,policyId:policyRef.id};
+}
+function adminReason(reason:string){const text=reason.trim();if(text.length<3||text.length>500)throw Error('Indica un motivo de 3 a 500 caracteres.');return text;}
+async function adminChange(user:User,kind:'enterpriseClients'|'enterpriseIssuance',id:string,action:string,reason:string,fn:(data:Record<string,unknown>)=>Record<string,unknown>){
+ const clean=adminReason(reason),target=doc(root(kind),id),audit=doc(root('enterpriseAdminAudit'));
+ await runTransaction(db,async tx=>{
+  const snap=await tx.get(target);if(!snap.exists())throw Error('El registro no existe.');
+  const values=fn(snap.data());tx.update(target,{...values,adminUpdatedAt:serverTimestamp(),adminUpdatedBy:user.uid,adminReason:clean});
+  tx.set(audit,{targetType:kind,targetId:id,action,reason:clean,actorUid:user.uid,createdAt:serverTimestamp()});
+ });
+}
+export async function adminUpdateCustomer(user:User,c:Customer,values:Omit<Customer,'id'|'ownerUid'|'trial'>,reason:string){
+ await adminChange(user,'enterpriseClients',c.id,'EDIT_CLIENT',reason,()=>cleanCustomer(values));
+}
+export async function adminUpdatePolicy(user:User,r:RequestRecord,values:PolicyDetails,reason:string){
+ await adminChange(user,'enterpriseIssuance',r.id,'EDIT_POLICY',reason,current=>{if(current.status!=='ISSUED')throw Error('Solo se corrigen pólizas emitidas desde este formulario.');return {...cleanPolicy(values),updatedAt:serverTimestamp()};});
+}
+export async function adminArchive(user:User,kind:'enterpriseClients'|'enterpriseIssuance',id:string,reason:string,archived=true){
+ await adminChange(user,kind,id,archived?'ARCHIVE':'RESTORE',reason,()=>({archived}));
+}
+export async function adminRemoveAttachment(user:User,r:RequestRecord,slot:Slot|'policy',reason:string){
+ const clean=adminReason(reason),name=slot==='policy'?r.pdf:r.files[slot];
+ if(!name)throw Error('No existe un archivo asociado.');
+ // Storage and Firestore are not atomic; retain the pointer on failure so an owner can retry.
+ try{await withDeadline(deleteObject(ref(storage,path(r.id,name))),25000,'No se confirmó la eliminación del archivo. Reintenta.');}catch(e){if(!(typeof e==='object'&&e!==null&&'code' in e&&e.code==='storage/object-not-found'))throw e;}
+ await adminChange(user,'enterpriseIssuance',r.id,'DELETE_ATTACHMENT',clean,current=>{
+  const files=current.files as Record<Slot,string>;
+  if((slot==='policy'?current.pdf:files[slot])!==name)throw Error('El archivo asociado cambió; actualiza el expediente.');
+  return slot==='policy'?{pdf:'',updatedAt:serverTimestamp()}:{files:{...files,[slot]:''},updatedAt:serverTimestamp()};
+ });
+}
+export async function attachExternalDocument(user:User,r:RequestRecord,slot:Slot|'policy',file:File,onProgress?:ProgressCallback){
+ if(r.source!=='EXTERNAL'||r.archived||r.status!=='ISSUED'||(slot==='policy'?r.pdf:r.files[slot]))throw Error('Solo puedes adjuntar documentos faltantes.');
+ const name=await upload(r.id,slot,file,onProgress);
+ await change(r.id,c=>{
+  if(c.source!=='EXTERNAL'||c.archived||c.status!=='ISSUED'||(slot==='policy'?c.pdf:c.files[slot]))throw Error('El expediente cambió.');
+  return slot==='policy'?{pdf:name,updatedAt:serverTimestamp()}:{files:{...c.files,[slot]:name},updatedAt:serverTimestamp()};
+ });
+}

@@ -16,7 +16,7 @@ export async function createTrialCommission(user:User,input:{policyId:string;cut
   const existing=await tx.get(commissionRef(id));
   if(flag.data()?.enabled!==true)throw Error('Habilita el modo de pruebas desde Clientes.');
   const p=policy.data();
-  if(!p||p.trial!==true||p.status!=='ISSUED'||!p.pdf||!p.agentUid||!p.insurerId||!['USD','NIO'].includes(p.currency))throw Error('Selecciona una póliza de prueba emitida.');
+  if(!p||p.trial!==true||p.status!=='ISSUED'||p.archived===true||!p.agentUid||!p.insurerId||!['USD','NIO'].includes(p.currency))throw Error('Selecciona una póliza de prueba emitida.');
   if(existing.exists())throw Error('Ya existe un registro para esa póliza y corte.');
   tx.set(commissionRef(id),{trial:true,source:'MANUAL_TRIAL',agentUid:p.agentUid,policyId:policy.id,policyNumber:p.policyNumber,insurerId:p.insurerId,cutId:cut,periodStart:input.periodStart,periodEnd:input.periodEnd,currency:p.currency,amountCents:input.amountCents,paidCents:0,payments:[],createdBy:user.uid,createdAt:serverTimestamp(),updatedAt:serverTimestamp()});
  });

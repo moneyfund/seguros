@@ -10,7 +10,7 @@ const fmt=(c:number,curr:string)=>new Intl.NumberFormat('es-NI',{style:'currency
 const empty={policyId:'',cutId:'',periodStart:'',periodEnd:'',amount:''};
 export default function TrialFinance({rows,records,user,admin}:{rows:LiveRecord[];records:EnterpriseRecords;user:User;admin:boolean}){
  const [show,setShow]=useState(false),[form,setForm]=useState(empty),[selected,setSelected]=useState(''),[payment,setPayment]=useState({amount:'',date:localToday(),reference:''}),[busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
- const issued=records.requests.filter(r=>r.status==='ISSUED'&&r.pdf);
+ const issued=records.requests.filter(r=>r.status==='ISSUED');
  const items=rows.filter(r=>r.trial===true&&r.source==='MANUAL_TRIAL'&&typeof r.amountCents==='number'&&typeof r.paidCents==='number');
  const current=items.find(r=>r.id===selected),pol=issued.find(r=>r.id===form.policyId);
  async function action(fn:()=>Promise<void>,done:string){if(busy)return;setBusy(true);setError('');setNotice('');try{await fn();setNotice(done);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
