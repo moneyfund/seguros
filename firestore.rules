@@ -331,8 +331,7 @@ service cloud.firestore {
       // explicitly sets settings/enterpriseTrial.enabled=true in a test project.
       // Synthetic records ONLY until trusted SQL/Storage backend and QA are approved.
       function trialEnabled() {
-        return exists(/databases/$(database)/documents/companies/main/settings/enterpriseTrial) &&
-          get(/databases/$(database)/documents/companies/main/settings/enterpriseTrial).data.enabled == true;
+        return get(/databases/$(database)/documents/companies/main/settings/enterpriseTrial).data.enabled == true;
       }
       function enterpriseWide() {
         return hasView('clientes') && hasRole(['direccion','operaciones','servicio']);
@@ -376,14 +375,21 @@ service cloud.firestore {
           validString(d.fullName, 2, 120) && validString(d.email, 0, 150) &&
           (d.email == '' || d.email.matches('[^@ ]+@[^@ ]+[.][^@ ]+')) &&
           validString(d.phone, 0, 32) && validString(d.city, 0, 100) &&
-          assignedSales(d.ownerUid) && d.createdAt == request.time && d.trial == true;
+          assignedSales(d.ownerUid,['clientes']) && d.createdAt == request.time && d.trial == true;
       }
-      function assignedSales(uid) {
-        return uid == request.auth.uid && enterpriseSales() ||
-          isOwner() && exists(/databases/$(database)/documents/companies/main/members/$(uid)) &&
-          get(/databases/$(database)/documents/companies/main/members/$(uid)).data.active == true &&
-          (get(/databases/$(database)/documents/companies/main/members/$(uid)).data.role == 'ventas' ||
-           get(/databases/$(database)/documents/companies/main/members/$(uid)).data.get('roles',[]).hasAny(['ventas']));
+      function eligibleSales(uid, views) {
+        let m = get(/databases/$(database)/documents/companies/main/members/$(uid)).data;
+        return m.active == true && (m.role in ['ventas','direccion'] || m.get('roles',[]).hasAny(['ventas','direccion'])) &&
+          m.get('allowedSections',[]).hasAll(views);
+      }
+      function assignedOtherSales(uid) {
+        let m = get(/databases/$(database)/documents/companies/main/members/$(uid)).data;
+        return m.active == true && (m.role == 'ventas' || m.get('roles',[]).hasAny(['ventas']));
+      }
+      function assignedSales(uid, views) {
+        return verified() && (isOwner()
+          ? uid == request.auth.uid || assignedOtherSales(uid)
+          : uid == request.auth.uid && eligibleSales(uid, views));
       }
       function correctionMetadata(d) {
         return d.adminUpdatedBy == request.auth.uid && d.adminUpdatedAt == request.time &&
@@ -412,7 +418,7 @@ service cloud.firestore {
       }
       match /enterpriseClients/{clientId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.ownerUid));
-        allow create: if trialEnabled() && enterpriseSales() && validCustomer(request.resource.data);
+        allow create: if trialEnabled() && validCustomer(request.resource.data);
         allow update: if trialEnabled() && isOwner() && correctionMetadata(request.resource.data) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','email','phone','city','profile','archived','adminUpdatedAt','adminUpdatedBy','adminReason']) &&
           customerFields(request.resource.data) && request.resource.data.get('archived',false) is bool;
@@ -467,12 +473,12 @@ service cloud.firestore {
           d.premiumCents <= 1000000000 && d.currency in ['USD','NIO'];
       }
       function externalRecord(d) {
-        let cp = enterpriseCustomerPath(d.clientId);
+        let c = getAfter(enterpriseCustomerPath(d.clientId)).data;
         return d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','vehicle','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial','source','registeredBy']) &&
           d.source == 'EXTERNAL' && d.registeredBy == request.auth.uid && d.status == 'ISSUED' &&
-          validString(d.clientId,1,80) && existsAfter(cp) && getAfter(cp).data.ownerUid == d.agentUid &&
-          getAfter(cp).data.get('archived',false) == false && getAfter(cp).data.fullName == d.clientName &&
-          assignedSales(d.agentUid) && d.productKey == 'VEHICLE_MANDATORY' && validPolicyFields(d) &&
+          validString(d.clientId,1,80) && c.ownerUid == d.agentUid &&
+          c.get('archived',false) == false && c.fullName == d.clientName &&
+          assignedSales(d.agentUid,['clientes','polizas']) && d.productKey == 'VEHICLE_MANDATORY' && validPolicyFields(d) &&
           validAttachments(d) && d.files.front == '' && d.files.back == '' && d.files.registration == '' &&
           d.pdf == '' && d.operatorUid == '' && d.reason == '' && d.revision == 0 && d.agentSeenRevision == 0 &&
           d.createdAt == request.time && d.updatedAt == request.time && d.trial == true;
@@ -502,8 +508,8 @@ service cloud.firestore {
       }
       match /enterpriseIssuance/{requestId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.agentUid));
-        allow create: if trialEnabled() && enterpriseSales() && hasView('polizas') &&
-          (request.resource.data.get('source','') == 'EXTERNAL' ? externalRecord(request.resource.data) : validDraft(request.resource.data));
+        allow create: if trialEnabled() &&
+          (request.resource.data.get('source','') == 'EXTERNAL' ? externalRecord(request.resource.data) : enterpriseSales() && hasView('polizas') && validDraft(request.resource.data));
         // Evaluate only the relevant action. Avoid exceeding the Rules engine's
         // 1,000-expression budget by repeatedly expanding authorization helpers.
         function agentEdit(old, next, keys) {
