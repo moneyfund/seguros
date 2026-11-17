@@ -501,3 +501,6 @@
 @media(prefers-reduced-motion:reduce){
   .acos-public *,.acos-public *:before,.acos-public *:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+
+/* Academy navigation — preserve commercial page layout. */
+.acos-public .ap-nav .ap-academy-link{color:var(--brand-champagne);font-weight:700;letter-spacing:.05px}.acos-public .ap-nav .ap-academy-link:after{background:var(--brand-champagne)}@media(min-width:1181px){.acos-public .ap-nav{gap:clamp(11px,1.4vw,23px)}}@media(max-width:1180px){.acos-public .ap-nav .ap-academy-link{color:var(--brand-navy-raised)}}

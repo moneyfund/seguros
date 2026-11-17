@@ -36,6 +36,18 @@ const load = async (hash = '#/inicio') => {
   await page.evaluate(() => document.fonts.ready);
 };
 try {
+  await page.goto(base+'#/academy');await page.locator('.aa-site').waitFor();
+  await test('Academy public route and interactive quiz',async()=>{
+    assert.equal(await page.locator('.aa-track').count(),3);assert.ok(await page.locator('.aa-lesson').count()>=6);
+    await page.locator('.aa-exams button').first().click();
+    const picks=[1,2,0,1,2];for(let i=0;i<picks.length;i++){await page.locator('.aa-options button').nth(picks[i]).click();await page.locator('.aa-quiz .aa-button').click();}
+    assert.match(await page.locator('.aa-score strong').innerText(),/5\/5/);
+    await page.reload();await page.locator('.aa-exams').waitFor();assert.match(await page.locator('.aa-exams button').first().innerText(),/5\/5/);
+    await page.setViewportSize({width:360,height:800});assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+    await page.screenshot({path:resolve(output,'academy-mobile.png'),fullPage:true});
+    await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:resolve(output,'academy-desktop.png'),fullPage:true});
+    await page.evaluate(()=>localStorage.removeItem('acos-academy-progress-v1'));
+  });
   await load();
   await test('Production root renders the commercial website without login', async () => {
     await page.goto(base);
