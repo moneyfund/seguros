@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import ConnectedWorkspace from './ConnectedWorkspace';
 import PublicSite from './PublicSite';
+import {lazy,Suspense} from 'react';
+const Academy=lazy(()=>import('./Academy'));
 
-type Surface = 'public' | 'workspace';
+type Surface = 'public' | 'workspace' | 'academy';
 
 const publicHash = /^#(?:\/inicio(?:\/.*)?|\/web(?:\/.*)?|inicio|servicios|filosofia|proceso|contacto)$/;
 
@@ -16,6 +18,7 @@ const publicHash = /^#(?:\/inicio(?:\/.*)?|\/web(?:\/.*)?|inicio|servicios|filos
 function getSurface(): Surface {
   const hash = window.location.hash;
   if (!hash || hash === '#') return 'public';
+  if (/^#\/academy\/?$/.test(hash)) return 'academy';
   return publicHash.test(hash) ? 'public' : 'workspace';
 }
 
@@ -53,6 +56,7 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
+  if (surface === 'academy') return <Suspense fallback={<div role="status" style={{padding:32}}>Cargando ACOS Academy…</div>}><Academy/></Suspense>;
   if (surface === 'public') {
     return <PublicSite openWorkspace={() => navigate('workspace')} />;
   }

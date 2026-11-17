@@ -194,6 +194,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
           <button className="ap-icon-button ap-menu-toggle" ref={menuButton} aria-label={mobile ? 'Cerrar menú' : 'Abrir menú'} aria-expanded={mobile} aria-controls="ap-navigation" onClick={() => setMobile(!mobile)}>{mobile ? <X /> : <Menu />}</button>
           <nav id="ap-navigation" aria-label="Navegación principal" className={'ap-nav' + (mobile ? ' ap-nav-open' : '')}>
             {navigation.map(item => <a key={item.id} href={sectionHref(item.id)} aria-current={active === item.id ? 'location' : undefined} onClick={() => sectionClick(item.id)}>{item.label}</a>)}
+            <a className="ap-academy-link" href="#/academy" onClick={()=>setMobile(false)}>ACOS Academy</a>
             <button className="ap-button ap-nav-cta" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button>
             <button className="ap-mobile-enterprise" onClick={openWorkspace}><LockKeyhole size={15} /> Acceso empresarial</button>
           </nav>
@@ -305,7 +306,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
         <div className="ap-container">
           <div className="ap-footer-main">
             <div className="ap-footer-brand"><a href="#/inicio" aria-label="ACOS, volver al inicio" onClick={() => sectionClick('inicio')}><BrandLogo variant="primary" /></a><p>Correduría de seguros.<br />Aseguramos tu futuro.</p><span><MapPin size={14} /> Nicaragua</span></div>
-            <div><h2>Conocé ACOS</h2><a href={sectionHref('nosotros')} onClick={() => sectionClick('nosotros')}>Nosotros</a><a href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Cómo trabajamos</a><a href={sectionHref('contacto')} onClick={() => sectionClick('contacto')}>Contacto</a><button onClick={() => setPrivacy(true)}>Aviso de privacidad</button></div>
+            <div><h2>Conocé ACOS</h2><a href={sectionHref('nosotros')} onClick={() => sectionClick('nosotros')}>Nosotros</a><a href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Cómo trabajamos</a><a href={sectionHref('contacto')} onClick={() => sectionClick('contacto')}>Contacto</a><a href="#/academy">ACOS Academy</a><button onClick={() => setPrivacy(true)}>Aviso de privacidad</button></div>
             <div><h2>Nuestros seguros</h2>{publicSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
             <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button><button className="ap-footer-access" onClick={openWorkspace}><LockKeyhole size={14} /> Acceso empresarial</button></div>
           </div>

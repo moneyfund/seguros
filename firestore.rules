@@ -587,6 +587,21 @@ service cloud.firestore {
       }
 
       // ACOS Mail: append-only supervision records. No mailbox credentials or content.
+      match /academyVideos/{videoId} {
+        allow read: if true;
+        function validLesson(d) {
+          return d.keys().hasAll(['title','description','videoId','author','track','createdAt','updatedAt']) &&
+            d.keys().hasOnly(['title','description','videoId','author','track','createdAt','updatedAt']) &&
+            validString(d.title,3,120) && validString(d.description,1,500) &&
+            validString(d.author,2,100) && d.videoId is string &&
+            d.videoId.matches('[A-Za-z0-9_-]{11}') &&
+            d.track in ['finanzas','seguros','proteccion'] && d.updatedAt == request.time;
+        }
+        allow create: if isOwner() && validLesson(request.resource.data) && request.resource.data.createdAt == request.time;
+        allow update: if isOwner() && validLesson(request.resource.data) && request.resource.data.createdAt == resource.data.createdAt;
+        allow delete: if isOwner();
+      }
+
       match /mailAudit/{auditId} {
         allow get, list: if isOwner();
         allow create: if isOwner() &&
