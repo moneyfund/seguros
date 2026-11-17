@@ -1,5 +1,8 @@
 import {Component,Suspense,useEffect,useLayoutEffect,useState,type ReactNode} from 'react';
 
+// 2.5 s total visual presentation, including the graceful exit, if content is ready.
+const PRESENTATION_MS=2500;
+const EXIT_MS=900;
 const loader=()=>document.getElementById('acos-public-loader');
 function reduced(){return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}
 function showPublicLoader(academy:boolean){
@@ -34,10 +37,10 @@ export function PublicEntrance({children,academy=false}:{children:ReactNode;acad
  useEffect(()=>{
   if(!ready||started===null)return;
   let exitTimer:number|undefined;
-  const delay=reduced()?0:Math.max(0,720-(performance.now()-started));
+  const delay=reduced()?0:Math.max(0,PRESENTATION_MS-EXIT_MS-(performance.now()-started));
   const minimumTimer=window.setTimeout(()=>{
    loader()?.classList.add('acos-loading-exit');
-   exitTimer=window.setTimeout(()=>{hidePublicLoader();setDone(true);},reduced()?0:440);
+   exitTimer=window.setTimeout(()=>{hidePublicLoader();setDone(true);},reduced()?0:EXIT_MS);
   },delay);
   return()=>{window.clearTimeout(minimumTimer);if(exitTimer!==undefined)window.clearTimeout(exitTimer);};
  },[ready,started]);

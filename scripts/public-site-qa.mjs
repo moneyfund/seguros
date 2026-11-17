@@ -61,7 +61,11 @@ try {
     try{const p=await loadingContext.newPage();await p.route('**/assets/*.js',async route=>{await new Promise(r=>setTimeout(r,650));await route.continue();});
       await p.goto(base+'#/inicio',{waitUntil:'commit'});const loader=p.locator('#acos-public-loader');await loader.waitFor({state:'visible'});
       assert.match(await loader.innerText(),/Aseguramos tu futuro/);assert.match(await loader.locator('img').getAttribute('src'),/acos-horizontal-negative\.svg/);
-      await p.screenshot({path:resolve(output,'acos-loading.png')});await loader.waitFor({state:'hidden'});
+      await p.screenshot({path:resolve(output,'acos-loading.png')});
+      await p.waitForFunction(()=>document.getElementById('acos-public-loader')?.classList.contains('acos-loading-exit'));
+      const fade=await loader.evaluate(el=>({elapsed:performance.now()-Number(el.dataset.started),duration:getComputedStyle(el).transitionDuration,visibility:getComputedStyle(el).visibility}));
+      assert.ok(fade.elapsed>=1550,'Loader must hold for about 1.6 seconds before exit');assert.match(fade.duration,/0\.9s/);assert.equal(fade.visibility,'visible');
+      await p.waitForFunction(()=>document.getElementById('acos-public-loader')?.hidden===true);
       await p.locator('.ap-academy-link').first().click();await loader.waitFor({state:'visible'});assert.match(await loader.innerText(),/ACOS ACADEMY/);await loader.waitFor({state:'hidden'});
       await p.getByRole('link',{name:'Rutas',exact:true}).click();assert.equal(await loader.isVisible(),false);
       await p.goto(base+'#/acceso',{waitUntil:'commit'});await p.locator('#root').waitFor({state:'attached'});assert.equal(await loader.isVisible(),false);
