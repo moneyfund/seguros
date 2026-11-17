@@ -159,7 +159,7 @@ service firebase.storage {
       return firestore.get(/databases/(default)/documents/companies/main/enterpriseIssuance/$(id)).data;
     }
     function enterpriseRead(id) {
-      return verified() && requestExists(id) && issuance(id).trial == true && enterpriseView('clientes') &&
+      return verified() && requestExists(id) && issuance(id).trial == true && (isOwner() || issuance(id).get('archived',false) == false) && enterpriseView('clientes') &&
          (enterpriseRole(['direccion','operaciones','servicio']) ||
           (enterpriseRole(['ventas']) && issuance(id).agentUid == request.auth.uid));
     }

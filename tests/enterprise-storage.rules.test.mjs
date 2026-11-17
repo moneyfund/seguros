@@ -63,3 +63,17 @@ test('Storage: own attachments, authorized service readers, assigned reviewer an
  await assertFails(getBytes(file(agent,jpg)));
  await assertFails(getBytes(file(agent,pdf)));
 });
+
+test('External policy: only assigned agent may fill missing files; only verified owner deletes',async()=>{
+ await env.withSecurityRulesDisabled(async c=>{
+  const db=c.firestore();await updateDoc(doc(db,root+'members/'+agent),{active:true});
+  await setDoc(doc(db,root+'enterpriseIssuance/external'),{agentUid:agent,operatorUid:'',status:'ISSUED',source:'EXTERNAL',trial:true,files:{front:'',back:'',registration:''},pdf:''});
+ });
+ await assertSucceeds(upload(agent,jpg,photo,'image/jpeg','external'));
+ await assertSucceeds(upload(agent,pdf,policy,'application/pdf','external'));
+ await assertFails(upload(other,back,photo,'image/jpeg','external'));
+ await assertFails(deleteObject(file(agent,jpg,'external')));
+ const owner=env.authenticatedContext('owner-storage',{email:'amyblandon171@gmail.com',email_verified:true});
+ await assertSucceeds(deleteObject(ref(owner.storage(),path(jpg,'external'))));
+ await assertSucceeds(deleteObject(ref(owner.storage(),path(pdf,'external'))));
+});

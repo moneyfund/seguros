@@ -509,7 +509,10 @@ service cloud.firestore {
         function agentEdit(old, next, keys) {
           return old.status in ['DRAFT','NEEDS_CORRECTION'] &&
             (next.status == old.status
-              ? keys.hasOnly(['files','updatedAt']) && validAttachments(next) && next.updatedAt == request.time
+              ? keys.hasOnly(['files','updatedAt']) && validAttachments(next) && next.updatedAt == request.time &&
+                (old.files.front == '' || old.files.front == next.files.front) &&
+                (old.files.back == '' || old.files.back == next.files.back) &&
+                (old.files.registration == '' || old.files.registration == next.files.registration)
               : next.status == 'SUBMITTED' && keys.hasOnly(['status','operatorUid','reason','revision','updatedAt']) &&
                 next.operatorUid == '' && next.reason == '' && completeAttachments(old) && nextRevision()) &&
             hasView('polizas') && enterpriseAgent(old.agentUid);

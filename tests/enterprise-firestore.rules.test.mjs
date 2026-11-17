@@ -1,7 +1,7 @@
 import {after,before,test} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {collection,doc,getDoc,getDocs,query,setDoc,updateDoc,deleteDoc,where,serverTimestamp} from 'firebase/firestore';
+import {collection,doc,getDoc,getDocs,query,setDoc,updateDoc,deleteDoc,where,serverTimestamp,writeBatch} from 'firebase/firestore';
 let env; const projectId='demo-acos-enterprise';
 const base='companies/main/';
 const aUid='agent-a',bUid='agent-b',oUid='operator-a',serviceUid='service-a',financeUid='finance-a';
@@ -89,4 +89,28 @@ test('ACOS Mail audit: only verified owners may append/read, never alter or dele
  await assertFails(setDoc(d(ctx(aUid),'mailAudit/agent'),{...record,actorUid:aUid}));
  await assertFails(getDoc(d(unverified,'mailAudit/one')));
  await assertFails(getDoc(d(anon,'mailAudit/one')));
+});
+
+test('External registration is atomic and corrections belong exclusively to verified owners',async()=>{
+ const a=ctx(aUid),b=ctx(bUid),o=ctx(oUid),owner=env.authenticatedContext('owner-registry',{email:'amyblandon171@gmail.com',email_verified:true}).firestore();
+ await env.withSecurityRulesDisabled(async c=>{await setDoc(d(c.firestore(),'settings/enterpriseTrial'),{enabled:true});});
+ const external=(uid,id)=>({...draft(uid,id),source:'EXTERNAL',registeredBy:uid,status:'ISSUED',policyNumber:'TEST-EXTERNAL',startDate:'2026-11-01',endDate:'2027-11-01',premiumCents:10000,vehicle:{make:'Prueba',model:'Modelo',year:'2020',color:'Azul',vin:'TEST',use:'Particular'}});
+ const batch=writeBatch(a);batch.set(d(a,'enterpriseClients/external'),client(aUid));batch.set(d(a,'enterpriseIssuance/external'),external(aUid,'external'));await assertSucceeds(batch.commit());
+ await assertFails(setDoc(d(b,'enterpriseIssuance/forged-external'),external(bUid,'external')));
+ await assertFails(setDoc(d(o,'enterpriseIssuance/operator-external'),external(oUid,'external')));
+ await assertFails(updateDoc(d(a,'enterpriseClients/external'),{fullName:'No autorizado'}));
+ await assertFails(updateDoc(d(a,'enterpriseIssuance/external'),{policyNumber:'No autorizado'}));
+ await assertFails(updateDoc(d(a,'enterpriseIssuance/external'),{archived:true}));
+ await assertFails(deleteDoc(d(a,'enterpriseIssuance/external')));
+ await assertSucceeds(updateDoc(d(a,'enterpriseIssuance/external'),{files:{front:docs.front,back:'',registration:''},updatedAt:serverTimestamp()}));
+ await assertFails(updateDoc(d(a,'enterpriseIssuance/external'),{files:{front:'',back:'',registration:''},updatedAt:serverTimestamp()}));
+ const meta={adminUpdatedBy:'owner-registry',adminUpdatedAt:serverTimestamp(),adminReason:'Corrección ficticia'};
+ await assertSucceeds(updateDoc(d(owner,'enterpriseClients/external'),{fullName:'Cliente corregido',...meta}));
+ await assertSucceeds(updateDoc(d(owner,'enterpriseIssuance/external'),{policyNumber:'TEST-CORRECTED',updatedAt:serverTimestamp(),...meta}));
+ await assertSucceeds(updateDoc(d(owner,'enterpriseIssuance/external'),{files:{front:'',back:'',registration:''},updatedAt:serverTimestamp(),...meta}));
+ await assertFails(updateDoc(d(a,'enterpriseIssuance/external'),{archived:true,...meta}));
+ await assertSucceeds(updateDoc(d(owner,'enterpriseIssuance/external'),{archived:true,...meta}));
+ await assertFails(updateDoc(d(a,'enterpriseIssuance/external'),{files:{front:docs.front,back:'',registration:''},updatedAt:serverTimestamp()}));
+ const assigned=writeBatch(owner);assigned.set(d(owner,'enterpriseClients/assigned'),client(bUid));assigned.set(d(owner,'enterpriseIssuance/assigned'),{...external(bUid,'assigned'),registeredBy:'owner-registry'});await assertSucceeds(assigned.commit());
+ await assertSucceeds(getDoc(d(b,'enterpriseIssuance/assigned')));await assertFails(getDoc(d(a,'enterpriseIssuance/assigned')));
 });
