@@ -3,3 +3,6 @@ Public entry #/academy; manager #/direccion/academy (verified founders only). In
 
 ## Refinamiento editorial
 Fotografía de Scott Graham, Unsplash License: https://unsplash.com/photos/5fNmWej4tAA . Hero sin cuadrícula, con foto remota optimizada, respaldo local existente /images/asesoria.webp, contraste oscuro, símbolo oficial ACOS en marca de agua y superficies de vidrio con esquinas moderadas. IntersectionObserver aplica entrada escalonada una sola vez por tarjeta visible; respeta reduced motion y permite foco de teclado. No se modifica contenido educativo ni permisos. La descarga de la foto remota depende de disponibilidad del CDN.
+
+## Tarjetas fotográficas
+Las rutas, lecciones y evaluaciones reutilizan fotografías WebP existentes en la biblioteca ACOS. Imagen a sangre completa bajo gradientes de contraste, esquinas de 0 px, iconografía y contenido original. Las publicaciones nuevas reciben una imagen según su ruta; las seis lecciones seleccionadas tienen asignación individual. Entrada al desplazarse mediante IntersectionObserver, con umbral de 12 %, desplazamiento vertical y retraso escalonado; respeta la preferencia de movimiento reducido. No se agregan imágenes externas ni cambios a Firebase.

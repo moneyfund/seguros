@@ -39,6 +39,9 @@ try {
   await page.goto(base+'#/academy');await page.locator('.aa-site').waitFor();
   await test('Academy public route and interactive quiz',async()=>{
     assert.equal(await page.locator('.aa-track').count(),3);assert.ok(await page.locator('.aa-lesson').count()>=6);
+    const cards=await page.locator('.aa-track,.aa-lesson,.aa-exam-card').evaluateAll(nodes=>nodes.map(el=>({radius:getComputedStyle(el).borderRadius,photo:getComputedStyle(el,'::before').backgroundImage})));
+    for(const card of cards){assert.equal(card.radius,'0px');assert.match(card.photo,/\/images\/.*\.webp/);}
+    for(const asset of new Set(cards.map(c=>c.photo.match(/\/images\/[^"')]+/)[0])))assert.ok((await page.request.get(base+asset.slice(1))).ok(),'Missing card photo: '+asset);
     await page.locator('.aa-exams button').first().click();
     const picks=[1,2,0,1,2];for(let i=0;i<picks.length;i++){await page.locator('.aa-options button').nth(picks[i]).click();await page.locator('.aa-quiz .aa-button').click();}
     assert.match(await page.locator('.aa-score strong').innerText(),/5\/5/);
@@ -47,6 +50,16 @@ try {
     await page.screenshot({path:resolve(output,'academy-mobile.png'),fullPage:true});
     await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:resolve(output,'academy-desktop.png'),fullPage:true});
     await page.evaluate(()=>localStorage.removeItem('acos-academy-progress-v1'));
+  });
+  await test('Academy cards reveal when scrolled into view',async()=>{
+    const motion=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'no-preference'});
+    try {const motionPage=await motion.newPage();await motionPage.goto(base+'#/academy');await motionPage.locator('.aa-site').waitFor();
+      const last=motionPage.locator('.aa-lesson').last();
+      await motionPage.waitForFunction(()=>document.querySelector('.aa-lessons .aa-lesson:last-child')?.classList.contains('aa-awaiting'));
+      await last.scrollIntoViewIfNeeded();
+      await motionPage.waitForFunction(()=>document.querySelector('.aa-lessons .aa-lesson:last-child')?.classList.contains('aa-arrived'));
+      await motionPage.waitForFunction(()=>getComputedStyle(document.querySelector('.aa-lessons .aa-lesson:last-child')).opacity==='1');
+    }finally{await motion.close();}
   });
   await load();
   await test('Production root renders the commercial website without login', async () => {
