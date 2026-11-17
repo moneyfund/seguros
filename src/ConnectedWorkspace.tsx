@@ -1,3 +1,4 @@
+import {policyValidity,localToday} from './operationMath';
 import BrandLogo from './BrandLogo';
 import AcosMail from './AcosMail';
 import {Mail,MailCheck} from 'lucide-react';
@@ -296,7 +297,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
  const trialReady=enterprise.enabled&&!enterprise.loading&&!enterprise.error;
  if(enterpriseAccess.canView)metrics.push({label:'Clientes',value:trialReady?enterprise.clients.length:'—',onClick:()=>go('clientes')});
  if(activeTabs.includes('polizas'))metrics.push({label:'Pólizas',value:enterpriseAccess.canView?(trialReady?enterprise.requests.filter(r=>r.status==='ISSUED').length:'—'):(rows.policies?policies.length:'—'),onClick:()=>go('polizas')});
- if(enterpriseAccess.issuance)metrics.push({label:'En gestión',value:trialReady?enterprise.requests.filter(r=>['SUBMITTED','IN_REVIEW','NEEDS_CORRECTION'].includes(r.status)).length:'—',onClick:()=>special('modulo/clientes/emision')});
+ if(enterpriseAccess.issuance)metrics.push({label:'Por vencer',value:trialReady?enterprise.requests.filter(r=>r.status==='ISSUED'&&policyValidity(r.startDate,r.endDate,localToday())==='due').length:'—',onClick:()=>special('modulo/polizas/renovaciones')});
  else if(activeTabs.includes('finanzas'))metrics.push({label:'Comisiones',value:rows.commissions?commissions.length:'—',onClick:()=>go('finanzas')});
  else if(activeTabs.includes('solicitudes'))metrics.push({label:'Pendientes',value:rows.tickets?tickets.filter(t=>t.status!=='Resuelto').length:'—',onClick:()=>go('solicitudes')});
  if(!metrics.length&&activeTabs.includes('prospectos'))metrics.push({label:'Oportunidades',value:rows.leads?leads.length:'—',onClick:()=>go('prospectos')});
