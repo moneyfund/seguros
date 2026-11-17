@@ -30,13 +30,14 @@ const test = async (name, run) => { await run(); results.push({ name, status: 'P
 const load = async (hash = '#/inicio') => {
   await page.goto(base + hash);
   await page.locator('.acos-public').waitFor();
+  await page.locator('#acos-public-loader').waitFor({state:'hidden'});
   await page.evaluate(() => { document.querySelectorAll('img').forEach(img => { img.loading = 'eager'; }); });
   await page.waitForFunction(() => Array.from(document.querySelectorAll('.acos-public img')).every(img => img.complete && img.naturalWidth > 0));
   await page.evaluate(() => Promise.all(Array.from(document.querySelectorAll('.acos-public img')).map(img => img.decode())));
   await page.evaluate(() => document.fonts.ready);
 };
 try {
-  await page.goto(base+'#/academy');await page.locator('.aa-site').waitFor();
+  await page.goto(base+'#/academy');await page.locator('.aa-site').waitFor();await page.locator('#acos-public-loader').waitFor({state:'hidden'});
   await test('Academy public route and interactive quiz',async()=>{
     assert.equal(await page.locator('.aa-track').count(),3);assert.ok(await page.locator('.aa-lesson').count()>=6);
     const cards=await page.locator('.aa-track,.aa-lesson,.aa-exam-card').evaluateAll(nodes=>nodes.map(el=>({radius:getComputedStyle(el).borderRadius,photo:getComputedStyle(el,'::before').backgroundImage})));
@@ -54,6 +55,17 @@ try {
     await page.screenshot({path:resolve(output,'academy-mobile.png'),fullPage:true});
     await page.setViewportSize({width:1440,height:1000});await page.screenshot({path:resolve(output,'academy-desktop.png'),fullPage:true});
     await page.evaluate(()=>localStorage.removeItem('acos-academy-progress-v1'));
+  });
+  await test('Public branded loading transition, route scope and reduced-motion exit',async()=>{
+    const loadingContext=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'no-preference'});
+    try{const p=await loadingContext.newPage();await p.route('**/assets/*.js',async route=>{await new Promise(r=>setTimeout(r,650));await route.continue();});
+      await p.goto(base+'#/inicio',{waitUntil:'commit'});const loader=p.locator('#acos-public-loader');await loader.waitFor({state:'visible'});
+      assert.match(await loader.innerText(),/Aseguramos tu futuro/);assert.match(await loader.locator('img').getAttribute('src'),/acos-horizontal-negative\.svg/);
+      await p.screenshot({path:resolve(output,'acos-loading.png')});await loader.waitFor({state:'hidden'});
+      await p.locator('.ap-academy-link').first().click();await loader.waitFor({state:'visible'});assert.match(await loader.innerText(),/ACOS ACADEMY/);await loader.waitFor({state:'hidden'});
+      await p.getByRole('link',{name:'Rutas',exact:true}).click();assert.equal(await loader.isVisible(),false);
+      await p.goto(base+'#/acceso',{waitUntil:'commit'});await p.locator('#root').waitFor({state:'attached'});assert.equal(await loader.isVisible(),false);
+    }finally{await loadingContext.close();}
   });
   await test('Academy cards reveal when scrolled into view',async()=>{
     const motion=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'no-preference'});

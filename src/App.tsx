@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useState, lazy } from 'react';
+import { PublicEntrance, hidePublicLoader } from './PublicEntrance';
 import ConnectedWorkspace from './ConnectedWorkspace';
 import PublicSite from './PublicSite';
-import {lazy,Suspense} from 'react';
 const Academy=lazy(()=>import('./Academy'));
 
 type Surface = 'public' | 'workspace' | 'academy';
@@ -49,6 +49,8 @@ export default function App() {
     };
   }, []);
 
+  useLayoutEffect(() => { if (surface === 'workspace') hidePublicLoader(); }, [surface]);
+
   function navigate(next: Surface) {
     const hash = next === 'public' ? '#/inicio' : '#/acceso';
     window.history.pushState({}, '', window.location.pathname + window.location.search + hash);
@@ -56,9 +58,9 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   }
 
-  if (surface === 'academy') return <Suspense fallback={<div role="status" style={{padding:32}}>Cargando ACOS Academy…</div>}><Academy/></Suspense>;
+  if (surface === 'academy') return <PublicEntrance key="academy" academy><Academy/></PublicEntrance>;
   if (surface === 'public') {
-    return <PublicSite openWorkspace={() => navigate('workspace')} />;
+    return <PublicEntrance key="public"><PublicSite openWorkspace={() => navigate('workspace')} /></PublicEntrance>;
   }
 
   return <ConnectedWorkspace onPublic={() => navigate('public')} />;
