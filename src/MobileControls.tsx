@@ -5,8 +5,8 @@ export function useMobileViewport(){
  useEffect(()=>{const m=window.matchMedia('(max-width:760px)');const update=()=>setMobile(m.matches);m.addEventListener('change',update);update();return()=>m.removeEventListener('change',update);},[]);
  return mobile;
 }
-export function GuidedForm({id,steps,onSubmit,onClose,busy,submitLabel}:{id:string;steps:{title:string;content:ReactNode}[];onSubmit:(e:FormEvent<HTMLFormElement>)=>void;onClose:()=>void;busy:boolean;submitLabel:string}){
- const mobile=useMobileViewport(),[step,setStep]=useState(0);
+export function GuidedForm({id,steps,onSubmit,onClose,busy,submitLabel,forceSteps=false}:{forceSteps?:boolean;id:string;steps:{title:string;content:ReactNode}[];onSubmit:(e:FormEvent<HTMLFormElement>)=>void;onClose:()=>void;busy:boolean;submitLabel:string}){
+ const mobile=useMobileViewport()||forceSteps,[step,setStep]=useState(0);
  const form=useRef<HTMLFormElement>(null);
  function move(next:number){setStep(next);requestAnimationFrame(()=>form.current?.scrollIntoView({block:'start',behavior:'smooth'}));}
  function validate(index:number){
@@ -17,7 +17,7 @@ export function GuidedForm({id,steps,onSubmit,onClose,busy,submitLabel}:{id:stri
   return false;
  }
  function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();if(busy)return;if(mobile&&step<steps.length-1){if(validate(step))move(step+1);return;}for(let i=0;i<steps.length;i++)if(!validate(i))return;onSubmit(e);}
- return <form id={id} ref={form} className="ed-form ed-expanded acos-guided-form" noValidate onSubmit={submit}>
+ return <form id={id} ref={form} className={"ed-form ed-expanded acos-guided-form "+(forceSteps?"acos-force-steps":"")} noValidate onSubmit={submit}>
   <div className="acos-form-progress ed-span"><div><strong>Paso {step+1} de {steps.length}</strong><span>{steps[step].title}</span></div><progress max={steps.length} value={step+1} aria-label="Progreso del formulario"/></div>
   {steps.map((item,i)=><div key={item.title} data-form-stage={i} className={'acos-form-stage '+(mobile&&i!==step?'acos-stage-hidden':'')}><h4 className="ed-span">{item.title}</h4>{item.content}</div>)}
   <small className="acos-draft-note ed-span">Borrador temporal. Guarda antes de cerrar sesión.</small>

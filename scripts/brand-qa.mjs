@@ -97,11 +97,11 @@ try {
     });
     await check(profile + ': mobile client wizard validates and preserves draft', async()=>{
       const nav=page.getByRole('navigation',{name:'Navegación móvil'});
-      await page.locator('.acos-mobile-quick').getByRole('button',{name:'Registrar cliente'}).click();
-      const form=page.locator('#acos-client-form');
+      await page.locator('.acos-mobile-quick').getByRole('button',{name:'Registrar cliente y póliza'}).click();
+      const form=page.locator('#acos-external-form');
       await form.waitFor();
       await form.getByRole('button',{name:'Continuar'}).click();
-      assert.equal(await form.locator('.acos-form-progress strong').innerText(),'Paso 1 de 2');
+      assert.equal(await form.locator('.acos-form-progress strong').innerText(),'Paso 1 de 5');
       await form.getByLabel('Nombre completo').fill('Cliente de prueba temporal');
       await form.getByRole('button',{name:'Continuar'}).click();
       await form.getByLabel(/Correo electrónico/).fill('prueba@example.invalid');
