@@ -40,8 +40,12 @@ try {
   await test('Academy public route and interactive quiz',async()=>{
     assert.equal(await page.locator('.aa-track').count(),3);assert.ok(await page.locator('.aa-lesson').count()>=6);
     const cards=await page.locator('.aa-track,.aa-lesson,.aa-exam-card').evaluateAll(nodes=>nodes.map(el=>({radius:getComputedStyle(el).borderRadius,photo:getComputedStyle(el,'::before').backgroundImage})));
-    for(const card of cards){assert.equal(card.radius,'0px');assert.match(card.photo,/\/images\/.*\.webp/);}
-    for(const asset of new Set(cards.map(c=>c.photo.match(/\/images\/[^"')]+/)[0])))assert.ok((await page.request.get(base+asset.slice(1))).ok(),'Missing card photo: '+asset);
+    for(const card of cards){assert.equal(card.radius,'0px');assert.match(card.photo,/https:\/\/images\.pexels\.com\/photos\/\d+\//);}
+    const initialPhotos=await page.locator('.aa-track,.aa-exam-card,.aa-lesson').evaluateAll(nodes=>nodes.map(el=>getComputedStyle(el,'::before').backgroundImage));
+    assert.ok(new Set(initialPhotos).size>=12,'Expected distinct photos for initial Academy cards');
+    const cue=page.getByRole('button',{name:'Explorar rutas de aprendizaje',exact:true});
+    assert.equal(await cue.locator('svg').count(),2);await cue.click();
+    await page.waitForFunction(()=>{const top=document.querySelector('#aa-rutas').getBoundingClientRect().top;return top>=0&&top<160;});
     await page.locator('.aa-exams button').first().click();
     const picks=[1,2,0,1,2];for(let i=0;i<picks.length;i++){await page.locator('.aa-options button').nth(picks[i]).click();await page.locator('.aa-quiz .aa-button').click();}
     assert.match(await page.locator('.aa-score strong').innerText(),/5\/5/);
