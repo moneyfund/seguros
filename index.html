@@ -26,10 +26,9 @@
     <div id="acos-public-loader" class="acos-loading-screen" hidden role="status" aria-label="Cargando ACOS">
       <div class="acos-loading-content">
         <div class="acos-loading-brand"><img src="/brand/acos-horizontal-negative.svg" alt="ACOS · Correduría de Seguros y Fianzas" width="1360" height="385" fetchpriority="high" /></div>
-        <p class="acos-loading-slogan">Aseguramos <em>tu futuro.</em></p>
         <span class="acos-loading-context" id="acos-loading-context">CORREDURÍA DE SEGUROS Y FIANZAS</span>
         <div class="acos-loading-track" aria-hidden="true"><i></i></div>
-        <span class="acos-loading-status" id="acos-loading-status">Cargando experiencia</span>
+        <p class="acos-loading-slogan">¡Aseguramos <em>tu futuro</em>!</p>
         <a class="acos-loading-retry" href="" onclick="location.reload();return false;">¿Tarda demasiado? Recargar</a>
       </div>
     </div>
@@ -42,7 +41,6 @@
         var loader = document.getElementById('acos-public-loader');
         if (academy) {
           document.getElementById('acos-loading-context').textContent = 'ACOS ACADEMY';
-          document.getElementById('acos-loading-status').textContent = 'Preparando tu aprendizaje';
           loader.setAttribute('aria-label', 'Cargando ACOS Academy');
         }
         loader.dataset.started = String(performance.now());

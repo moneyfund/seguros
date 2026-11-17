@@ -11,9 +11,8 @@ function showPublicLoader(academy:boolean){
  const started=alreadyVisible?Number(node.dataset.started)||performance.now():performance.now();
  node.dataset.started=String(started);
  node.classList.remove('acos-loading-exit');
- const context=document.getElementById('acos-loading-context'),status=document.getElementById('acos-loading-status');
+ const context=document.getElementById('acos-loading-context');
  if(context)context.textContent=academy?'ACOS ACADEMY':'CORREDURÍA DE SEGUROS Y FIANZAS';
- if(status)status.textContent=academy?'Preparando tu aprendizaje':'Cargando experiencia';
  node.setAttribute('aria-label',academy?'Cargando ACOS Academy':'Cargando ACOS');
  node.hidden=false;document.documentElement.classList.add('acos-loading-active');return started;
 }
