@@ -48,7 +48,22 @@ const sections: Record<Section, { label: string; icon: LucideIcon }> = {
 };
 const companyRoles: EnterpriseRole[] = ['direccion','ventas','operaciones','servicio','finanzas','supervision','cliente'];
 const loadingText = 'Cargando entorno seguro…';
-const readRoute = () => window.location.hash.replace(/^#\/?/, '').toLowerCase();
+const adminHost = window.location.hostname === 'admin.acosseguros.com';
+const portalHost = window.location.hostname === 'portal.acosseguros.com';
+const cleanHost = adminHost || portalHost;
+const departments: EnterpriseRole[] = ['ventas','operaciones','finanzas','servicio','supervision'];
+const readRoute = () => {
+  const hash = window.location.hash.replace(/^#\/?/, '').toLowerCase();
+  let path = window.location.pathname.replace(/^\/+|\/+$/g, '').toLowerCase();
+  if (window.location.hash.startsWith('#/')) {
+    path = hash;
+    if (cleanHost) window.history.replaceState(window.history.state, '', '/' + path + window.location.search);
+  }
+  if (/^(demo|dashboard|workspace)(\/|$)/.test(path)) return 'acceso';
+  if (path === 'admin' || path.startsWith('admin/')) return 'direccion';
+  return path || (adminHost ? 'direccion' : 'acceso');
+};
+
 const readable = (value: unknown): string =>
   typeof value === 'number' ? new Intl.NumberFormat('es-NI').format(value)
   : typeof value === 'string' ? value : '—';
@@ -58,7 +73,7 @@ function friendlyError(error: unknown) {
   if (message.includes('auth/email-already-in-use')) return 'Ese correo ya tiene una cuenta.';
   if (message.includes('auth/weak-password')) return 'La contraseña debe tener al menos 6 caracteres.';
   if (message.includes('auth/operation-not-allowed')) return 'Activa el método Correo/Contraseña en Firebase Authentication.';
-  if (message.includes('auth/unauthorized-domain')) return 'El dominio de Vercel debe autorizarse en Firebase Authentication.';
+  if (message.includes('auth/unauthorized-domain')) return 'Este dominio debe autorizarse en Firebase Authentication.';
   if (message.includes('permission-denied') || message.includes('storage/unauthorized')) return 'Acceso rechazado: verifica que publicaste las reglas y que tu perfil esté autorizado.';
   if (message.includes('storage/retry-limit-exceeded')) return 'La carga no pudo completarse. Revisa Storage y la conexión.';
   return message;
@@ -471,8 +486,23 @@ export default function ConnectedWorkspace({onPublic}:{onPublic:()=>void}){
  async function sendRequest(name:string,requestedRole:EnterpriseRole){
    const u=auth.currentUser;if(!u)return;await requestAccess(u,name,requestedRole);await sync(u);
  }
+ const authorizedRoles = grantedRoles.length ? grantedRoles : [role];
+ const requestedDepartment = route.split('/')[0] as EnterpriseRole;
+ const departmentBlocked = portalHost && departments.includes(requestedDepartment) && !admin && !authorizedRoles.includes(requestedDepartment);
+ const adminRequired = adminHost || route==='direccion' || route.startsWith('direccion/');
+ const clientBlocked = portalHost && role==='cliente';
+ useEffect(()=>{
+   if(stage!=='active'||!user||!portalHost||admin||clientBlocked)return;
+   if(['acceso','workspace','mi-panel'].includes(route)&&departments.includes(role)){
+     window.history.replaceState(window.history.state,'','/'+role+window.location.search);
+     setRoute(role);
+   }
+ },[stage,user,admin,clientBlocked,route,role]);
  if(route==='accesos')return <AccessFlowGuide onPublic={onPublic}/>;
+ if(stage==='active'&&user&&((adminRequired&&!admin)||departmentBlocked||clientBlocked)){
+   return <div className="live-auth-screen"><div className="live-auth-card"><BrandLogo variant="primary"/><div className="live-auth-title"><span>ACOS · ACCESO RESTRINGIDO</span><h1>Acceso no autorizado</h1><p>Tu cuenta no tiene los permisos requeridos para este entorno.</p></div><button className="btn btn-dark full" onClick={()=>void signOut(auth)}>Cambiar cuenta</button><button className="btn btn-soft full" onClick={()=>window.location.assign(clientBlocked?'https://clientes.acosseguros.com':'https://portal.acosseguros.com')}>Ir a mi espacio</button><button className="live-switch" onClick={onPublic}>Volver al sitio público</button></div></div>;
+ }
  return stage==='loading'?<div className="live-loading"><ShieldCheck size={40}/><span>{loadingText}</span></div>
  :stage==='active'&&user?<LivePanel key={user.uid} user={user} role={role} admin={admin} grantedRoles={grantedRoles} grantedSections={grantedSections} onPublic={onPublic} route={route}/>
- :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'} adminRouteBlocked={route.startsWith('direccion/')}/>{error&&<div className="live-fatal">{error}</div>}</>;
+ :<><AuthBox user={user} stage={stage==='active'?'signed-out':stage} onRetry={retry} onRequest={sendRequest} onBack={onPublic} registrationMode={route==='registro'} adminRouteBlocked={adminRequired}/>{error&&<div className="live-fatal">{error}</div>}</>;
 }
