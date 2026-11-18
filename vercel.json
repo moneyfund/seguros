@@ -10,5 +10,91 @@
       "maxDuration": 60,
       "excludeFiles": "{tests/**,public/**,dist/**,src/**,node_modules/**,scripts/**,brand-qa/**,public-site-qa/**}"
     }
-  }
+  },
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/portal",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/academy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/clientes",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/inicio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/acceso",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/accesos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/registro",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/mi-panel",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/workspace",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/laboratorio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ventas",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/operaciones",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/finanzas",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/servicio",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/supervision",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/demo",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/direccion",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/direccion/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/modulo/:path*",
+      "destination": "/index.html"
+    }
+  ]
 }
