@@ -35,9 +35,18 @@
     <script>
       (function () {
         var h = location.hash;
-        var academy = /^#\/academy\/?$/.test(h);
+        var host = location.hostname;
+        var path = location.pathname.replace(/\/$/, '');
+        var privateHost = /^(admin|portal|clientes)\.acosseguros\.com$/.test(host);
+        if (privateHost) {
+          var robots = document.createElement('meta');
+          robots.name = 'robots'; robots.content = 'noindex, nofollow';
+          document.head.appendChild(robots);
+          return;
+        }
+        var academy = host === 'academy.acosseguros.com' || path === '/academy' || /^#\/academy\/?$/.test(h);
         var publicPage = !h || h === '#' || /^#(?:\/inicio(?:\/.*)?|\/web(?:\/.*)?|inicio|servicios|filosofia|proceso|contacto)$/.test(h);
-        if (!academy && !publicPage) return;
+        if (!academy && (!publicPage || (path && path !== '/inicio'))) return;
         var loader = document.getElementById('acos-public-loader');
         if (academy) {
           document.getElementById('acos-loading-context').textContent = 'ACOS ACADEMY';
