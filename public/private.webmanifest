@@ -3,7 +3,7 @@
   "name": "ACOS Seguros · Mi espacio",
   "short_name": "ACOS",
   "lang": "es-NI",
-  "start_url": "/#/acceso",
+  "start_url": "/acceso",
   "scope": "/",
   "display": "standalone",
   "background_color": "#f5f6f6",
