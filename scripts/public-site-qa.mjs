@@ -151,13 +151,13 @@ try {
     await page.locator('.ap-nav-cta').click();
     await page.getByRole('button', { name: 'Copiar consulta' }).click();
     assert.match(await page.evaluate(() => navigator.clipboard.readText()), /Hola, ACOS/);
-    assert.match(await page.locator('[role=status]').innerText(), /Copiado/);
+    assert.match(await page.locator('dialog .ap-copy-status').innerText(), /Copiado/);
     await page.locator('#ap-interest').selectOption('hogar');
     assert.match(await page.locator('#ap-message').inputValue(), /hogar/);
-    assert.equal(await page.locator('[role=status]').innerText(), '');
+    assert.equal(await page.locator('dialog .ap-copy-status').innerText(), '');
     await page.evaluate(() => { navigator.clipboard.writeText = async () => { throw new Error('denied'); }; });
     await page.getByRole('button', { name: 'Copiar consulta' }).click();
-    assert.match(await page.locator('[role=status]').innerText(), /manualmente/);
+    assert.match(await page.locator('dialog .ap-copy-status').innerText(), /manualmente/);
     await page.keyboard.press('Escape');
     assert.equal(await page.evaluate(() => document.activeElement.classList.contains('ap-nav-cta')), true);
   });

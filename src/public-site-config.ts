@@ -2,7 +2,9 @@
 export const publicContact = { email: '', phone: '', whatsapp: '', address: '' };
 
 /** Areas of advice, not binding offers or promises of coverage from a particular insurer. */
-export const publicSolutions = [
+import { insuranceCatalog } from './insuranceCatalog';
+
+export const featuredSolutions = [
   {
     id: 'vida', name: 'Seguro de vida', shortName: 'Vida y familia', audience: 'personas',
     headline: 'Por los que más querés.',
@@ -53,4 +55,17 @@ export const publicSolutions = [
   },
 ] as const;
 
+export const catalogSolutions = insuranceCatalog.map(product => ({
+  id: `catalog-${product.id}` as const,
+  name: product.name,
+  shortName: product.name,
+  audience: product.audiences.length > 1 ? 'todos' : product.audiences[0],
+  headline: 'Protección según tus necesidades.',
+  description: product.summary,
+  summary: product.summary,
+  topics: product.topics,
+  image: '',
+  alt: '',
+}));
+export const publicSolutions = [...featuredSolutions, ...catalogSolutions];
 export type SolutionId = typeof publicSolutions[number]['id'];
