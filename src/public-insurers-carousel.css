@@ -30,28 +30,6 @@
   font-size: 12px;
   line-height: 1.9;
 }
-.acos-public .ap-insurers-motion-control {
-  display: inline-flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-width: 112px;
-  min-height: 43px;
-  padding: 11px 16px;
-  border: 1px solid var(--brand-line);
-  border-radius: 7px;
-  background: #ffffff;
-  color: var(--ap-navy);
-  font-size: 11px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color .2s ease, background .2s ease;
-}
-.acos-public .ap-insurers-motion-control:hover {
-  background: var(--brand-mist);
-  border-color: var(--brand-muted);
-}
 .acos-public .ap-insurers-viewport {
   position: relative;
   width: 100%;
@@ -66,7 +44,6 @@
   animation: ap-insurers-scroll 34s linear infinite;
   will-change: transform;
 }
-.acos-public .ap-insurers-track-paused { animation-play-state: paused; }
 .acos-public .ap-insurers-viewport:focus-visible {
   outline: 3px solid var(--brand-muted);
   outline-offset: -3px;
@@ -156,7 +133,6 @@
   .acos-public .ap-insurers-top { flex-direction: column; align-items: stretch; gap: 18px; margin-bottom: 26px; }
   .acos-public .ap-insurers h2 { font-size: 29px; letter-spacing: -1.1px; }
   .acos-public .ap-insurers-intro > p { font-size: 11px; }
-  .acos-public .ap-insurers-motion-control { align-self: flex-end; min-height: 39px; }
   .acos-public .ap-insurers-item { width: 174px; min-height: 115px; padding: 13px 10px; }
   .acos-public .ap-insurers-item .insurer-brand-mark { width: 125px; height: 57px; }
   .acos-public .ap-insurers-name { font-size: 10px; }
@@ -174,5 +150,4 @@
     will-change: auto;
     transform: none !important;
   }
-  .acos-public .ap-insurers-motion-control { display: none; }
 }

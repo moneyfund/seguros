@@ -139,6 +139,13 @@ try {
     assert.equal(await page.locator('.ap-commercial-business h2>span').evaluate(el=>getComputedStyle(el).color),logoGold);
 
   });
+  await test('Insurer carousel has no pause button and preserves reduced-motion support', async()=>{
+    assert.equal(await page.locator('.ap-insurers button').count(),0);
+    assert.equal(await page.locator('.ap-insurers-track').evaluate(el=>getComputedStyle(el).animationName),'none');
+    assert.ok(await page.locator('.ap-insurers-loop').first().locator('.ap-insurers-item').count()>0);
+    const motion=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference'});
+    try{const p=await motion.newPage();await p.goto(base+'#/inicio');await p.locator('#acos-public-loader').waitFor({state:'hidden'});const track=p.locator('.ap-insurers-track');await track.waitFor({state:'attached'});assert.equal(await track.evaluate(el=>getComputedStyle(el).animationName),'ap-insurers-scroll');await p.locator('.ap-insurers-viewport').hover();assert.equal(await track.evaluate(el=>getComputedStyle(el).animationPlayState),'paused');await p.mouse.move(1,1);assert.equal(await track.evaluate(el=>getComputedStyle(el).animationPlayState),'running');}finally{await motion.close();}
+  });
   await test('Only two redesigned commercial sections remain between insurers and FAQ', async()=>{
     const selectors=await page.locator('main').evaluate(el=>{const children=Array.from(el.children);const start=children.findIndex(n=>n.classList.contains('ap-insurers'));const end=children.findIndex(n=>n.classList.contains('ap-faq'));return {start,end,between:children.slice(start+1,end).map(n=>n.className)};});
     assert.ok(selectors.start>=0&&selectors.end>selectors.start);
