@@ -56,6 +56,8 @@ try {
       assert.equal(await page.locator('.sidebar').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
       assert.match(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily), /ACOS Poppins/);
       assert.equal(await page.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(), profile==='admin'?1:0);
+      assert.equal(await page.getByRole('button',{name:/Laboratorio operativo|Abrir centro operativo/}).count(),0);
+      assert.equal(await page.locator('.ins-live-entry').count(),0);
     });
     for (const width of [1440,1024,768,390,320]) {
       await page.setViewportSize({width,height:width<600?844:1000});
@@ -88,6 +90,7 @@ try {
       const sheet=page.getByRole('dialog',{name:'Más opciones'});
       await sheet.waitFor();
       assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),profile==='admin'?1:0);
+      assert.equal(await sheet.getByRole('button',{name:'Laboratorio operativo',exact:true}).count(),0);
       await page.screenshot({path:resolve(output,profile+'-mobile-menu.png'),animations:'disabled'});
       await audit(profile+'-mobile-menu');
       await sheet.getByRole('button',{name:'Cerrar',exact:true}).click();
