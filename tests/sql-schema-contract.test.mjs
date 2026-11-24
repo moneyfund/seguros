@@ -24,9 +24,9 @@ test('issuance schema keeps state revisions and attachment history', () => {
 });
 
 test('new database operations are admin-SDK only and never public', () => {
-  const definitions = privateOps.split(/\bquery\s+/).slice(1);
-  assert.equal(definitions.length, 2);
-  for (const definition of definitions) {
+  const queryLines = privateOps.split('\n').filter(line => /^query\s+[A-Za-z_][A-Za-z_0-9]*/.test(line));
+  assert.equal(queryLines.length, 2);
+  for (const definition of queryLines) {
     assert.match(definition, /@auth\(level:\s*NO_ACCESS\)/);
     assert.doesNotMatch(definition, /@auth\(level:\s*(PUBLIC|USER|USER_ANON)\)/);
   }
