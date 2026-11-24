@@ -60,13 +60,15 @@ try {
     const loadingContext=await browser.newContext({viewport:{width:1280,height:720},reducedMotion:'no-preference'});
     try{const p=await loadingContext.newPage();await p.route('**/assets/*.js',async route=>{await new Promise(r=>setTimeout(r,650));await route.continue();});
       await p.goto(base+'#/inicio',{waitUntil:'commit'});const loader=p.locator('#acos-public-loader');await loader.waitFor({state:'visible'});
+      assert.equal(await loader.locator('#acos-loading-context').isVisible(),false);
+      assert.doesNotMatch(await loader.innerText(),/CORREDURÍA DE SEGUROS Y FIANZAS/);
       assert.equal(await loader.locator('.acos-loading-atmosphere,.acos-loading-divider').count(),0);assert.match(await loader.innerText(),/¡Aseguramos tu futuro!/);assert.equal(await loader.locator('.acos-loading-status').count(),0);assert.match(await loader.locator('.acos-loading-slogan').evaluate(el=>getComputedStyle(el).fontFamily),/ACOS Loading Serif/);assert.equal(await loader.locator('.acos-loading-slogan').evaluate(el=>el.previousElementSibling.classList.contains('acos-loading-track')),true);assert.match(await loader.locator('img').getAttribute('src'),/acos-horizontal-negative\.svg/);
       await p.screenshot({path:resolve(output,'acos-loading.png')});
       await p.waitForFunction(()=>document.getElementById('acos-public-loader')?.classList.contains('acos-loading-exit'));
       const fade=await loader.evaluate(el=>({elapsed:performance.now()-Number(el.dataset.started),duration:getComputedStyle(el).transitionDuration,animation:getComputedStyle(el).animationName,animationDuration:getComputedStyle(el).animationDuration,visibility:getComputedStyle(el).visibility}));
       assert.ok(fade.elapsed>=1550,'Loader must hold for about 1.6 seconds before exit');assert.ok(/0\.9s/.test(fade.duration)||/0\.9s/.test(fade.animationDuration));assert.equal(fade.visibility,'visible');if(fade.animation==='acos-symbol-aperture')assert.match(fade.animationDuration,/0\.9s/);
       await p.waitForFunction(()=>document.getElementById('acos-public-loader')?.hidden===true);
-      await p.locator('.ap-academy-link').first().click();await loader.waitFor({state:'visible'});assert.match(await loader.innerText(),/ACOS ACADEMY/);await loader.waitFor({state:'hidden'});
+      await p.locator('.ap-academy-link').first().click();await loader.waitFor({state:'visible'});assert.match(await loader.innerText(),/ACOS ACADEMY/);assert.equal(await loader.locator('#acos-loading-context').isVisible(),true);await loader.waitFor({state:'hidden'});
       await p.getByRole('link',{name:'Rutas',exact:true}).click();assert.equal(await loader.isVisible(),false);
       await p.goto(base+'#/acceso',{waitUntil:'commit'});await p.locator('#root').waitFor({state:'attached'});assert.equal(await loader.isVisible(),false);
     }finally{await loadingContext.close();}

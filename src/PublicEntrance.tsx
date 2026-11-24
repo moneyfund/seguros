@@ -12,7 +12,7 @@ function showPublicLoader(academy:boolean){
  node.dataset.started=String(started);
  node.classList.remove('acos-loading-exit');
  const context=document.getElementById('acos-loading-context');
- if(context)context.textContent=academy?'ACOS ACADEMY':'CORREDURÍA DE SEGUROS Y FIANZAS';
+ if(context){context.textContent=academy?'ACOS ACADEMY':'';context.hidden=!academy;}
  node.setAttribute('aria-label',academy?'Cargando ACOS Academy':'Cargando ACOS');
  node.hidden=false;document.documentElement.classList.add('acos-loading-active');return started;
 }
