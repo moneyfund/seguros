@@ -1,8 +1,9 @@
+import {moveToTrash} from './enterpriseTrash';
 import {useState,type FormEvent} from 'react';
 import type {User} from 'firebase/auth';
 import {AlertTriangle,CheckCircle2,FileText,Pencil,Trash2,UserRound} from 'lucide-react';
 import {GuidedForm} from './MobileControls';
-import {emptyProfile,emptyVehicle,registerExternalPolicy,adminUpdateCustomer,adminUpdatePolicy,adminArchive,adminRemoveAttachment,type Customer,type RequestRecord,type PolicyDetails,type Slot} from './enterpriseTrial';
+import {emptyProfile,emptyVehicle,registerExternalPolicy,adminUpdateCustomer,adminUpdatePolicy,adminRemoveAttachment,type Customer,type RequestRecord,type PolicyDetails,type Slot} from './enterpriseTrial';
 import {nicaraguanInsurers} from './insurers';
 import {localToday,policyValidity} from './operationMath';
 import type {LiveRecord} from './backend';
@@ -36,10 +37,10 @@ export function AdminEditor({user,customer,record,onClose,onDone}:{user:User;cus
  async function submit(e:FormEvent){e.preventDefault();if(busy)return;setBusy(true);setError('');try{if(customer)await adminUpdateCustomer(user,customer,c,reason);else if(record)await adminUpdatePolicy(user,record,policyData(p),reason);onDone();}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
  return <div className="acos-registry"><h3>Corrección administrativa</h3>{error&&<p role="alert" className="live-error">{error}</p>}<GuidedForm id="acos-admin-edit" forceSteps busy={busy} onSubmit={e=>void submit(e)} onClose={onClose} submitLabel="Guardar corrección" steps={[...(customer?[{title:'Datos personales',content:personalFields(c,setC)},{title:'Contacto y domicilio',content:contactFields(c,setC)}]:[{title:'Vehículo',content:vehicleFields(p,setP)},{title:'Aseguradora y póliza',content:policyFields(p,setP)}]),{title:'Motivo de corrección',content:<label className="ed-span">Motivo *<textarea required minLength={3} maxLength={500} value={reason} onChange={e=>setReason(e.target.value)}/></label>}]}/></div>;
 }
-export function ArchiveAction({user,kind,id,archived=false,label,blocked=false}:{user:User;kind:'enterpriseClients'|'enterpriseIssuance';id:string;archived?:boolean;label:string;blocked?:boolean}){
+export function ArchiveAction({user,kind,id,label,blocked=false}:{user:User;kind:'enterpriseClients'|'enterpriseIssuance';id:string;label:string;blocked?:boolean}){
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
- async function run(){if(busy)return;const reason=window.prompt((archived?'Restaurar ':'Eliminar de la cartera ')+label+'. Indica el motivo:');if(reason===null)return;if(!window.confirm(archived?'¿Restaurar el registro?':'¿Retirar este registro de la cartera? Se conservará el historial.'))return;setBusy(true);setError('');try{await adminArchive(user,kind,id,reason, !archived);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
- return <div className="acos-admin-action"><button type="button" className="btn btn-soft acos-danger" disabled={busy||blocked} title={blocked?'Retira primero las pólizas asociadas':undefined} onClick={()=>void run()}><Trash2 size={15}/>{busy?'Guardando…':archived?'Restaurar':'Eliminar de cartera'}</button>{blocked&&<small>Retira primero las pólizas asociadas.</small>}{error&&<small className="ed-upload-error" role="alert">{error}</small>}</div>;
+ async function run(){if(busy)return;const reason=window.prompt('Enviar a papelera: '+label+'. Indica el motivo (sin datos personales):');if(reason===null)return;if(!window.confirm('¿Enviar este registro a la papelera administrativa? Podrás restaurarlo más adelante.'))return;setBusy(true);setError('');try{await moveToTrash(user,kind,id,reason);}catch(e){setError(e instanceof Error?e.message:String(e));}finally{setBusy(false);}}
+ return <div className="acos-admin-action"><button type="button" className="btn btn-soft acos-danger" disabled={busy||blocked} title={blocked?'Retira primero las pólizas asociadas':undefined} onClick={()=>void run()}><Trash2 size={15}/>{busy?'Guardando…':'Enviar a papelera'}</button>{blocked&&<small>Retira primero las pólizas asociadas.</small>}{error&&<small className="ed-upload-error" role="alert">{error}</small>}</div>;
 }
 export function DeleteAttachmentAction({user,record,slot}:{user:User;record:RequestRecord;slot:Slot|'policy'}){
  const [busy,setBusy]=useState(false),[error,setError]=useState('');
