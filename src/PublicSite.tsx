@@ -317,6 +317,16 @@ export default function PublicSite({ catalogPage=false }: { catalogPage?:boolean
         <section id="inicio" data-nav="inicio" className="ap-hero" tabIndex={-1} aria-labelledby="ap-hero-title">
           <img className="ap-hero-photo" src="/images/familia-hero.webp" alt="Una familia compartiendo un momento juntos al aire libre." width="1400" height="933" fetchPriority="high" />
           <div className="ap-hero-shade" />
+          <div className="ap-hero-atmosphere" aria-hidden="true">
+            <div className="ap-hero-light" />
+            <div className="ap-hero-orbits">
+              <i className="ap-hero-orbit ap-hero-orbit-outer"/>
+              <i className="ap-hero-orbit ap-hero-orbit-inner"/>
+              <span className="ap-hero-satellite ap-hero-satellite-shield"><ShieldCheck size={29} strokeWidth={1.45}/></span>
+              <span className="ap-hero-satellite ap-hero-satellite-home"><House size={23} strokeWidth={1.45}/></span>
+              <span className="ap-hero-satellite ap-hero-satellite-health"><HeartPulse size={23} strokeWidth={1.45}/></span>
+            </div>
+          </div>
           <div className="ap-container ap-hero-content">
             <span className="ap-eyebrow ap-light-eyebrow"><span /> TUS PLANES MERECEN PROTECCIÓN</span>
             <h1 id="ap-hero-title">Aseguramos<br /><span>tu futuro.</span></h1>

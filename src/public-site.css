@@ -72,10 +72,15 @@
 .acos-public .ap-shortcut-intro{display:flex;flex-direction:column;justify-content:center;padding:24px 28px;background:var(--brand-mist)}
 .acos-public .ap-shortcut-intro>span{font-size:8px;font-weight:600;letter-spacing:1px;color:var(--brand-slate);margin-bottom:7px}
 .acos-public .ap-shortcut-intro>strong{font-size:20px;line-height:1.25;letter-spacing:-.6px;font-weight:600}
-.acos-public .ap-shortcuts>button{position:relative;background:white;border:0;border-left:1px solid var(--brand-mist);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:17px 9px;color:var(--ap-navy);transition:background .2s}
+.acos-public .ap-shortcuts>button{position:relative;background:white;border:0;border-left:1px solid var(--brand-mist);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:17px 9px;color:var(--ap-navy);transition:background-color .25s ease,color .25s ease,border-color .25s ease}
 .acos-public .ap-shortcuts>button>span{font-size:11px;font-weight:500}
 .acos-public .ap-shortcuts>button>svg:last-child{position:absolute;right:12px;top:13px;opacity:0;transform:translate(-3px,3px);transition:opacity .2s,transform .2s}
-.acos-public .ap-shortcuts>button:hover,.acos-public .ap-shortcuts>button:focus-visible{background:var(--brand-mist)}
+/* The entire shortcut takes the exact gold of the ACOS mark. */
+@media(hover:hover) and (pointer:fine){
+ .acos-public .ap-shortcuts>button:hover{background:var(--brand-logo-gold);color:var(--brand-navy);border-left-color:var(--brand-logo-gold)}
+}
+.acos-public .ap-shortcuts>button:focus-visible,.acos-public .ap-shortcuts>button:active{background:var(--brand-logo-gold);color:var(--brand-navy)}
+.acos-public .ap-shortcuts>button:focus-visible>svg:last-child{opacity:1;transform:translate(0)}
 .acos-public .ap-shortcuts>button:hover>svg:last-child{opacity:1;transform:translate(0)}
 
 /* An asymmetric catalogue. */
@@ -610,3 +615,25 @@
 @media(max-width:1050px){.acos-public .ap-commercial-business-panel{grid-template-columns:1.2fr .8fr}.acos-public .ap-commercial-business-caption{margin:20px}.acos-public .ap-commercial-business-copy{padding:35px}.acos-public .ap-commercial-advice-visual{min-height:430px}}
 @media(max-width:760px){.acos-public .ap-commercial-business{padding-block:35px 8px}.acos-public .ap-commercial-business-panel{display:flex;flex-direction:column;min-height:0}.acos-public .ap-commercial-business-photo{position:relative;inset:auto;height:220px;order:0;flex:none}.acos-public .ap-commercial-business-panel:after{display:none}.acos-public .ap-commercial-business-copy{order:2;align-self:stretch;padding:27px}.acos-public .ap-commercial-business-caption{display:none}.acos-public .ap-commercial-business h2{font-size:35px}.acos-public .ap-commercial-business-categories{gap:14px}.acos-public .ap-commercial-advice{padding-block:40px}.acos-public .ap-commercial-advice-layout{grid-template-columns:1fr;gap:22px}.acos-public .ap-commercial-advice-visual{height:250px;min-height:0}.acos-public .ap-commercial-advice-copy{padding-block:0}.acos-public .ap-commercial-advice h2{font-size:35px}.acos-public .ap-commercial-advice-mark{bottom:16px;left:18px}}
 @media(max-width:400px){.acos-public .ap-commercial-business-copy{padding:23px 19px}.acos-public .ap-commercial-business-photo{height:188px}.acos-public .ap-commercial-business-categories span{font-size:10px}.acos-public .ap-commercial-business-copy .ap-button{width:100%;font-size:11px;padding:12px 14px}.acos-public .ap-commercial-advice-visual{height:200px}.acos-public .ap-commercial-advice .ap-button{width:100%}.acos-public .ap-commercial-advice-copy>p,.acos-public .ap-commercial-business-copy>p{font-size:12px}}
+
+/* Public hero — Academy-inspired orbital motion, with the family photograph
+   kept visible and decorative elements isolated from links and text. */
+.acos-public .ap-hero{isolation:isolate}
+.acos-public .ap-hero-atmosphere{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.acos-public .ap-hero-content,.acos-public .ap-hero-caption{z-index:2}
+.acos-public .ap-hero-light{position:absolute;inset:-25%;background:radial-gradient(ellipse at 78% 22%,#4385bb25,transparent 34%);animation:ap-hero-breathe 9s ease-in-out infinite alternate}
+.acos-public .ap-hero-orbits{position:absolute;right:1%;top:8%;width:clamp(180px,22vw,360px);aspect-ratio:1;display:grid;place-items:center}
+.acos-public .ap-hero-orbit{position:absolute;inset:7%;border:1px solid rgb(201 156 49 / .30);border-radius:50%;transform:rotate(-24deg) scaleY(.74)}
+.acos-public .ap-hero-orbit-inner{inset:18%;border-color:rgb(170 210 240 / .26);transform:rotate(49deg) scaleY(.82)}
+.acos-public .ap-hero-orbit-outer{border-style:dashed;animation:ap-hero-orbit 32s linear infinite}
+.acos-public .ap-hero-satellite{position:absolute;display:grid;place-items:center;width:48px;height:48px;color:var(--brand-logo-gold);background:linear-gradient(145deg,#164b70dd,#001929ee);border:1px solid rgb(201 156 49 / .48);border-radius:12px;box-shadow:0 8px 24px #00192966,inset 0 0 14px #5b9ac41c;animation:ap-hero-float 7s ease-in-out infinite}
+.acos-public .ap-hero-satellite-shield{top:12%;right:19%;width:62px;height:62px}
+.acos-public .ap-hero-satellite-home{left:10%;top:49%;animation-delay:-2s}
+.acos-public .ap-hero-satellite-health{bottom:8%;right:12%;animation-delay:-4s}
+@keyframes ap-hero-breathe{from{opacity:.55;transform:translate3d(-2%,0,0)}to{opacity:1;transform:translate3d(2%,3%,0)}}
+@keyframes ap-hero-orbit{from{transform:rotate(-24deg) scaleY(.74)}to{transform:rotate(336deg) scaleY(.74)}}
+@keyframes ap-hero-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-11px)}}
+@media(max-width:1180px){.acos-public .ap-hero-orbits{right:-2%;width:180px;top:7%}.acos-public .ap-hero-satellite{width:38px;height:38px;border-radius:9px}.acos-public .ap-hero-satellite-shield{width:48px;height:48px}.acos-public .ap-hero-satellite svg{width:20px;height:20px}}
+@media(max-width:900px){.acos-public .ap-hero-orbits{right:0;top:6%;width:145px;opacity:.8}.acos-public .ap-hero-satellite-home{display:none}}
+@media(max-width:640px){.acos-public .ap-hero-orbits{top:12px;right:-12px;width:116px;opacity:.85}.acos-public .ap-hero-orbit{inset:4%}.acos-public .ap-hero-orbit-inner{display:none}.acos-public .ap-hero-satellite-shield{width:40px;height:40px;right:19%;top:16%}.acos-public .ap-hero-satellite-health{display:none}.acos-public .ap-hero-light{background:radial-gradient(ellipse at 80% 13%,#4385bb20,transparent 28%)}}
+@media(prefers-reduced-motion:reduce){.acos-public .ap-hero-atmosphere *{animation:none!important;transition:none!important}.acos-public .ap-shortcuts>button{transition:none!important}}
