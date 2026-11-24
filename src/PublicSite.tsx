@@ -21,13 +21,6 @@ const navigation = [
   { id: 'contacto', label: 'Contacto' },
 ];
 const icons: Record<string, typeof ShieldCheck> = { vida: UsersRound, vehiculos: CarFront, salud: HeartPulse, hogar: House, empresas: BriefcaseBusiness, asesoria: HeartHandshake, soa: ShieldCheck, viajes: Plane, accidentes: HeartPulse, robos: LockKeyhole, agricola: Tractor, 'gastos-medicos': Stethoscope, 'micro-seguro': BriefcaseBusiness, maquinarias: Wrench, transportes: Truck, do: Building2, eo: Scale, incendios: Flame, responsabilidad: ShieldCheck, contratista: HardHat, construccion: HardHat };
-const processSteps = [
-  ['Te escuchamos', 'Contanos qué necesitás proteger y qué es importante para vos.'],
-  ['Analizamos', 'Revisamos tu situación y los riesgos que debés considerar.'],
-  ['Te orientamos', 'Exploramos alternativas y explicamos sus condiciones.'],
-  ['Te acompañamos', 'Te guiamos con los requisitos y la gestión de tu seguro.'],
-  ['Seguimos con vos', 'Damos seguimiento a tus consultas y próximas gestiones.'],
-];
 const questions = [
   ['¿ACOS es una aseguradora?', 'ACOS es una empresa de asesoría y corretaje de seguros. Te orientamos sobre alternativas de protección y acompañamos tus gestiones. La evaluación, emisión y condiciones de cada póliza corresponden a la aseguradora.'],
   ['¿Qué necesito para solicitar asesoría?', 'Para empezar, basta con saber qué querés proteger: tu familia, salud, vehículo, hogar o negocio. Durante la asesoría se revisan tus necesidades y se indican los documentos que correspondan.'],
@@ -169,7 +162,7 @@ function FullInsuranceCatalog({onOpen}:{onOpen:(id:SolutionId)=>void}){
   </section>
   {(['personas','empresas'] as const).map(audience=>{
    const items=catalogSolutions.filter(item=>item.audiences.includes(audience));
-   return <section className="ap-section ap-catalog-segment" id={'catalogo-'+audience} key={audience} aria-labelledby={'ap-catalog-'+audience+'-title'}>
+   return <section className="ap-section ap-catalog-segment" id={'catalogo-'+audience} tabIndex={-1} key={audience} aria-labelledby={'ap-catalog-'+audience+'-title'}>
     <div className="ap-container">
      <div className="ap-section-heading"><div><span className="ap-eyebrow">{audience==='personas'?'PROTECCIÓN PERSONAL Y FAMILIAR':'PROTECCIÓN PARA TU NEGOCIO'}</span><h2 id={'ap-catalog-'+audience+'-title'}>Seguros para <span>{audience}.</span></h2></div><p>{audience==='personas'?'Cuidá lo que más importa en tu vida.':'Protegé tu actividad, tus bienes y tu equipo.'}</p></div>
      <div className="ap-product-grid ap-exact-catalog ap-catalog-grid">{items.map(item=><InsuranceCard key={item.id} item={item} audience={audience} onOpen={onOpen}/>)}</div>
@@ -201,7 +194,7 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
   const visibleSolutions = catalogSolutions.filter(item => item.audiences.includes(audience));
 
   useEffect(() => {
-    const sections = root.current?.querySelectorAll<HTMLElement>('section[data-nav]') || [];
+    const sections = root.current?.querySelectorAll<HTMLElement>('[data-nav]') || [];
     let frame: number | null = null;
     const update = () => {
       setScrolled(window.scrollY > 35);
@@ -230,7 +223,7 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
     const scrollToHash = () => {
       const isCatalog=/^#\/seguros(?:\/|$)/.test(window.location.hash);
       if(isCatalog!==catalogPage)return;
-      if(catalogPage){window.scrollTo({top:0,behavior:'instant'});document.getElementById('catalogo')?.focus({preventScroll:true});setMobile(false);return;}
+      if(catalogPage){const segment=window.location.hash.split('/')[2];const target=document.getElementById(segment==='empresas'||segment==='personas'?'catalogo-'+segment:'catalogo');if(segment==='empresas'||segment==='personas')target?.scrollIntoView({behavior:'instant',block:'start'});else window.scrollTo({top:0,behavior:'instant'});target?.focus({preventScroll:true});setMobile(false);return;}
       const legacy: Record<string, string> = { '#inicio': 'inicio', '#servicios': 'soluciones', '#filosofia': 'nosotros', '#proceso': 'proceso', '#contacto': 'contacto' };
       const id = legacy[window.location.hash] || window.location.hash.split('/')[2] || 'inicio';
       const target = document.getElementById(navigation.some(item => item.id === id) ? id : 'inicio');
@@ -368,40 +361,45 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
 
         <PublicInsurersCarousel />
 
-        <section className="ap-business" id="empresas" data-nav="empresas" tabIndex={-1} aria-labelledby="ap-business-title">
-          <div className="ap-business-image"><img src="/images/negocio.webp" alt="Área de atención de una cafetería, con iluminación cálida y mobiliario de madera." width="1000" height="667" loading="lazy" decoding="async" /><span>DETRÁS DE CADA NEGOCIO,<br /><strong>hay un gran esfuerzo.</strong></span></div>
-          <div className="ap-business-copy">
-            <span className="ap-eyebrow ap-light-eyebrow">SEGUROS PARA EMPRESAS</span>
-            <h2 id="ap-business-title">Vos hacés<br />crecer tu negocio.<br /><span>Juntos, lo cuidamos.</span></h2>
-            <p>Tu equipo, tus activos y tu operación. Te ayudamos a identificar lo que necesitás proteger para seguir construyendo.</p>
-            <div className="ap-business-needs"><span><BriefcaseBusiness size={19} /> Tu operación</span><span><House size={19} /> Tus activos</span><span><UsersRound size={19} /> Tu equipo</span></div>
-            <button className="ap-button ap-button-gold" onClick={() => consult('empresas')}>Asesoría para mi empresa <ArrowUpRight size={18} /></button>
-          </div>
-        </section>
-
-        <section className="ap-section ap-about" id="nosotros" data-nav="nosotros" tabIndex={-1} aria-labelledby="ap-about-title">
-          <div className="ap-container ap-about-layout" data-reveal>
-            <div className="ap-about-visual"><img src="/images/asesoria.webp" alt="Revisión de documentos y alternativas durante una asesoría." width="1000" height="667" loading="lazy" decoding="async" /><div className="ap-about-label"><HeartHandshake size={31} strokeWidth={1.4} /><div><strong>Entender antes de elegir.</strong><span>Ese es nuestro punto de partida.</span></div></div></div>
-            <div className="ap-about-copy"><span className="ap-eyebrow">CONOCÉ ACOS</span><h2 id="ap-about-title">Los seguros son<br />importantes.<br /><span>Las personas, más.</span></h2><p>Somos una empresa de asesoría y corretaje de seguros en Nicaragua. Escuchamos lo que necesitás, te explicamos tus opciones y te acompañamos en cada gestión.</p>
-              <ul className="ap-about-benefits"><li><Check size={17} /><div><strong>Asesoría que parte de vos</strong><span>Tu situación y tus prioridades van primero.</span></div></li><li><Check size={17} /><div><strong>Información que se entiende</strong><span>Alcances y condiciones, con claridad.</span></div></li><li><Check size={17} /><div><strong>Acompañamiento que continúa</strong><span>Atención, documentos y seguimiento.</span></div></li></ul>
-              <a className="ap-text-link" href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Así trabajamos con vos <ArrowRight size={18} /></a>
+        <section className="ap-commercial-business" id="empresas" data-nav="empresas" tabIndex={-1} aria-labelledby="ap-business-title">
+          <div className="ap-container">
+            <div className="ap-commercial-business-panel">
+              <div className="ap-commercial-business-photo" aria-hidden="true">
+                <img src="/images/negocio.webp" alt="" width="1000" height="667" loading="lazy" decoding="async"/>
+              </div>
+              <div className="ap-commercial-business-copy">
+                <span className="ap-eyebrow">ACOS PARA EMPRESAS</span>
+                <h2 id="ap-business-title">Tu negocio tiene futuro.<br/><span>Protegelo.</span></h2>
+                <p>Desde tu primer local hasta grandes proyectos. Encontrá alternativas de seguros que respondan a los riesgos de tu actividad.</p>
+                <div className="ap-commercial-business-categories" aria-label="Áreas de protección">
+                  <span><BriefcaseBusiness size={19} strokeWidth={1.8}/> Operación</span>
+                  <span><House size={19} strokeWidth={1.8}/> Patrimonio</span>
+                  <span><UsersRound size={19} strokeWidth={1.8}/> Equipo</span>
+                </div>
+                <a className="ap-button ap-button-gold" href="#/seguros/empresas">Explorar seguros empresariales <ArrowUpRight size={19}/></a>
+                <button type="button" className="ap-commercial-contact-link" onClick={()=>consult('empresas')}>Hablar con un asesor <ArrowRight size={17}/></button>
+              </div>
+              <div className="ap-commercial-business-caption"><span>ACOS / NEGOCIOS</span><strong>Que nada detenga<br/>lo que estás construyendo.</strong></div>
             </div>
           </div>
         </section>
 
-        <section className="ap-process ap-section" id="proceso" data-nav="proceso" tabIndex={-1} aria-labelledby="ap-process-title">
-          <div className="ap-container">
-            <div className="ap-section-heading"><div><span className="ap-eyebrow">DE LA PRIMERA CONSULTA AL SEGUIMIENTO</span><h2 id="ap-process-title">El siguiente paso,<br /><span>lo damos con vos.</span></h2></div><button className="ap-text-link" onClick={() => consult()}>Empezá con una consulta <ArrowRight size={18} /></button></div>
-            <ol className="ap-journey" data-reveal>{processSteps.map(([title, description], index) => <li key={title}><div className="ap-step-number"><span>0{index + 1}</span><ArrowRight size={17} /></div><h3>{title}</h3><p>{description}</p></li>)}</ol>
-          </div>
-        </section>
-
-        <section className="ap-digital" aria-labelledby="ap-digital-title">
-          <div className="ap-container ap-digital-layout">
-            <div className="ap-digital-copy"><span className="ap-eyebrow">ACOS DIGITAL <span className="ap-development">EN DESARROLLO</span></span><h2 id="ap-digital-title">Una atención cercana.<br /><span>Cada vez más conectada.</span></h2><p>Estamos desarrollando nuestra plataforma para organizar documentos, expedientes y seguimiento. Más orden en cada gestión, con las personas siempre en el centro.</p><small>El portal de clientes aún no está disponible.</small></div>
-            <div className="ap-workspace-preview" aria-label="Vista ilustrativa de la plataforma de ACOS en desarrollo. Sin datos de clientes.">
-              <div className="ap-workspace-top"><span><ShieldCheck size={18} /> ACOS <b>/ OPERACIONES</b></span><LockKeyhole size={15} /></div>
-              <div className="ap-workspace-body"><span className="ap-preview-label">ORGANIZACIÓN Y SEGUIMIENTO</span><div className="ap-workspace-items"><span><FolderOpen size={25} /><strong>Expedientes</strong></span><span><FileText size={25} /><strong>Documentos</strong></span><span><ClipboardCheck size={25} /><strong>Gestiones</strong></span></div><div className="ap-workspace-flow"><span>Solicitud</span><ArrowRight size={14} /><span>Revisión</span><ArrowRight size={14} /><span>Seguimiento</span></div><small>VISTA ILUSTRATIVA · SIN DATOS DE CLIENTES</small></div>
+        <section className="ap-commercial-advice ap-section" id="nosotros" data-nav="nosotros" tabIndex={-1} aria-labelledby="ap-about-title">
+          <div className="ap-container ap-commercial-advice-layout">
+            <div className="ap-commercial-advice-visual">
+              <img src="/images/asesoria.webp" alt="Personas revisando documentación en una reunión de asesoría." width="1000" height="667" loading="lazy" decoding="async"/>
+              <div className="ap-commercial-advice-mark"><HeartHandshake size={29} strokeWidth={1.7}/><span>ACOS A TU LADO</span></div>
+            </div>
+            <div className="ap-commercial-advice-copy">
+              <span className="ap-eyebrow">TU ALIADO EN SEGUROS</span>
+              <h2 id="ap-about-title">Elegí con confianza.<br/><span>Nosotros te guiamos.</span></h2>
+              <p>No se trata solo de contratar un seguro. En ACOS te ayudamos a entender tus alternativas y a tomar decisiones de protección con información clara.</p>
+              <div className="ap-commercial-steps" id="proceso" data-nav="proceso" tabIndex={-1} aria-label="Cómo trabajamos">
+                <div><span className="ap-commercial-step-icon"><MessageCircle size={20} strokeWidth={1.7}/></span><div><h3>Te escuchamos</h3><p>Entendemos qué necesitás proteger.</p></div></div>
+                <div><span className="ap-commercial-step-icon"><ShieldCheck size={20} strokeWidth={1.7}/></span><div><h3>Te orientamos</h3><p>Revisamos alternativas y condiciones.</p></div></div>
+                <div><span className="ap-commercial-step-icon"><HeartHandshake size={20} strokeWidth={1.7}/></span><div><h3>Te acompañamos</h3><p>Apoyo en tus documentos y gestiones.</p></div></div>
+              </div>
+              <button className="ap-button" onClick={()=>consult()}>Solicitar asesoría <ArrowUpRight size={18}/></button>
             </div>
           </div>
         </section>
