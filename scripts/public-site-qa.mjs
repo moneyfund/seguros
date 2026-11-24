@@ -104,6 +104,18 @@ try {
     assert.equal(await page.locator('.ap-shortcuts>button').count(), 6);
     assert.equal(await page.locator('a[href^="tel:"],a[href^="mailto:"],a[href*="wa.me"]').count(), 0);
   });
+  await test('Gold shortcut hover is temporary and hero motion respects accessibility',async()=>{
+    const shortcut=page.locator('.ap-shortcuts>button').first();
+    await shortcut.hover();
+    assert.equal(await shortcut.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(201, 156, 49)');
+    assert.equal(await shortcut.evaluate(el=>getComputedStyle(el).color),'rgb(0, 25, 41)');
+    await page.mouse.move(1,1);
+    assert.equal(await shortcut.evaluate(el=>getComputedStyle(el).backgroundColor),'rgb(255, 255, 255)');
+    assert.equal(await page.locator('.ap-hero-atmosphere').getAttribute('aria-hidden'),'true');
+    assert.equal(await page.locator('.ap-hero-satellite-shield').evaluate(el=>getComputedStyle(el).animationName),'none');
+    const motion=await browser.newContext({viewport:{width:1440,height:1000},reducedMotion:'no-preference'});
+    try{const p=await motion.newPage();await p.goto(base+'#/inicio');await p.locator('.ap-hero-atmosphere').waitFor();await p.locator('#acos-public-loader').waitFor({state:'hidden'});assert.equal(await p.locator('.ap-hero-satellite-shield').evaluate(el=>getComputedStyle(el).animationName),'ap-hero-float');assert.equal(await p.locator('.ap-hero-orbit-outer').evaluate(el=>getComputedStyle(el).animationName),'ap-hero-orbit');assert.equal(await p.locator('.ap-hero-atmosphere').evaluate(el=>getComputedStyle(el).pointerEvents),'none');}finally{await motion.close();}
+  });
   await test('Official artwork, local fonts and navy brand identity are present', async () => {
     assert.match(await page.locator('.ap-brand img').getAttribute('src'), /acos-horizontal-negative\.svg$/);
     assert.match(await page.locator('.ap-footer-brand img').getAttribute('src'), /acos-primary\.svg$/);
