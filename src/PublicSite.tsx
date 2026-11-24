@@ -174,7 +174,7 @@ function FullInsuranceCatalog({onOpen}:{onOpen:(id:SolutionId)=>void}){
 }
 
 /** Public content only: never reads operational stores, client records or authentication data. */
-export default function PublicSite({ openWorkspace, catalogPage=false }: { openWorkspace: () => void; catalogPage?:boolean }) {
+export default function PublicSite({ catalogPage=false }: { catalogPage?:boolean }) {
   const root = useRef<HTMLDivElement>(null);
   const menuButton = useRef<HTMLButtonElement>(null);
   const [mobile, setMobile] = useState(false);
@@ -298,9 +298,6 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
   return (
     <div className="acos-public" ref={root}>
       <a href="#ap-main" className="ap-skip" onClick={event => { event.preventDefault(); document.getElementById('ap-main')?.focus(); }}>Saltar al contenido</a>
-      <div className="ap-topbar">
-        <div className="ap-container"><span><MapPin size={13} /> Asesoría y corretaje de seguros en Nicaragua</span><button onClick={openWorkspace}><LockKeyhole size={13} /> Acceso empresarial <ArrowUpRight size={13} /></button></div>
-      </div>
       <header className={'ap-header' + (scrolled ? ' ap-header-scrolled' : '')}>
         <div className="ap-container ap-navbar">
           <a href="#/inicio" className="ap-brand" aria-label="ACOS, inicio" onClick={() => sectionClick('inicio')}>
@@ -311,7 +308,6 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
             {navigation.map(item => <a key={item.id} href={sectionHref(item.id)} aria-current={active === item.id ? 'location' : undefined} onClick={() => sectionClick(item.id)}>{item.label}</a>)}
             <a className="ap-academy-link" href={/^(www\.)?acosseguros\.com$/.test(window.location.hostname) ? 'https://academy.acosseguros.com' : '#/academy'} onClick={()=>setMobile(false)}>ACOS Academy</a>
             <button className="ap-button ap-nav-cta" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button>
-            <button className="ap-mobile-enterprise" onClick={openWorkspace}><LockKeyhole size={15} /> Acceso empresarial</button>
           </nav>
         </div>
       </header>
@@ -420,7 +416,7 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
             <div className="ap-footer-brand"><a href="#/inicio" aria-label="ACOS, volver al inicio" onClick={() => sectionClick('inicio')}><BrandLogo variant="primary" /></a><p>Correduría de seguros.<br />Aseguramos tu futuro.</p><span><MapPin size={14} /> Nicaragua</span></div>
             <div><h2>Conocé ACOS</h2><a href={sectionHref('nosotros')} onClick={() => sectionClick('nosotros')}>Nosotros</a><a href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Cómo trabajamos</a><a href={sectionHref('contacto')} onClick={() => sectionClick('contacto')}>Contacto</a><a href={/^(www\.)?acosseguros\.com$/.test(window.location.hostname) ? 'https://academy.acosseguros.com' : '#/academy'}>ACOS Academy</a><button onClick={() => setPrivacy(true)}>Aviso de privacidad</button></div>
             <div><h2>Nuestros seguros</h2><a href="#/seguros">Ver todos los seguros</a>{catalogSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
-            <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button><button className="ap-footer-access" onClick={openWorkspace}><LockKeyhole size={14} /> Acceso empresarial</button></div>
+            <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button></div>
           </div>
           <div className="ap-footer-bottom"><span>© {new Date().getFullYear()} ACOS. Todos los derechos reservados.</span><span>Diseño y desarrollo <strong>XARCON</strong></span><a href={catalogPage?"#/seguros":"#/inicio"} onClick={() => sectionClick(catalogPage?"soluciones":"inicio")}>Volver arriba <ArrowDown size={14} /></a></div>
         </div>
@@ -433,7 +429,7 @@ export default function PublicSite({ openWorkspace, catalogPage=false }: { openW
         <div className="ap-consultation"><label htmlFor="ap-interest">¿Qué te gustaría proteger?</label><select id="ap-interest" value={consultation} onChange={event => { setConsultation(event.target.value as SolutionId); setCopied('idle'); }}><option value="asesoria">Asesoría general</option><option value="empresas">Asesoría empresarial</option>{catalogSolutions.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><label htmlFor="ap-message">Tu mensaje inicial</label><textarea id="ap-message" value={message} readOnly rows={5} /><div className="ap-consultation-actions">{whatsapp && <a className="ap-button" href={'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">Continuar en WhatsApp <ArrowUpRight size={16} /></a>}{publicContact.email && <a className="ap-button" href={'mailto:' + publicContact.email + '?subject=' + encodeURIComponent('Consulta de seguros — ACOS') + '&body=' + encodeURIComponent(message)}>Escribir por correo <Mail size={16} /></a>}{publicContact.phone && <a className="ap-text-link" href={'tel:' + publicContact.phone.replace(/[^+\d]/g, '')}>Llamar a ACOS <Phone size={16} /></a>}<button className={hasChannel ? 'ap-text-link' : 'ap-button'} onClick={copyMessage}>{copied === 'done' ? 'Mensaje copiado' : 'Copiar consulta'}{copied === 'done' ? <Check size={16} /> : <Copy size={16} />}</button></div><p className="ap-copy-status" role="status">{copied === 'done' ? 'Copiado. Podés compartirlo por un canal que ya conozcás de ACOS.' : copied === 'error' ? 'No pudimos copiar automáticamente. Seleccioná el mensaje de arriba y copialo manualmente.' : ''}</p><p className="ap-dialog-note"><LockKeyhole size={14} />No se envía ni se guarda una solicitud desde esta ventana.</p></div>
       </Modal>}
       {privacy && <Modal title="Aviso de privacidad" description="Información sobre esta web pública y sus accesos." onClose={() => setPrivacy(false)}>
-        <div className="ap-privacy"><h3>Consultas desde esta página</h3><p>El asistente de consulta prepara un texto en tu navegador. No solicita datos personales, no almacena el mensaje en una base de datos y no registra una solicitud. Al copiar, el texto pasa al portapapeles de tu dispositivo.</p><h3>Canales externos</h3><p>Si se habilitan enlaces de correo, teléfono o WhatsApp, la comunicación continúa en ese servicio y está sujeta a sus condiciones de privacidad.</p><h3>Acceso empresarial</h3><p>El entorno privado tiene autenticación y permisos propios. Esta página no permite consultar expedientes ni información de clientes.</p><h3>Servicios técnicos</h3><p>La entrega del sitio puede implicar el procesamiento de datos técnicos, como la dirección IP y el navegador, por parte de los proveedores de alojamiento y de fuentes tipográficas.</p><h3>Información de seguros</h3><p>El contenido es orientativo. No constituye una cotización, confirmación de cobertura ni contrato de seguro. Las condiciones deben verificarse antes de contratar.</p></div>
+        <div className="ap-privacy"><h3>Consultas desde esta página</h3><p>El asistente de consulta prepara un texto en tu navegador. No solicita datos personales, no almacena el mensaje en una base de datos y no registra una solicitud. Al copiar, el texto pasa al portapapeles de tu dispositivo.</p><h3>Canales externos</h3><p>Si se habilitan enlaces de correo, teléfono o WhatsApp, la comunicación continúa en ese servicio y está sujeta a sus condiciones de privacidad.</p><h3>Protección de información</h3><p>Esta página no permite consultar expedientes ni información de clientes.</p><h3>Servicios técnicos</h3><p>La entrega del sitio puede implicar el procesamiento de datos técnicos, como la dirección IP y el navegador, por parte de los proveedores de alojamiento y de fuentes tipográficas.</p><h3>Información de seguros</h3><p>El contenido es orientativo. No constituye una cotización, confirmación de cobertura ni contrato de seguro. Las condiciones deben verificarse antes de contratar.</p></div>
       </Modal>}
     </div>
   );
