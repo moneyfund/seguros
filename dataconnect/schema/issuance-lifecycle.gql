@@ -1,0 +1,107 @@
+# ACOS · Real issuance lifecycle relational model v1 (2026-11-24)
+# Source of truth when Cloud SQL is provisioned; no test records are seeded.
+# Every relationship's company must be verified by privileged application code.
+
+type InsuredVehicle @table {
+  company: Company!
+  customer: Customer!
+  plate: String
+  vin: String
+  make: String
+  model: String
+  modelYear: Int
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Requirement catalogue can differ by insurer and insurance product.
+# Example documentKind keys: ID_FRONT, ID_BACK, REGISTRATION_CARD.
+# These are structural examples, not assumptions of insurer acceptance.
+type IssuanceDocumentRequirement @table @unique(fields: ["company", "insurer", "productKey", "documentKind"]) {
+  company: Company!
+  insurer: Insurer!
+  productKey: String!
+  documentKind: String!
+  label: String!
+  required: Boolean! @default(value: true)
+  active: Boolean! @default(value: true)
+}
+
+# Agent -> emissions -> agent: all changes must be transactional with
+# revision check + authorisation; statuses are validated in trusted code.
+type IssuanceRequest @table {
+  company: Company!
+  customer: Customer!
+  insurer: Insurer!
+  agent: CompanyMember!
+  vehicle: InsuredVehicle
+  assignedOperator: CompanyMember
+  productKey: String!
+  status: String! @default(value: "DRAFT")
+  notes: String
+  correctionReason: String
+  createdBy: AppUser!
+  createdAt: Timestamp! @default(expr: "request.time")
+  submittedAt: Timestamp
+  issuedAt: Timestamp
+  updatedAt: Timestamp! @default(expr: "request.time")
+  revision: Int! @default(value: 0)
+}
+
+# The single current attachment pointer per document type. A replacement
+# must create an IssuanceAttachmentVersion event in the same transaction.
+type IssuanceAttachment @table @unique(fields: ["request", "documentKind"]) {
+  company: Company!
+  request: IssuanceRequest!
+  documentKind: String!
+  document: ManagedDocument!
+  currentRevision: Int! @default(value: 1)
+  updatedBy: AppUser!
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Immutable attachment revision ledger; file blobs stay in private Storage.
+type IssuanceAttachmentVersion @table @unique(fields: ["request", "documentKind", "revision"]) {
+  company: Company!
+  request: IssuanceRequest!
+  documentKind: String!
+  revision: Int!
+  document: ManagedDocument!
+  changedBy: AppUser!
+  changeReason: String
+  changedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Append-only lifecycle events. Revision is unique per request to prevent
+# duplicate transition events under concurrent submissions.
+type IssuanceStatusEvent @table @unique(fields: ["request", "revision"]) {
+  company: Company!
+  request: IssuanceRequest!
+  revision: Int!
+  fromStatus: String!
+  toStatus: String!
+  actor: AppUser!
+  note: String
+  occurredAt: Timestamp! @default(expr: "request.time")
+}
+
+# InsurancePolicy is already present in schema.gql. Link a generated policy
+# only after a trusted issuance transition and issuer/number verification.
+type IssuancePolicyLink @table {
+  company: Company!
+  request: IssuanceRequest! @unique
+  policy: InsurancePolicy! @unique
+  linkedBy: AppUser!
+  linkedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Idempotent per-recipient operational notification. Not a sent email.
+type InboxNotification @table @unique(fields: ["company", "recipient", "deduplicationKey"]) {
+  company: Company!
+  recipient: AppUser!
+  issuanceRequest: IssuanceRequest
+  kind: String!
+  deduplicationKey: String!
+  createdAt: Timestamp! @default(expr: "request.time")
+  readAt: Timestamp
+}

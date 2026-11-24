@@ -1,0 +1,57 @@
+# Privileged operations for the future ACOS backend.
+# Firebase Admin SDK only. A publicly callable Vercel endpoint MUST verify
+# Firebase ID token, active membership, scope and tenant server-side.
+# NO_ACCESS is intentional: never relax these just to "make the UI work".
+
+query InternalMemberAccessSnapshot($companyId: UUID!, $firebaseUid: String!) @auth(level: NO_ACCESS) {
+  companyMembers(where: {
+    company: { id: { eq: $companyId } }
+    user: { firebaseUid: { eq: $firebaseUid } }
+  }) {
+    id active employeeCode
+    user { firebaseUid displayName email }
+    department { id code name }
+  }
+  memberDepartments(where: {
+    company: { id: { eq: $companyId } }
+    member: { user: { firebaseUid: { eq: $firebaseUid } } }
+  }) {
+    department { id code name }
+    departmentAdmin active
+  }
+  memberRoles(where: {
+    member: {
+      company: { id: { eq: $companyId } }
+      user: { firebaseUid: { eq: $firebaseUid } }
+    }
+  }) {
+    role { id key label }
+  }
+  memberPermissionOverrides(where: {
+    company: { id: { eq: $companyId } }
+    member: { user: { firebaseUid: { eq: $firebaseUid } } }
+  }) {
+    permission { key module action }
+    effect scope expiresAt
+    department { id code }
+  }
+  rolePermissions(where: {
+    role: { company: { id: { eq: $companyId } } }
+  }) {
+    role { id key }
+    permission { key module action }
+    scope
+  }
+}
+
+# The endpoint must intersect these rows with permitted department/agent
+# scope. This query must NEVER be made browser-accessible.
+query InternalIssuanceQueue($companyId: UUID!) @auth(level: NO_ACCESS) {
+  issuanceRequests(where: { company: { id: { eq: $companyId } } }) {
+    id productKey status revision createdAt updatedAt
+    customer { id fullName }
+    insurer { id name }
+    agent { id employeeCode }
+    assignedOperator { id employeeCode }
+  }
+}
