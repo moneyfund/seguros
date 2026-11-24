@@ -51,6 +51,8 @@ try {
     await ready();
     await check(profile + ': role-specific menu and official brand render', async () => {
       assert.equal(await page.locator('.acos-sidebar-brand img').getAttribute('src'), '/brand/acos-horizontal-negative.svg');
+      assert.equal(await page.locator('.sidebar .workspace-profile,.sidebar .workspace-title,.sidebar .live-environment,.sidebar .acos-sidebar-brand>span').count(),0);
+      assert.ok(await page.locator('.sidebar-nav button').count()>0);
       assert.equal(await page.locator('.sidebar').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
       assert.match(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily), /ACOS Poppins/);
       assert.equal(await page.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(), profile==='admin'?1:0);
