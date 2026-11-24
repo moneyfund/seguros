@@ -1,24 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {insuranceCatalog,catalogGroups,searchCatalog,productById} from '../src/insuranceCatalog.ts';
-test('22 commercial product types have unique keys, original labels and valid groups',()=>{
- assert.equal(insuranceCatalog.length,22);
- assert.equal(new Set(insuranceCatalog.map(p=>p.id)).size,22);
- assert.equal(new Set(insuranceCatalog.map(p=>p.name)).size,22);
- for(const p of insuranceCatalog){assert.ok(p.topics.length>=3);assert.ok(p.audiences.length);assert.ok(catalogGroups.some(g=>g.id===p.group));assert.ok(p.name.length<=100);}
+import {insuranceCatalog,searchCatalog,productById} from '../src/insuranceCatalog.ts';
+test('exact inventory from dedicated Advisers pages',()=>{
+ assert.equal(insuranceCatalog.length,19);
+ assert.equal(new Set(insuranceCatalog.map(p=>p.id)).size,19);
+ assert.deepEqual(searchCatalog('','personas').map(p=>p.name),['Seguro de vida','Seguro de salud','Seguro vehicular','Seguro hogar','SOA','Seguro de viajes','Accidentes personales']);
+ assert.deepEqual(searchCatalog('','empresas').map(p=>p.name),['Seguro vehicular','Seguro contra robos','Seguro agrícola','Seguro gastos médicos','Micro-Seguro','Seguro maquinarias','Seguro transportes','Seguro D&O','Seguro RC Profesional E&O','Seguro incendios y líneas aliadas','Responsabilidad civil','Seguro contratista','Seguro todo riesgo de construcción']);
+ assert.deepEqual(insuranceCatalog.filter(p=>p.audiences.length===2).map(p=>p.id),['AUTO']);
 });
-test('reference aliases resolve without duplicate products',()=>{
- for(const [q,id] of [['SOAT','VEHICLE_MANDATORY'],['daños propios','AUTO'],['CAR','CONSTRUCTION_CAR'],['EAR','ERECTION_EAR'],['TREC','EQUIPMENT_TREC'],['micro-seguro','SME'],['Vida Ley','LABOR_LIFE'],['SCTR','LABOR_RISK'],['D&O','DIRECTORS_DO'],['E&O','PROFESSIONAL_EO'],['cibernetico','CYBER'],['carta fianza','SURETY']]) assert.ok(searchCatalog(q).some(p=>p.id===id),q);
+test('search respects segment and accents, without extra products',()=>{
+ assert.equal(searchCatalog('agricola','personas').length,0);
+ assert.equal(searchCatalog('agricola','empresas')[0].id,'AGRICULTURE');
+ assert.equal(searchCatalog('cibernetico').length,0);
+ assert.equal(searchCatalog('soa')[0].id,'VEHICLE_MANDATORY');
 });
-test('audiences, category and search compose',()=>{
- assert.ok(searchCatalog('','personas').every(p=>p.audiences.includes('personas')));
- assert.ok(searchCatalog('','empresas').every(p=>p.audiences.includes('empresas')));
- assert.deepEqual(searchCatalog('montaje','empresas','ingenieria').map(p=>p.id),['ERECTION_EAR']);
- assert.equal(searchCatalog('montaje','personas','ingenieria').length,0);
- assert.equal(searchCatalog('producto inexistente').length,0);
-});
-test('only the existing mandatory vehicle workflow is enabled by catalog metadata',()=>{
+test('existing specialized issuance workflow is unchanged',()=>{
  assert.deepEqual(insuranceCatalog.filter(p=>p.flow==='vehicle-mandatory').map(p=>p.id),['VEHICLE_MANDATORY']);
- assert.equal(productById('VEHICLE_MANDATORY').name,'Seguro obligatorio vehicular (SOA)');
- assert.equal(productById('not-a-product'),undefined);
+ assert.equal(productById('VEHICLE_MANDATORY').name,'SOA');
 });

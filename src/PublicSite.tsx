@@ -3,13 +3,12 @@ import {
   ArrowDown, ArrowRight, ArrowUpRight, BriefcaseBusiness, CarFront, Check,
   ChevronDown, ClipboardCheck, Copy, FileText, FolderOpen, HeartHandshake,
   HeartPulse, House, LockKeyhole, Mail, MapPin, Menu, MessageCircle, Phone,
-  ShieldCheck, UsersRound, X,
+  ShieldCheck, UsersRound, X, Plane, Stethoscope, Tractor, Truck, HardHat, Flame, Wrench, Scale, Building2,
 } from 'lucide-react';
 import BrandLogo from './BrandLogo';
 import PublicInsurersCarousel from './PublicInsurersCarousel';
 import { publicContact, publicSolutions, featuredSolutions, catalogSolutions, type SolutionId } from './public-site-config';
-import InsuranceCatalogBrowser, { CatalogIcon } from './InsuranceCatalogBrowser';
-import { insuranceCatalog, catalogGroups } from './insuranceCatalog';
+import type { CatalogAudience } from './insuranceCatalog';
 import './public-site.css';
 
 const navigation = [
@@ -20,7 +19,7 @@ const navigation = [
   { id: 'proceso', label: 'Cómo trabajamos' },
   { id: 'contacto', label: 'Contacto' },
 ];
-const icons = { vida: UsersRound, vehiculos: CarFront, salud: HeartPulse, hogar: House, empresas: BriefcaseBusiness, asesoria: HeartHandshake };
+const icons: Record<string, typeof ShieldCheck> = { vida: UsersRound, vehiculos: CarFront, salud: HeartPulse, hogar: House, empresas: BriefcaseBusiness, asesoria: HeartHandshake, soa: ShieldCheck, viajes: Plane, accidentes: HeartPulse, robos: LockKeyhole, agricola: Tractor, 'gastos-medicos': Stethoscope, 'micro-seguro': BriefcaseBusiness, maquinarias: Wrench, transportes: Truck, do: Building2, eo: Scale, incendios: Flame, responsabilidad: ShieldCheck, contratista: HardHat, construccion: HardHat };
 const processSteps = [
   ['Te escuchamos', 'Contanos qué necesitás proteger y qué es importante para vos.'],
   ['Analizamos', 'Revisamos tu situación y los riesgos que debés considerar.'],
@@ -74,18 +73,18 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
   const [mobile, setMobile] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [active, setActive] = useState('inicio');
-  const [audience, setAudience] = useState<'todos' | 'personas' | 'empresas'>('todos');
+  const [audience, setAudience] = useState<CatalogAudience>('personas');
   const [detail, setDetail] = useState<SolutionId | null>(null);
   const [consultation, setConsultation] = useState<SolutionId | null>(null);
   const [privacy, setPrivacy] = useState(false);
   const [copied, setCopied] = useState<'idle' | 'done' | 'error'>('idle');
   const detailSolution = publicSolutions.find(item => item.id === detail);
   const contactSolution = publicSolutions.find(item => item.id === consultation);
-  const detailProduct = insuranceCatalog.find(item => detail === 'catalog-' + item.id);
+  const DetailIcon = icons[detail || ''] || ShieldCheck;
   const message = 'Hola, ACOS. Me gustaría recibir asesoría sobre ' + (contactSolution?.name.toLowerCase() || 'seguros') + '. Quisiera conocer las alternativas disponibles, sus condiciones y los siguientes pasos.';
   const whatsapp = publicContact.whatsapp.replace(/\D/g, '');
   const hasChannel = Boolean(whatsapp || publicContact.email || publicContact.phone);
-  const visibleSolutions = featuredSolutions.filter(item => audience === 'todos' || item.audience === audience || item.audience === 'todos');
+  const visibleSolutions = catalogSolutions.filter(item => item.audiences.includes(audience));
 
   useEffect(() => {
     const sections = root.current?.querySelectorAll<HTMLElement>('section[data-nav]') || [];
@@ -235,24 +234,23 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
           <div className="ap-container">
             <div className="ap-section-heading">
               <div><span className="ap-eyebrow">NUESTROS SEGUROS</span><h2 id="ap-products-title">Para tu vida de hoy.<br /><span>Y tus planes de mañana.</span></h2></div>
-              <div className="ap-products-intro"><p>Explorá nuestras áreas destacadas y el catálogo completo de seguros para personas y empresas.</p>
+              <div className="ap-products-intro"><p>Encontrá el seguro que necesitás, para vos o para tu empresa.</p>
                 <div className="ap-filters" role="group" aria-label="Filtrar seguros">
-                  {([['todos', 'Todos'], ['personas', 'Para vos'], ['empresas', 'Para tu empresa']] as const).map(([id, label]) => <button key={id} aria-pressed={audience === id} onClick={() => setAudience(id)}>{label}</button>)}
+                  {([['personas', 'Personas'], ['empresas', 'Empresas']] as const).map(([id, label]) => <button key={id} aria-pressed={audience === id} onClick={() => setAudience(id)}>{label}</button>)}
                 </div>
               </div>
             </div>
-            <div className={'ap-product-grid' + (audience !== 'todos' ? ' ap-grid-filtered' : '')}>
+            <div className="ap-product-grid ap-exact-catalog" aria-label={audience==='personas'?'Seguros para personas':'Seguros para empresas'}>
               {visibleSolutions.map(item => {
-                const Icon = icons[item.id];
-                return <article key={item.id} className={'ap-product ap-product-' + item.id}>
-                  {item.id !== 'asesoria' && <img src={item.image} alt={item.alt} width="1000" height="667" loading="lazy" decoding="async" />}
+                const Icon = icons[item.id] || ShieldCheck;
+                return <article key={item.id} className={'ap-product ap-product-' + item.id + (item.image ? ' ap-product-photo' : ' ap-product-technical')}>
+                  {item.image ? <img src={item.image} alt="" width="1000" height="667" loading="lazy" decoding="async" /> : <Icon className="ap-product-watermark" size={160} strokeWidth={.65} aria-hidden="true"/>}
                   <div className="ap-product-shade" />
-                  <div className="ap-product-top"><span className="ap-product-icon"><Icon size={25} strokeWidth={1.6} /></span><span>{item.audience === 'empresas' ? 'PARA TU NEGOCIO' : item.id === 'asesoria' ? 'SIEMPRE A TU LADO' : 'PARA VOS'}</span></div>
-                  <div className="ap-product-body"><h3>{item.name}</h3><p>{item.summary}</p><button onClick={() => setDetail(item.id)} aria-label={'Ver detalles de ' + item.name.toLowerCase()}>{item.id === 'asesoria' ? 'Conocé cómo te ayudamos' : 'Conocé este seguro'}<ArrowUpRight size={18} /></button></div>
+                  <div className="ap-product-top"><span className="ap-product-icon"><Icon size={25} strokeWidth={1.6} /></span><span>{audience === 'empresas' ? 'PARA TU EMPRESA' : 'PARA VOS'}</span></div>
+                  <div className="ap-product-body"><h3>{item.name}</h3><p>{item.summary}</p><button onClick={() => setDetail(item.id)} aria-label={'Ver detalles de ' + item.name.toLowerCase()}>Conocé este seguro<ArrowUpRight size={18} /></button></div>
                 </article>;
               })}
             </div>
-            <InsuranceCatalogBrowser audience={audience} onSelect={product => setDetail(`catalog-${product.id}`)} />
             <div className="ap-product-note"><ShieldCheck size={17} /><p>Te orientamos sobre estas categorías. La disponibilidad y las coberturas se revisan según tu caso y las condiciones de cada aseguradora.</p></div>
           </div>
         </section>
@@ -311,7 +309,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
           <div className="ap-footer-main">
             <div className="ap-footer-brand"><a href="#/inicio" aria-label="ACOS, volver al inicio" onClick={() => sectionClick('inicio')}><BrandLogo variant="primary" /></a><p>Correduría de seguros.<br />Aseguramos tu futuro.</p><span><MapPin size={14} /> Nicaragua</span></div>
             <div><h2>Conocé ACOS</h2><a href={sectionHref('nosotros')} onClick={() => sectionClick('nosotros')}>Nosotros</a><a href={sectionHref('proceso')} onClick={() => sectionClick('proceso')}>Cómo trabajamos</a><a href={sectionHref('contacto')} onClick={() => sectionClick('contacto')}>Contacto</a><a href={/^(www\.)?acosseguros\.com$/.test(window.location.hostname) ? 'https://academy.acosseguros.com' : '#/academy'}>ACOS Academy</a><button onClick={() => setPrivacy(true)}>Aviso de privacidad</button></div>
-            <div><h2>Nuestros seguros</h2>{featuredSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
+            <div><h2>Nuestros seguros</h2>{catalogSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
             <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button><button className="ap-footer-access" onClick={openWorkspace}><LockKeyhole size={14} /> Acceso empresarial</button></div>
           </div>
           <div className="ap-footer-bottom"><span>© {new Date().getFullYear()} ACOS. Todos los derechos reservados.</span><span>Diseño y desarrollo <strong>XARCON</strong></span><a href="#/inicio" onClick={() => sectionClick('inicio')}>Volver arriba <ArrowDown size={14} /></a></div>
@@ -319,10 +317,10 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
       </footer>
 
       {detailSolution && <Modal wide title={detailSolution.name} description={detailSolution.headline} onClose={() => setDetail(null)}>
-        <div className="ap-detail-layout">{detailProduct ? <div className="ac-catalog-detail-visual"><CatalogIcon group={detailProduct.group} size={72}/><span>{catalogGroups.find(group=>group.id===detailProduct.group)?.name}</span></div> : <img src={detailSolution.image} alt={detailSolution.alt} width="1000" height="667" />}<div><p>{detailSolution.description}</p><h3>¿Qué revisamos con vos?</h3><ul>{detailSolution.topics.map(topic => <li key={topic}><Check size={17} />{topic}</li>)}</ul><button className="ap-button" onClick={() => consult(detailSolution.id)}>Solicitar asesoría <ArrowUpRight size={17} /></button></div></div><p className="ap-dialog-note">Información orientativa. Los alcances, requisitos y disponibilidad deben confirmarse con la aseguradora antes de contratar.</p>
+        <div className="ap-detail-layout">{detailSolution.image ? <img src={detailSolution.image} alt="" width="1000" height="667" /> : <div className="ap-product-detail-technical"><DetailIcon size={90} strokeWidth={1}/></div>}<div><p>{detailSolution.description}</p><h3>¿Qué revisamos con vos?</h3><ul>{detailSolution.topics.map(topic => <li key={topic}><Check size={17} />{topic}</li>)}</ul><button className="ap-button" onClick={() => consult(detailSolution.id)}>Solicitar asesoría <ArrowUpRight size={17} /></button></div></div><p className="ap-dialog-note">Información orientativa. Los alcances, requisitos y disponibilidad deben confirmarse con la aseguradora antes de contratar.</p>
       </Modal>}
       {consultation && <Modal title={hasChannel ? 'Hablemos de tu seguro.' : 'Prepará tu consulta.'} description={hasChannel ? 'Elegí un canal de atención para continuar tu consulta con ACOS.' : 'Los canales de atención de esta web estarán disponibles próximamente. Por ahora, podés preparar y copiar tu consulta.'} onClose={() => setConsultation(null)}>
-        <div className="ap-consultation"><label htmlFor="ap-interest">¿Qué te gustaría proteger?</label><select id="ap-interest" value={consultation} onChange={event => { setConsultation(event.target.value as SolutionId); setCopied('idle'); }}><optgroup label="Áreas de asesoría">{featuredSolutions.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>{catalogGroups.map(group => <optgroup key={group.id} label={group.name}>{catalogSolutions.filter(item => insuranceCatalog.some(product => item.id === `catalog-${product.id}` && product.group === group.id)).map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</optgroup>)}</select><label htmlFor="ap-message">Tu mensaje inicial</label><textarea id="ap-message" value={message} readOnly rows={5} /><div className="ap-consultation-actions">{whatsapp && <a className="ap-button" href={'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">Continuar en WhatsApp <ArrowUpRight size={16} /></a>}{publicContact.email && <a className="ap-button" href={'mailto:' + publicContact.email + '?subject=' + encodeURIComponent('Consulta de seguros — ACOS') + '&body=' + encodeURIComponent(message)}>Escribir por correo <Mail size={16} /></a>}{publicContact.phone && <a className="ap-text-link" href={'tel:' + publicContact.phone.replace(/[^+\d]/g, '')}>Llamar a ACOS <Phone size={16} /></a>}<button className={hasChannel ? 'ap-text-link' : 'ap-button'} onClick={copyMessage}>{copied === 'done' ? 'Mensaje copiado' : 'Copiar consulta'}{copied === 'done' ? <Check size={16} /> : <Copy size={16} />}</button></div><p className="ap-copy-status" role="status">{copied === 'done' ? 'Copiado. Podés compartirlo por un canal que ya conozcás de ACOS.' : copied === 'error' ? 'No pudimos copiar automáticamente. Seleccioná el mensaje de arriba y copialo manualmente.' : ''}</p><p className="ap-dialog-note"><LockKeyhole size={14} />No se envía ni se guarda una solicitud desde esta ventana.</p></div>
+        <div className="ap-consultation"><label htmlFor="ap-interest">¿Qué te gustaría proteger?</label><select id="ap-interest" value={consultation} onChange={event => { setConsultation(event.target.value as SolutionId); setCopied('idle'); }}><option value="asesoria">Asesoría general</option><option value="empresas">Asesoría empresarial</option>{catalogSolutions.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><label htmlFor="ap-message">Tu mensaje inicial</label><textarea id="ap-message" value={message} readOnly rows={5} /><div className="ap-consultation-actions">{whatsapp && <a className="ap-button" href={'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">Continuar en WhatsApp <ArrowUpRight size={16} /></a>}{publicContact.email && <a className="ap-button" href={'mailto:' + publicContact.email + '?subject=' + encodeURIComponent('Consulta de seguros — ACOS') + '&body=' + encodeURIComponent(message)}>Escribir por correo <Mail size={16} /></a>}{publicContact.phone && <a className="ap-text-link" href={'tel:' + publicContact.phone.replace(/[^+\d]/g, '')}>Llamar a ACOS <Phone size={16} /></a>}<button className={hasChannel ? 'ap-text-link' : 'ap-button'} onClick={copyMessage}>{copied === 'done' ? 'Mensaje copiado' : 'Copiar consulta'}{copied === 'done' ? <Check size={16} /> : <Copy size={16} />}</button></div><p className="ap-copy-status" role="status">{copied === 'done' ? 'Copiado. Podés compartirlo por un canal que ya conozcás de ACOS.' : copied === 'error' ? 'No pudimos copiar automáticamente. Seleccioná el mensaje de arriba y copialo manualmente.' : ''}</p><p className="ap-dialog-note"><LockKeyhole size={14} />No se envía ni se guarda una solicitud desde esta ventana.</p></div>
       </Modal>}
       {privacy && <Modal title="Aviso de privacidad" description="Información sobre esta web pública y sus accesos." onClose={() => setPrivacy(false)}>
         <div className="ap-privacy"><h3>Consultas desde esta página</h3><p>El asistente de consulta prepara un texto en tu navegador. No solicita datos personales, no almacena el mensaje en una base de datos y no registra una solicitud. Al copiar, el texto pasa al portapapeles de tu dispositivo.</p><h3>Canales externos</h3><p>Si se habilitan enlaces de correo, teléfono o WhatsApp, la comunicación continúa en ese servicio y está sujeta a sus condiciones de privacidad.</p><h3>Acceso empresarial</h3><p>El entorno privado tiene autenticación y permisos propios. Esta página no permite consultar expedientes ni información de clientes.</p><h3>Servicios técnicos</h3><p>La entrega del sitio puede implicar el procesamiento de datos técnicos, como la dirección IP y el navegador, por parte de los proveedores de alojamiento y de fuentes tipográficas.</p><h3>Información de seguros</h3><p>El contenido es orientativo. No constituye una cotización, confirmación de cobertura ni contrato de seguro. Las condiciones deben verificarse antes de contratar.</p></div>

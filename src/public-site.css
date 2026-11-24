@@ -504,3 +504,17 @@
 
 /* Academy navigation — preserve commercial page layout. */
 .acos-public .ap-nav .ap-academy-link{color:var(--brand-champagne);font-weight:700;letter-spacing:.05px}.acos-public .ap-nav .ap-academy-link:after{background:var(--brand-champagne)}@media(min-width:1181px){.acos-public .ap-nav{gap:clamp(11px,1.4vw,23px)}}@media(max-width:1180px){.acos-public .ap-nav .ap-academy-link{color:var(--brand-navy-raised)}}
+
+/* One product collection, two business segments. Preserve original ACOS photography, navy and gold. */
+.acos-public .ap-exact-catalog{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.acos-public .ap-exact-catalog .ap-product{grid-column:auto;min-height:300px;padding:25px;border-radius:10px}
+.acos-public .ap-exact-catalog .ap-product h3{font-size:24px;line-height:1.2}
+.acos-public .ap-exact-catalog .ap-product p{font-size:12px;line-height:1.65}
+.acos-public .ap-exact-catalog .ap-product-shade{background:linear-gradient(180deg,#00192999 0%,#00192926 22%,#001929b3 58%,#001929fa 100%)}
+.acos-public .ap-product-technical{background:linear-gradient(145deg,#284858 0%,#001929 80%)}
+.acos-public .ap-product-watermark{position:absolute;right:14px;top:16px;color:#e4cf9f;opacity:.24;z-index:-1}
+.acos-public .ap-product-technical .ap-product-shade{display:none}
+.acos-public .ap-product-detail-technical{min-height:240px;background:linear-gradient(145deg,#284858,#001929);color:#e4cf9f;border-radius:7px;display:grid;place-items:center}
+@media(min-width:1100px){.acos-public .ap-exact-catalog .ap-product:first-child{grid-column:span 2;min-height:320px}.acos-public .ap-exact-catalog .ap-product:first-child h3{font-size:32px}}
+@media(max-width:900px){.acos-public .ap-exact-catalog{grid-template-columns:repeat(2,minmax(0,1fr))}.acos-public .ap-exact-catalog .ap-product{min-height:285px}}
+@media(max-width:540px){.acos-public .ap-exact-catalog{grid-template-columns:1fr;gap:12px}.acos-public .ap-exact-catalog .ap-product{min-height:255px;padding:21px}.acos-public .ap-exact-catalog .ap-product h3{font-size:24px}}

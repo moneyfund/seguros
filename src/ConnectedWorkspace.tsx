@@ -22,7 +22,7 @@ import {
 } from './backend';
 import { money, navigationByRole, roles, type Section } from './data';
 import InsuranceCatalogBrowser, { ProductOptions } from './InsuranceCatalogBrowser';
-import { insuranceCatalog } from './insuranceCatalog';
+
 import { nicaraguanInsurers } from './insurers';
 
 import EnterpriseDesk from './EnterpriseDesk';
@@ -381,7 +381,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
       </div></div></>}
      
      {section!=='academy-admin'&&section!=='mail'&&section!=='mail-supervision'&&section!=='resumen'&&section!=='configuracion'&&section!=='piloto'&&section!=='roles-preview'&&section!=='registro-preview'&&section!=='sin-acceso'&&!(section==='equipo'&&route==='direccion/solicitudes')&&<>
-      {(section==='prospectos'||section==='polizas'||section==='clientes')&&role!=='cliente'&&<details className="data-card ac-catalog-workspace"><summary>Catálogo de seguros ACOS <span>{insuranceCatalog.length} soluciones · Explorar catálogo ↓</span></summary><InsuranceCatalogBrowser internal/></details>}
+      {(section==='prospectos'||section==='polizas'||section==='clientes')&&role!=='cliente'&&<details className="data-card ac-catalog-workspace"><summary>Catálogo de seguros ACOS <span>Personas y empresas · Explorar ↓</span></summary><InsuranceCatalogBrowser internal/></details>}
       <div className="live-search-row"><label><Search size={17}/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar registros…" /></label><span><Database size={15}/> ORIGEN: FIRESTORE</span></div>
       {(section==='prospectos'||section==='polizas'&&!enterpriseAccess.canView||section==='documentos')&&(()=>{
         const kind:LiveCollection=section==='prospectos'?'leads':section==='polizas'?'policies':'documents';
