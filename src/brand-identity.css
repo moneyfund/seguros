@@ -21,9 +21,9 @@ body{font-family:var(--brand-sans)}
 .acos-public .ap-nav-cta,.acos-public .ap-button-gold{background:var(--brand-champagne);border-color:var(--brand-champagne);color:var(--brand-navy)}
 .acos-public .ap-nav-cta:hover,.acos-public .ap-button-gold:hover{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
 .acos-public .ap-menu-toggle{background:transparent;border-color:rgb(218 187 131 / .5);color:var(--brand-champagne)}
-.acos-public h1,.acos-public h2,.acos-public .ap-product h3{font-family:var(--brand-display);font-weight:400;letter-spacing:-.025em;font-synthesis:none}
+.acos-public h1,.acos-public h2,.acos-public .ap-product h3{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.045em;font-synthesis:none}
 .acos-public h2{line-height:1.15;font-size:clamp(34px,3.2vw,46px)}
-.acos-public .ap-hero h1{font-family:var(--brand-display);font-weight:400;font-size:clamp(62px,6.2vw,88px);line-height:1.03;letter-spacing:-.025em}
+.acos-public .ap-hero h1{font-family:var(--brand-sans);font-weight:700;font-size:clamp(54px,5.5vw,80px);line-height:1.07;letter-spacing:-.055em}
 .acos-public .ap-hero h1>span{color:var(--brand-champagne)}
 .acos-public .ap-hero .ap-eyebrow{color:var(--brand-champagne)}
 .acos-public .ap-hero-assurance{color:var(--brand-white)}
@@ -40,7 +40,7 @@ body{font-family:var(--brand-sans)}
 .acos-public .ap-journey>li:first-child .ap-step-number>span{background:var(--brand-navy);color:var(--brand-champagne)}
 .acos-public .ap-process,.acos-public .ap-insurers{background:var(--brand-mist)}
 .acos-public .ap-digital{background:var(--brand-ivory)}
-.acos-public .ap-insurers h2{font-family:var(--brand-display);letter-spacing:-.025em;line-height:1.15}
+.acos-public .ap-insurers h2{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.045em;line-height:1.15}
 .acos-public .ap-insurers-foot{color:var(--brand-muted)}
 .acos-public .ap-contact{background:var(--brand-navy);color:var(--brand-white);border-top:1px solid rgb(218 187 131 / .3)}
 .acos-public .ap-contact h2,.acos-public .ap-contact h2>span{color:var(--brand-white)}
@@ -49,7 +49,7 @@ body{font-family:var(--brand-sans)}
 .acos-public .ap-footer{background:var(--brand-ivory)}
 .acos-public .ap-footer-main .ap-footer-brand>a{display:block;width:270px;padding:36px 45px 45px;margin-top:-18px;margin-left:-45px}
 .acos-public .ap-footer-brand .acos-mark img{width:100%;height:auto;margin:0}
-.acos-public .ap-dialog h2{font-family:var(--brand-display);font-weight:400;font-size:36px;letter-spacing:-.025em}
+.acos-public .ap-dialog h2{font-family:var(--brand-sans);font-weight:700;font-size:34px;letter-spacing:-.045em}
 .acos-public .ap-dialog-note{color:var(--brand-muted)}
 .acos-public button:focus-visible,.acos-public a:focus-visible,.acos-public select:focus-visible,.acos-public textarea:focus-visible,.acos-public summary:focus-visible{outline-color:var(--brand-bronze)!important}
 
@@ -127,7 +127,7 @@ body{font-family:var(--brand-sans)}
   .live-shell .sidebar{width:288px;min-width:288px}
   .live-shell .live-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .live-shell .live-title-row h1{font-size:26px}
-  .acos-public .ap-hero h1{font-size:64px}
+  .acos-public .ap-hero h1{font-size:58px}
 }
 @media(max-width:580px){
   .acos-mark-responsive{width:44px}
@@ -135,7 +135,7 @@ body{font-family:var(--brand-sans)}
   .acos-public .ap-brand{margin:0 26px 0 10px}
   .acos-public .ap-brand .acos-mark{width:44px}
   .acos-public .ap-brand .acos-mark img{width:44px;height:auto;aspect-ratio:1400/1187}
-  .acos-public .ap-hero h1{font-size:64px;line-height:1.03}
+  .acos-public .ap-hero h1{font-size:clamp(40px,10vw,58px);line-height:1.08}
   .acos-public h2,.acos-public .ap-insurers h2,.acos-public .ap-about-copy h2{font-size:36px;letter-spacing:-.025em;line-height:1.15}
   .acos-public .ap-product h3,.acos-public .ap-product-vida h3{font-size:36px}
   .acos-public .ap-business h2{font-size:38px}
@@ -143,7 +143,7 @@ body{font-family:var(--brand-sans)}
   .acos-public .ap-footer-brand .acos-mark{width:180px}
   .acos-public .ap-dialog h2{font-size:33px}
 }
-@media(max-width:360px){.acos-public .ap-hero h1{font-size:57px}.acos-public .ap-business h2{font-size:34px}}
+@media(max-width:360px){.acos-public .ap-hero h1{font-size:40px}.acos-public .ap-business h2{font-size:34px}}
 
 .acos-public .ap-footer-main h2{font-family:var(--brand-sans);font-weight:600}
 
@@ -151,3 +151,11 @@ body{font-family:var(--brand-sans)}
 @media(max-width:580px){.acos-public section[id]{scroll-margin-top:112px}}
 
 .acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-champagne)}
+
+/* Public title hierarchy — commercial sans serif, without changing the ACOS
+   logotype, loading slogan, Academy or private workspace typography. */
+.acos-public .ap-exact-catalog .ap-product h3{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.035em;line-height:1.22}
+.acos-public .ap-catalog-hero h1{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.045em}
+.acos-public .ap-commercial-business h2,.acos-public .ap-commercial-advice h2{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.05em;line-height:1.12}
+.acos-public .ap-commercial-steps h3{font-family:var(--brand-sans);font-weight:600;letter-spacing:-.02em}
+@media(max-width:600px){.acos-public .ap-commercial-business h2,.acos-public .ap-commercial-advice h2{font-size:clamp(29px,7.7vw,40px)}.acos-public .ap-dialog h2{font-size:26px;line-height:1.2}.acos-public .ap-catalog-hero h1{font-size:clamp(32px,8vw,47px)}}

@@ -101,8 +101,24 @@ try {
     assert.equal(await page.locator('.ap-header').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
     assert.equal(await page.locator('.ap-brand .acos-mark').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgba(0, 0, 0, 0)');
     assert.ok(await page.locator('.ap-brand img').evaluate(el=>el.complete && el.naturalWidth>0));
-    assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /ACOS Lunaquete/);
-    assert.equal(await page.evaluate(() => document.fonts.check('16px "ACOS Lunaquete"')), true);
+    assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /ACOS Poppins/);
+    assert.equal(await page.evaluate(() => document.fonts.check('700 16px "ACOS Poppins"')), true);
+    assert.equal(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontWeight),'700');
+    assert.equal(await page.locator('.ap-faq h2').evaluate(el=>getComputedStyle(el).fontWeight),'700');
+  });
+  await test('Only two redesigned commercial sections remain between insurers and FAQ', async()=>{
+    const selectors=await page.locator('main').evaluate(el=>{const children=Array.from(el.children);const start=children.findIndex(n=>n.classList.contains('ap-insurers'));const end=children.findIndex(n=>n.classList.contains('ap-faq'));return {start,end,between:children.slice(start+1,end).map(n=>n.className)};});
+    assert.ok(selectors.start>=0&&selectors.end>selectors.start);
+    assert.equal(selectors.between.length,2);
+    assert.ok(selectors.between[0].includes('ap-commercial-business'));
+    assert.ok(selectors.between[1].includes('ap-commercial-advice'));
+    assert.equal(await page.locator('.ap-commercial-business img,.ap-commercial-advice img').count(),2);
+    assert.equal(await page.locator('.ap-digital,.ap-process,.ap-business,.ap-about').count(),0);
+    await page.getByRole('link',{name:'Explorar seguros empresariales',exact:true}).click();
+    await page.locator('#catalogo-empresas').waitFor();
+    assert.equal(new URL(page.url()).hash,'#/seguros/empresas');
+    assert.equal(await page.locator('#catalogo-empresas .ap-product').count(),13);
+    await load();
   });
   for (const width of [1440, 1024, 768, 390, 320]) {
     await test('Responsive layout and accessibility at ' + width + ' px', async () => {
