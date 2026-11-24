@@ -11,41 +11,42 @@ body{font-family:var(--brand-sans)}
 /* Public site: navy navigation, original horizontal negative artwork, gold calls to action. */
 .acos-public .ap-topbar{background:var(--brand-navy-raised);color:var(--brand-white)}
 .acos-public .ap-topbar button{color:var(--brand-white)}
-.acos-public .ap-header{background:var(--brand-navy);border-bottom:1px solid rgb(218 187 131 / .22)}
+.acos-public .ap-header{background:var(--brand-navy);border-bottom:1px solid rgb(201 156 49 / .22)}
 .acos-public .ap-navbar{min-height:124px;height:auto;padding-block:28px;gap:32px}
 .acos-public .ap-brand{margin-right:12px}
 .acos-public .ap-brand .acos-mark img{width:100%;height:auto}
 .acos-public .ap-nav>a{color:var(--brand-white)}
-.acos-public .ap-nav>a:hover,.acos-public .ap-nav>a[aria-current]{color:var(--brand-champagne)}
-.acos-public .ap-nav>a[aria-current]:after{background:var(--brand-champagne)}
-.acos-public .ap-nav-cta,.acos-public .ap-button-gold{background:var(--brand-champagne);border-color:var(--brand-champagne);color:var(--brand-navy)}
-.acos-public .ap-nav-cta:hover,.acos-public .ap-button-gold:hover{background:var(--brand-gold);border-color:var(--brand-gold);color:var(--brand-navy)}
-.acos-public .ap-menu-toggle{background:transparent;border-color:rgb(218 187 131 / .5);color:var(--brand-champagne)}
+.acos-public .ap-nav>a:hover,.acos-public .ap-nav>a[aria-current]{color:var(--brand-logo-gold)}
+.acos-public .ap-nav>a:after,.acos-public .ap-nav>a[aria-current]:after{background:var(--brand-logo-gold)}
+.acos-public .ap-nav-cta,.acos-public .ap-button-gold{background:var(--brand-logo-gold);border-color:var(--brand-logo-gold);color:var(--brand-navy)}
+.acos-public .ap-nav-cta:hover,.acos-public .ap-button-gold:hover{background:var(--brand-logo-gold);border-color:var(--brand-logo-gold);color:var(--brand-navy)}
+.acos-public .ap-menu-toggle{background:transparent;border-color:rgb(201 156 49 / .5);color:var(--brand-logo-gold)}
 .acos-public h1,.acos-public h2,.acos-public .ap-product h3{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.045em;font-synthesis:none}
 .acos-public h2{line-height:1.15;font-size:clamp(34px,3.2vw,46px)}
 .acos-public .ap-hero h1{font-family:var(--brand-sans);font-weight:700;font-size:clamp(54px,5.5vw,80px);line-height:1.07;letter-spacing:-.055em}
-.acos-public .ap-hero h1>span{color:var(--brand-champagne)}
-.acos-public .ap-hero .ap-eyebrow{color:var(--brand-champagne)}
+.acos-public .ap-hero h1>span{color:var(--brand-logo-gold)}
+.acos-public .ap-hero .ap-eyebrow{color:var(--brand-logo-gold)}
 .acos-public .ap-hero-assurance{color:var(--brand-white)}
 .acos-public .ap-product h3{font-size:31px;line-height:1.1}
 .acos-public .ap-product-vida h3{font-size:39px}
 .acos-public .ap-product-icon{color:var(--brand-navy)}
 .acos-public .ap-product-asesoria{background:var(--brand-ivory);color:var(--brand-navy)}
-.acos-public .ap-product-asesoria .ap-product-icon{background:var(--brand-navy);color:var(--brand-champagne)}
+.acos-public .ap-product-asesoria .ap-product-icon{background:var(--brand-navy);color:var(--brand-logo-gold)}
 .acos-public .ap-product-asesoria p{color:var(--brand-muted)}
 .acos-public .ap-business h2{font-size:clamp(34px,3.4vw,48px);font-weight:400;line-height:1.15}
-.acos-public .ap-business h2>span{color:var(--brand-champagne)}
+.acos-public .ap-business h2>span{color:var(--brand-logo-gold)}
 .acos-public .ap-about-label{background:var(--brand-ivory)}
 .acos-public .ap-step-number>span{border-color:var(--brand-bronze)}
-.acos-public .ap-journey>li:first-child .ap-step-number>span{background:var(--brand-navy);color:var(--brand-champagne)}
+.acos-public .ap-journey>li:first-child .ap-step-number>span{background:var(--brand-navy);color:var(--brand-logo-gold)}
 .acos-public .ap-process,.acos-public .ap-insurers{background:var(--brand-mist)}
 .acos-public .ap-digital{background:var(--brand-ivory)}
 .acos-public .ap-insurers h2{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.045em;line-height:1.15}
 .acos-public .ap-insurers-foot{color:var(--brand-muted)}
-.acos-public .ap-contact{background:var(--brand-navy);color:var(--brand-white);border-top:1px solid rgb(218 187 131 / .3)}
-.acos-public .ap-contact h2,.acos-public .ap-contact h2>span{color:var(--brand-white)}
-.acos-public .ap-contact .ap-eyebrow,.acos-public .ap-contact p{color:var(--brand-champagne)}
-.acos-public .ap-contact .ap-button{background:var(--brand-champagne);color:var(--brand-navy);border-color:var(--brand-champagne)}
+.acos-public .ap-contact{background:var(--brand-navy);color:var(--brand-white);border-top:1px solid rgb(201 156 49 / .3)}
+.acos-public .ap-contact h2{color:var(--brand-white)}
+.acos-public .ap-contact h2>span{color:var(--brand-logo-gold)}
+.acos-public .ap-contact .ap-eyebrow,.acos-public .ap-contact p{color:var(--brand-logo-gold)}
+.acos-public .ap-contact .ap-button{background:var(--brand-logo-gold);color:var(--brand-navy);border-color:var(--brand-logo-gold)}
 .acos-public .ap-footer{background:var(--brand-ivory)}
 .acos-public .ap-footer-main .ap-footer-brand>a{display:block;width:270px;padding:36px 45px 45px;margin-top:-18px;margin-left:-45px}
 .acos-public .ap-footer-brand .acos-mark img{width:100%;height:auto;margin:0}
@@ -119,7 +120,7 @@ body{font-family:var(--brand-sans)}
 @media(min-width:1181px){.acos-public .ap-nav{gap:23px}}
 @media(max-width:1180px){
   .acos-public .ap-nav{background:var(--brand-navy)}
-  .acos-public .ap-nav>a{border-color:rgb(218 187 131 / .18)}
+  .acos-public .ap-nav>a{border-color:rgb(201 156 49 / .18)}
   .acos-public .ap-mobile-enterprise{color:var(--brand-white)}
   .live-shell .sidebar{width:288px;min-width:288px}
 }
@@ -150,7 +151,7 @@ body{font-family:var(--brand-sans)}
 .acos-public section[id]{scroll-margin-top:156px}
 @media(max-width:580px){.acos-public section[id]{scroll-margin-top:112px}}
 
-.acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-champagne)}
+.acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-logo-gold)}
 
 /* Public title hierarchy — commercial sans serif, without changing the ACOS
    logotype, loading slogan, Academy or private workspace typography. */
@@ -159,3 +160,17 @@ body{font-family:var(--brand-sans)}
 .acos-public .ap-commercial-business h2,.acos-public .ap-commercial-advice h2{font-family:var(--brand-sans);font-weight:700;letter-spacing:-.05em;line-height:1.12}
 .acos-public .ap-commercial-steps h3{font-family:var(--brand-sans);font-weight:600;letter-spacing:-.02em}
 @media(max-width:600px){.acos-public .ap-commercial-business h2,.acos-public .ap-commercial-advice h2{font-size:clamp(29px,7.7vw,40px)}.acos-public .ap-dialog h2{font-size:26px;line-height:1.2}.acos-public .ap-catalog-hero h1{font-size:clamp(32px,8vw,47px)}}
+
+/* Public gold accents follow the actual logo, not the champagne palette. */
+.acos-public .ap-nav .ap-academy-link{color:var(--brand-logo-gold)}
+.acos-public .ap-nav .ap-academy-link:after{background:var(--brand-logo-gold)}
+.acos-public .ap-nav-cta:hover,.acos-public .ap-button-gold:hover,.acos-public .ap-contact .ap-button:hover{background:var(--brand-logo-gold);border-color:var(--brand-logo-gold);box-shadow:0 5px 16px rgb(201 156 49 / .2)}
+.acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-white)}
+.acos-public .ap-hero .ap-eyebrow{color:var(--brand-logo-gold);text-shadow:0 1px 3px #001929,0 0 8px #001929}
+.acos-public .ap-hero h1>span{color:var(--brand-logo-gold);text-shadow:0 1px 6px #00192980}
+.acos-public .ap-commercial-advice h2>span{color:var(--brand-logo-gold-on-light)}
+.acos-public .ap-product-body{border-top-color:var(--brand-logo-gold)}
+.acos-public .ap-exact-catalog .ap-product-body{border-top-color:var(--brand-logo-gold)}
+.acos-public .ap-exact-catalog .ap-product-icon,.acos-public .ap-product-arrow{color:var(--brand-logo-gold);border-color:var(--brand-logo-gold)}
+.acos-public .ap-exact-catalog .ap-product:hover .ap-product-arrow,.acos-public .ap-exact-catalog .ap-product:focus-within .ap-product-arrow{background:var(--brand-logo-gold);color:var(--product-ink)}
+@media(max-width:1180px){.acos-public .ap-nav>a[aria-current]{color:var(--brand-logo-gold)}.acos-public .ap-nav>a[aria-current]{border-bottom-color:var(--brand-logo-gold)}}

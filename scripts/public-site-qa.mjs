@@ -105,6 +105,15 @@ try {
     assert.equal(await page.evaluate(() => document.fonts.check('700 16px "ACOS Poppins"')), true);
     assert.equal(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontWeight),'700');
     assert.equal(await page.locator('.ap-faq h2').evaluate(el=>getComputedStyle(el).fontWeight),'700');
+    const logoGold='rgb(201, 156, 49)';
+    assert.equal(await page.locator('.ap-hero h1>span').evaluate(el=>getComputedStyle(el).color),logoGold);
+    assert.equal(await page.locator('.ap-hero .ap-button-gold').evaluate(el=>getComputedStyle(el).backgroundColor),logoGold);
+    assert.equal(await page.locator('.ap-nav-cta').evaluate(el=>getComputedStyle(el).backgroundColor),logoGold);
+    assert.equal(await page.locator('.ap-nav>a[aria-current]').evaluate(el=>getComputedStyle(el,':after').backgroundColor),logoGold);
+    assert.equal(await page.locator('.ap-nav .ap-academy-link').evaluate(el=>getComputedStyle(el).color),logoGold);
+    assert.equal(await page.locator('.ap-faq h2>span').evaluate(el=>getComputedStyle(el).color),'rgb(128, 95, 22)');
+    assert.equal(await page.locator('.ap-commercial-business h2>span').evaluate(el=>getComputedStyle(el).color),logoGold);
+
   });
   await test('Only two redesigned commercial sections remain between insurers and FAQ', async()=>{
     const selectors=await page.locator('main').evaluate(el=>{const children=Array.from(el.children);const start=children.findIndex(n=>n.classList.contains('ap-insurers'));const end=children.findIndex(n=>n.classList.contains('ap-faq'));return {start,end,between:children.slice(start+1,end).map(n=>n.className)};});
