@@ -1,4 +1,4 @@
-import {collection,doc,getDocsFromServer,query,where,runTransaction,serverTimestamp,onSnapshot,type DocumentData} from 'firebase/firestore';
+import {collection,doc,getDocsFromServer,query,where,runTransaction,serverTimestamp,onSnapshot,type DocumentData,type Transaction} from 'firebase/firestore';
 import {ref,listAll,deleteObject} from 'firebase/storage';
 import type {User} from 'firebase/auth';
 import {db,storage,companyId} from './firebase';
@@ -10,7 +10,7 @@ const root=(name:string)=>collection(db,'companies',companyId,name);
 const source=(kind:TrashKind,id:string)=>doc(root(kind),id);
 const trash=(kind:TrashKind,id:string)=>doc(root(names[kind]),id);
 function cleanReason(value:string){const reason=value.trim();if(reason.length<3||reason.length>500)throw Error('Indica un motivo de 3 a 500 caracteres. No incluyas datos personales.');return reason;}
-function audit(tx:Parameters<Parameters<typeof runTransaction>[1]>[0],user:User,kind:TrashKind,id:string,action:string,reason:string){
+function audit(tx:Transaction,user:User,kind:TrashKind,id:string,action:string,reason:string){
  tx.set(doc(root('enterpriseAdminAudit')),{targetType:kind,targetId:id,action,reason,actorUid:user.uid,createdAt:serverTimestamp()});
 }
 async function hasLinks(collectionName:string,field:string,id:string){
@@ -82,6 +82,6 @@ export async function purgeTrash(user:User,kind:TrashKind,id:string,reason:strin
   const snapshot=await tx.get(entry),active=await tx.get(source(kind,id));
   if(!snapshot.exists()||snapshot.data().purging!==true||active.exists())throw Error('La eliminación no se pudo confirmar.');
   tx.delete(entry);
-  audit(tx,user,kind,id,'PURGE','Eliminación definitiva autorizada');
+  audit(tx,user,kind,id,'PURGE',clean);
  });
 }

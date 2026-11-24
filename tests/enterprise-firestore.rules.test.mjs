@@ -125,6 +125,7 @@ test('Administrative trash: atomic movement, restricted reads, restore and irrev
  const envelope={record:data,movedAt:serverTimestamp(),movedBy:'owner-trash',reason:'Registro ficticio',purging:false};
  await assertFails(deleteDoc(original));
  await assertFails(setDoc(bin,envelope));
+ const agentMove=writeBatch(agent);agentMove.set(d(agent,'enterpriseTrashIssuance/trash-p'),{...envelope,movedBy:aUid});agentMove.delete(d(agent,'enterpriseIssuance/trash-p'));await assertFails(agentMove.commit());
  const forged=writeBatch(owner);forged.set(bin,{...envelope,record:{...data,plate:'FAKE'}});forged.delete(original);await assertFails(forged.commit());
  const move=writeBatch(owner);move.set(bin,envelope);move.delete(original);await assertSucceeds(move.commit());
  await assertSucceeds(getDoc(bin));await assertFails(getDoc(d(agent,'enterpriseTrashIssuance/trash-p')));await assertFails(getDocs(collection(operator,base+'enterpriseTrashIssuance')));
@@ -139,5 +140,7 @@ test('Administrative trash: atomic movement, restricted reads, restore and irrev
  const clientMove=writeBatch(owner);clientMove.set(clientBin,{...envelope,record:clientData});clientMove.delete(clientRef);await assertSucceeds(clientMove.commit());
  await assertFails(setDoc(d(agent,'enterpriseIssuance/orphan'),draft(aUid,'trash-c')));
  await assertFails(getDoc(d(agent,'enterpriseTrashClients/trash-c')));
+ const clientRestore=writeBatch(owner);clientRestore.set(clientRef,{...clientData,archived:false});clientRestore.delete(clientBin);await assertSucceeds(clientRestore.commit());
+ const clientMoveAgain=writeBatch(owner);clientMoveAgain.set(clientBin,{...envelope,record:{...clientData,archived:false}});clientMoveAgain.delete(clientRef);await assertSucceeds(clientMoveAgain.commit());
  await assertSucceeds(updateDoc(clientBin,{purging:true}));await assertSucceeds(deleteDoc(clientBin));
 });
