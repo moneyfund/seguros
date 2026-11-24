@@ -33,11 +33,6 @@
 .acos-public .ap-skip:focus{transform:translateY(0)}
 
 /* A familiar commercial navigation, with a distinct staff entrance. */
-.acos-public .ap-topbar{background:var(--ap-navy);color:var(--brand-mist);font-size:10px}
-.acos-public .ap-topbar>.ap-container{display:flex;align-items:center;justify-content:space-between;min-height:33px}
-.acos-public .ap-topbar span,.acos-public .ap-topbar button{display:inline-flex;align-items:center;gap:8px}
-.acos-public .ap-topbar button{border:0;background:transparent;color:var(--brand-mist);font-size:10px;padding:7px 0;min-height:33px}
-.acos-public .ap-topbar button:hover{color:var(--ap-gold)}
 .acos-public .ap-header{position:sticky;top:0;z-index:50;background:#fff;transition:box-shadow .25s}
 .acos-public .ap-header-scrolled{box-shadow:0 2px 16px rgb(0 25 41 / 0.071)}
 .acos-public .ap-navbar{height:92px;display:flex;align-items:center;justify-content:space-between;gap:24px}
@@ -50,7 +45,7 @@
 .acos-public .ap-nav>a:hover:after,.acos-public .ap-nav>a[aria-current]:after{transform:scaleX(1)}
 .acos-public .ap-nav>a[aria-current]{color:var(--ap-navy)}
 .acos-public .ap-nav-cta{font-size:10px;padding:12px 17px;gap:12px;min-height:44px}
-.acos-public .ap-menu-toggle,.acos-public .ap-mobile-enterprise{display:none}
+.acos-public .ap-menu-toggle{display:none}
 
 /* Real photography and a high-contrast, product-first introduction. */
 .acos-public .ap-hero{position:relative;min-height:590px;background:var(--brand-navy);color:#fff;overflow:hidden}
@@ -208,7 +203,6 @@
 .acos-public .ap-footer-main>div>a,.acos-public .ap-footer-main>div>button{display:flex;align-items:center;gap:8px;width:fit-content;border:0;background:transparent;padding:5px 0;min-height:32px;font-size:10px;color:var(--brand-slate);text-align:left}
 .acos-public .ap-footer-main>div>a:hover,.acos-public .ap-footer-main>div>button:hover{color:var(--ap-navy);text-decoration:underline}
 .acos-public .ap-footer-help .ap-text-link{font-weight:600;color:var(--ap-navy);margin-top:10px}
-.acos-public .ap-footer-help .ap-footer-access{border:1px solid var(--brand-line);border-radius:4px;padding:10px 13px;margin-top:18px;font-size:9px}
 .acos-public .ap-footer-bottom{padding-block:20px;display:flex;justify-content:space-between;align-items:center;gap:25px;border-top:1px solid var(--brand-line);font-size:9px;color:var(--brand-muted)}
 .acos-public .ap-footer-bottom strong{font-size:10px;font-weight:600;letter-spacing:1px;color:var(--brand-slate)}
 .acos-public .ap-footer-bottom a{display:flex;align-items:center;gap:8px;min-height:32px}
@@ -272,7 +266,6 @@
   .acos-public .ap-nav>a:after{display:none}
   .acos-public .ap-nav>a[aria-current]{font-weight:600;color:var(--brand-slate)}
   .acos-public .ap-nav-cta{margin-top:20px;font-size:12px;min-height:48px}
-  .acos-public .ap-mobile-enterprise{display:flex;align-items:center;justify-content:center;gap:9px;background:transparent;border:0;font-size:11px;padding:17px 10px 0}
   .acos-public .ap-menu-scrim{position:fixed;inset:0;background:rgb(0 25 41 / 0.349);z-index:40;border:0}
   .acos-public .ap-hero{min-height:560px}
   .acos-public .ap-hero-content{padding-block:65px 95px}
@@ -366,9 +359,6 @@
   .acos-public h2{font-size:30px;letter-spacing:-1.2px}
   .acos-public .ap-eyebrow{font-size:9px;letter-spacing:1.3px;margin-bottom:14px}
   .acos-public section[id]{scroll-margin-top:87px}
-  .acos-public .ap-topbar>.ap-container{min-height:29px;justify-content:center;width:100%}
-  .acos-public .ap-topbar span{font-size:8px;gap:6px}
-  .acos-public .ap-topbar button{display:none}
   .acos-public .ap-navbar{height:76px}
   .acos-public .ap-brand img{width:77px;height:59px}
   .acos-public .ap-brand>span{font-size:6.5px;padding-left:10px}

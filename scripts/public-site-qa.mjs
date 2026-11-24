@@ -88,6 +88,16 @@ try {
     assert.equal(await page.locator('input[type=password]').count(), 0);
     await load();
   });
+  await test('Public navigation starts at the top and does not expose enterprise entry points', async () => {
+    assert.equal(await page.locator('.ap-topbar,.ap-mobile-enterprise,.ap-footer-access').count(),0);
+    assert.equal(await page.getByRole('button',{name:'Acceso empresarial',exact:true}).count(),0);
+    assert.ok(Math.abs(await page.locator('.ap-header').evaluate(el=>el.getBoundingClientRect().top))<2);
+    await page.setViewportSize({width:390,height:844});
+    await page.getByRole('button',{name:'Abrir menú',exact:true}).click();
+    assert.equal(await page.getByRole('button',{name:'Acceso empresarial',exact:true}).count(),0);
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({width:1440,height:1000});
+  });
   await test('Photographs, seven personal products and the commercial heading render', async () => {
     assert.match(await page.locator('h1').innerText(), /Aseguramos/);
     assert.equal(await page.locator('.ap-product').count(), 7);

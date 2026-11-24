@@ -9,8 +9,6 @@ body{font-family:var(--brand-sans)}
 .acos-mark-symbol{width:44px}
 
 /* Public site: navy navigation, original horizontal negative artwork, gold calls to action. */
-.acos-public .ap-topbar{background:var(--brand-navy-raised);color:var(--brand-white)}
-.acos-public .ap-topbar button{color:var(--brand-white)}
 .acos-public .ap-header{background:var(--brand-navy);border-bottom:1px solid rgb(201 156 49 / .22)}
 .acos-public .ap-navbar{min-height:124px;height:auto;padding-block:28px;gap:32px}
 .acos-public .ap-brand{margin-right:12px}
@@ -121,7 +119,6 @@ body{font-family:var(--brand-sans)}
 @media(max-width:1180px){
   .acos-public .ap-nav{background:var(--brand-navy)}
   .acos-public .ap-nav>a{border-color:rgb(201 156 49 / .18)}
-  .acos-public .ap-mobile-enterprise{color:var(--brand-white)}
   .live-shell .sidebar{width:288px;min-width:288px}
 }
 @media(max-width:760px){
@@ -148,8 +145,8 @@ body{font-family:var(--brand-sans)}
 
 .acos-public .ap-footer-main h2{font-family:var(--brand-sans);font-weight:600}
 
-.acos-public section[id]{scroll-margin-top:156px}
-@media(max-width:580px){.acos-public section[id]{scroll-margin-top:112px}}
+.acos-public section[id]{scroll-margin-top:123px}
+@media(max-width:580px){.acos-public section[id]{scroll-margin-top:83px}}
 
 .acos-public .ap-contact-layout>div:last-child>p{color:var(--brand-logo-gold)}
 

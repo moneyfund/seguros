@@ -75,6 +75,6 @@ export default function App() {
   if (entry.surface === 'redirect') return null;
   if (entry.surface === 'clients') return <main className="live-auth-screen"><div className="live-auth-card"><div className="live-auth-title"><span>ACOS SEGUROS</span><h1>Portal de clientes</h1><p>Estamos preparando tu espacio seguro. El acceso a pólizas y expedientes se habilitará cuando la plataforma esté validada.</p></div><button className="btn btn-dark full" onClick={() => navigate('public')}>Volver a ACOS</button></div></main>;
   if (entry.surface === 'academy') return <PublicEntrance key="academy" academy><Academy/></PublicEntrance>;
-  if (entry.surface === 'public') return <PublicEntrance key="public"><PublicSite catalogPage={/^#\/seguros(?:\/|$)/.test(window.location.hash)} openWorkspace={() => navigate('workspace')}/></PublicEntrance>;
+  if (entry.surface === 'public') return <PublicEntrance key="public"><PublicSite catalogPage={/^#\/seguros(?:\/|$)/.test(window.location.hash)}/></PublicEntrance>;
   return <ConnectedWorkspace onPublic={() => navigate('public')}/>;
 }
