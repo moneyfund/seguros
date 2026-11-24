@@ -88,9 +88,9 @@ try {
     assert.equal(await page.locator('input[type=password]').count(), 0);
     await load();
   });
-  await test('Photographs, six products and the commercial heading render', async () => {
+  await test('Photographs, seven personal products and the commercial heading render', async () => {
     assert.match(await page.locator('h1').innerText(), /Aseguramos/);
-    assert.equal(await page.locator('.ap-product').count(), 6);
+    assert.equal(await page.locator('.ap-product').count(), 7);
     assert.equal(await page.locator('.ap-shortcuts>button').count(), 6);
     assert.equal(await page.locator('a[href^="tel:"],a[href^="mailto:"],a[href*="wa.me"]').count(), 0);
   });
@@ -121,18 +121,16 @@ try {
     });
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await test('Product filters retain their active state and matching categories', async () => {
-    await page.getByRole('button', { name: 'Para tu empresa', exact: true }).click();
-    assert.equal(await page.locator('.ap-product').count(), 2);
-    assert.equal(await page.locator('.ap-product-empresas').count(), 1);
-    await page.getByRole('button', { name: 'Para vos', exact: true }).click();
-    assert.equal(await page.locator('.ap-product').count(), 5);
-    assert.equal(await page.locator('.ap-product-empresas').count(), 0);
-    await page.getByRole('button', { name: 'Todos', exact: true }).click();
-    assert.equal(await page.locator('.ap-product').count(), 6);
+  await test('Product segments retain their active state and exact listings', async () => {
+    await page.getByRole('button', { name: 'Empresas', exact: true }).click();
+    assert.equal(await page.locator('.ap-product').count(), 13);
+    assert.equal(await page.locator('.ap-product-agricola').count(), 1);
+    await page.getByRole('button', { name: 'Personas', exact: true }).click();
+    assert.equal(await page.locator('.ap-product').count(), 7);
+    assert.equal(await page.locator('.ap-product-agricola').count(), 0);
   });
   await test('Every product opens its details and a consultation for that product', async () => {
-    for (const id of ['vida', 'vehiculos', 'salud', 'hogar', 'empresas', 'asesoria']) {
+    for (const id of ['vida', 'vehiculos', 'salud', 'hogar', 'soa', 'viajes', 'accidentes']) {
       await page.locator('.ap-product-' + id + ' button').click();
       await page.locator('dialog[open]').waitFor();
       assert.equal(await page.locator('.ap-detail-layout li').count(), 3);
@@ -198,7 +196,7 @@ try {
       await page.goto(base + hash);
       await page.locator('input[type=password]').waitFor();
       assert.equal(await page.locator('.acos-public').count(), 0);
-      if (['#/demo', '#/dashboard', '#/admin'].includes(hash)) assert.equal(new URL(page.url()).hash, '#/acceso');
+      if (['#/demo', '#/dashboard', '#/admin'].includes(hash)) { await page.waitForFunction(()=>window.location.hash==='#/acceso'); assert.equal(new URL(page.url()).hash, '#/acceso'); }
     }
     await page.goto(base + '#/inicio');
     await page.locator('.acos-public').waitFor();
