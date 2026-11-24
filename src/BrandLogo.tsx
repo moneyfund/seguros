@@ -1,6 +1,6 @@
 import { ACOS_LOGO, ACOS_LOGO_HORIZONTAL, ACOS_LOGO_HORIZONTAL_NEGATIVE, ACOS_SYMBOL } from './acos-logo';
 
-/** Official artwork: vector tracing of the original artwork supplied by ACOS on 13 November 2026. */
+/** Official artwork supplied by ACOS in ACOS_Vectores.zip, November 2026. */
 export default function BrandLogo({ variant = 'horizontal', compact = false }: {
   variant?: 'primary' | 'horizontal' | 'negative' | 'symbol';
   compact?: boolean;
