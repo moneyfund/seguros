@@ -32,6 +32,8 @@ jobs:
         run: |
           npm install --prefix "$RUNNER_TEMP/acos-qa" --no-audit --no-fund playwright@1.62.1 axe-core@4.14.0
           "$RUNNER_TEMP/acos-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Verify shared insurance catalog and responsive consultation
+        run: ACOS_QA_MODULES="$RUNNER_TEMP/acos-qa/node_modules" node scripts/catalog-qa.mjs
       - name: Verify public flows, responsive layouts and access boundaries
         run: ACOS_QA_MODULES="$RUNNER_TEMP/acos-qa/node_modules" node scripts/public-site-qa.mjs
       - name: Verify administration and agent visual fixtures

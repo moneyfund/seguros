@@ -1,5 +1,5 @@
 /* ACOS catalog: restrained editorial hierarchy, dark navy / gold identity. */
-.ac-catalog{--cat-ink:#001929;--cat-muted:#435968;--cat-gold:#96732f;--cat-line:#d9e0e1;--cat-surface:#fff;color:var(--cat-ink);background:var(--cat-surface);border:1px solid var(--cat-line);border-radius:16px;padding:clamp(18px,3.2vw,44px);margin-top:42px}
+.ac-catalog{--cat-ink:#001929;--cat-muted:#435968;--cat-gold:#755821;--cat-line:#d9e0e1;--cat-surface:#fff;color:var(--cat-ink);background:var(--cat-surface);border:1px solid var(--cat-line);border-radius:16px;padding:clamp(18px,3.2vw,44px);margin-top:42px}
 .ac-catalog *{box-sizing:border-box}
 .ac-catalog-intro{display:flex;justify-content:space-between;gap:24px;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--cat-line)}
 .ac-catalog-kicker{display:block;color:var(--cat-gold);font-size:10px;font-weight:700;letter-spacing:2px;margin-bottom:8px}
