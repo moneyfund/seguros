@@ -163,6 +163,15 @@ service firebase.storage {
          (enterpriseRole(['direccion','operaciones','servicio']) ||
           (enterpriseRole(['ventas']) && issuance(id).agentUid == request.auth.uid));
     }
+    function trashPurge(id) {
+      return isOwner() && firestore.exists(/databases/(default)/documents/companies/main/enterpriseTrashIssuance/$(id)) &&
+        firestore.get(/databases/(default)/documents/companies/main/enterpriseTrashIssuance/$(id)).data.purging == true &&
+        !requestExists(id);
+    }
+    // Only the owner may enumerate the folder during a confirmed purge.
+    match /companies/main/enterpriseTrial/{requestId}/{rest=**} {
+      allow list: if trashPurge(requestId);
+    }
     match /companies/main/enterpriseTrial/{requestId}/{fileName} {
       // Only synthetic files; resource == null explicitly rejects overwrites.
       // Do not use download-token URLs for actual identity documents.
@@ -188,7 +197,7 @@ service firebase.storage {
            request.resource.contentType == 'application/pdf')
         );
       allow update: if false;
-      allow delete: if isOwner() && requestExists(requestId);
+      allow delete: if (isOwner() && requestExists(requestId)) || trashPurge(requestId);
     }
 
     // Todo lo demás queda privado.
