@@ -64,3 +64,6 @@ html.acos-loading-active,html.acos-loading-active body{overflow:hidden!important
 .acos-loading-brand img{filter:drop-shadow(0 3px 14px #00192960)}
 @media(max-width:480px){.acos-loading-brand{width:min(78vw,310px)}}
 @media(max-height:420px){.acos-loading-brand{width:min(47vw,270px)}}
+
+/* The corporate descriptor already belongs to the official vector artwork. */
+.acos-loading-context[hidden]{display:none!important}
