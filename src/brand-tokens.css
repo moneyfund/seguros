@@ -11,6 +11,10 @@
   --brand-navy-raised:#113c62;
   --brand-champagne:#E7CB80;
   --brand-gold:#CAA030;
+  /* Exact solid fill of public/brand/acos-symbol.svg and acos-horizontal-negative.svg. */
+  --brand-logo-gold:#C99C31;
+  /* Same gold hue darkened for readable text on white/light surfaces. */
+  --brand-logo-gold-on-light:#805F16;
   --brand-copper:#D4A06C;
   --brand-bronze:#A67C24;
   --brand-gold-strong:#DB9D23;
