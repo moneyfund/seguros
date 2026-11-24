@@ -13,3 +13,6 @@ Los PNG son las imágenes originales incrustadas en el PDF con su canal alfa, ex
 El original verde/plata anterior se sustituye en todas las superficies. `/acos-logo.png` conserva la ruta histórica para los metadatos sociales, con el nuevo arte principal.
 
 No aplicar filtros, sombras, efectos, rotaciones o recoloraciones a estos archivos. El componente `BrandLogo` elige la versión correcta. Mínimos de referencia: principal 180 px, secundaria 220 px, isotipo 24 px. En navegación móvil se utiliza el isotipo para evitar comprimir el descriptor.
+
+## Actualización vectorial — 24 de noviembre de 2026
+Los SVG activos se sustituyen por el arte del ZIP ACOS_Vectores.zip entregado por el cliente: isotipo con segmentos rectos originales, horizontales positiva y negativa con sus curvas originales (coordenadas de texto optimizadas a 0,1 unidad de viewBox, error máximo 0,05 por eje). Se conservan los colores del archivo: #C99C31, #062D48 y #FFFFFF. La versión primary usa la horizontal positiva porque el ZIP no incluye otra composición. No se cambia el diseño de las superficies ni el logotipo por una fuente de texto. La entrada pública conserva su fondo azul y usa el nuevo isotipo como máscara de salida. Los PNG activos del icono táctil y los metadatos sociales también se exportan de los nuevos vectores; los demás PNG del manual permanecen como archivo histórico.
