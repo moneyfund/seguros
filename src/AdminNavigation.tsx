@@ -12,9 +12,9 @@ const groups:{id:string;label:string;icon:LucideIcon;keys:string[]}[]=[
 export default function AdminNavigation({items,onSelect,variant='desktop'}:{items:MobileItem[];onSelect?:(fn:()=>void)=>void;variant?:'desktop'|'mobile'}){
  const active=items.find(item=>item.active)?.key;
  const activeGroup=groups.find(group=>active&&group.keys.includes(active))?.id||null;
- const [expanded,setExpanded]=useState<string|null>(activeGroup);
+ const [expanded,setExpanded]=useState<string[]>(()=>activeGroup?[activeGroup]:[]);
  const uid=useId();
- useEffect(()=>{setExpanded(activeGroup);},[active,activeGroup]);
+ useEffect(()=>{if(activeGroup)setExpanded(prev=>prev.includes(activeGroup)?prev:[...prev,activeGroup]);},[active,activeGroup]);
  const byKey=new Map(items.map(item=>[item.key,item]));
  const itemButton=(item:MobileItem)=><button key={item.key} type="button" className={'sidebar-item ac-admin-link '+(item.active?'active':'')} aria-current={item.active?'page':undefined} onClick={()=>onSelect?onSelect(item.onClick):item.onClick()}><item.icon size={17}/><span>{item.label}</span>{!!item.count&&<i>{item.count}</i>}</button>;
  return <div className={'ac-admin-navigation ac-admin-navigation-'+variant}>
@@ -22,9 +22,9 @@ export default function AdminNavigation({items,onSelect,variant='desktop'}:{item
   {groups.map(group=>{
    const children=group.keys.flatMap(key=>byKey.has(key)?[byKey.get(key)!]:[]);
    if(!children.length)return null;
-   const open=expanded===group.id,current=group.id===activeGroup,id=uid+'-'+group.id;
+   const open=expanded.includes(group.id),current=group.id===activeGroup,id=uid+'-'+group.id;
    return <div className="ac-admin-nav-group" key={group.id}>
-    <button type="button" className={'ac-admin-nav-toggle '+(current?'ac-current':'')} aria-expanded={open} aria-controls={id} onClick={()=>setExpanded(prev=>prev===group.id?null:group.id)}><group.icon size={18}/><span>{group.label}</span><ChevronDown className="ac-admin-chevron" size={16}/></button>
+    <button type="button" className={'ac-admin-nav-toggle '+(current?'ac-current':'')} aria-expanded={open} aria-controls={id} onClick={()=>setExpanded(prev=>prev.includes(group.id)?prev.filter(id=>id!==group.id):[...prev,group.id])}><group.icon size={18}/><span>{group.label}</span><ChevronDown className="ac-admin-chevron" size={16}/></button>
     <div id={id} className="ac-admin-nav-children" hidden={!open}>{children.map(itemButton)}</div>
    </div>;
   })}
