@@ -1,0 +1,93 @@
+# ACOS · Organization and authorization v1 (2026-11-24)
+# Extension of schema.gql; no records, permissions or staff accounts are seeded.
+# ALL access is resolved on a trusted server, never from client-supplied role
+# or company identifiers. SQL foreign keys do not enforce tenant equality.
+
+# A CompanyMember retains its primary Department from schema.gql, while also
+# serving in any number of additional areas, with independent admin delegation.
+type MemberDepartment @table(key: ["member", "department"]) {
+  company: Company!
+  member: CompanyMember!
+  department: Department!
+  departmentAdmin: Boolean! @default(value: false)
+  active: Boolean! @default(value: true)
+  assignedBy: AppUser!
+  assignedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Canonical resource/action registry, e.g. customers.read, issuance.approve,
+# mail.read, mail.send, access.manage. Adding a key grants no access by itself.
+type AccessPermission @table(key: "key") @unique(fields: ["module", "action"]) {
+  key: String!
+  module: String!
+  action: String!
+  description: String
+  sensitive: Boolean! @default(value: false)
+}
+
+# Roles can authorize different scopes for the same action:
+# OWN, ASSIGNED, DEPARTMENT, COMPANY. "COMPANY" must be checked against
+# the signed-in user's exact company membership, never trusted from a URL.
+type RolePermission @table(key: ["role", "permission"]) {
+  role: CompanyRole!
+  permission: AccessPermission!
+  scope: String! @default(value: "OWN")
+}
+
+# An override may deny or grant a permission with one explicit scope.
+# ALLOW and DENY are validated by trusted code; DENY wins over all grants.
+# Scope=DEPARTMENT requires active MemberDepartment; COMPANY may only be
+# granted by verified general administration through the privileged backend.
+type MemberPermissionOverride @table(key: ["member", "permission"]) {
+  company: Company!
+  member: CompanyMember!
+  permission: AccessPermission!
+  effect: String!
+  scope: String! @default(value: "OWN")
+  department: Department
+  reason: String
+  expiresAt: Timestamp
+  changedBy: AppUser!
+  changedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Delegated customer cases do not silently modify their original agent.
+# Visibility always intersects active membership, allowed action and scope.
+type CustomerAssignment @table(key: ["customer", "member"]) {
+  company: Company!
+  customer: Customer!
+  member: CompanyMember!
+  accessLevel: String! @default(value: "READ")
+  active: Boolean! @default(value: true)
+  assignedBy: AppUser!
+  assignedAt: Timestamp! @default(expr: "request.time")
+}
+
+# A personal mailbox or department mailbox may have explicit delegates.
+# Even general administration must be audited whenever opening a mailbox.
+# Nothing in this table provisions an email address or a Namecheap account.
+type MailboxDelegation @table(key: ["mailbox", "member"]) {
+  company: Company!
+  mailbox: Mailbox!
+  member: CompanyMember!
+  canRead: Boolean! @default(value: false)
+  canSend: Boolean! @default(value: false)
+  active: Boolean! @default(value: true)
+  delegatedBy: AppUser!
+  delegatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# The audit log is append-only in application policy: no browser-facing
+# mutation or automatic deletion is permitted for this table.
+# Do not log document bytes, identification numbers or email bodies here.
+type AccessAuditEntry @table {
+  company: Company!
+  actor: AppUser!
+  subjectMember: CompanyMember
+  resourceType: String!
+  resourceId: String!
+  operation: String!
+  decision: String!
+  reasonCode: String
+  occurredAt: Timestamp! @default(expr: "request.time")
+}
