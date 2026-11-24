@@ -5,6 +5,7 @@ import {
   Download, FileText, FlaskConical, Inbox, Plus, RefreshCw, ShieldCheck, Users, Wallet
 } from 'lucide-react';
 import { money } from './data';
+import { ProductOptions } from './InsuranceCatalogBrowser';
 import { nicaraguanInsurers, insurerById, insurerFromText } from './insurers';
 import InsuranceDirectory from './InsuranceDirectory';
 import ExecutiveDashboard from './ExecutiveDashboard';
@@ -250,7 +251,7 @@ export default function PilotWorkspace({user}:{user:User}) {
           </>}
           {tab!=='clientes'&&clientSelection}
           {tab==='oportunidades'&&<>
-            <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><option>Seguro vehicular</option><option>Seguro de vida</option><option>Seguro de salud</option><option>Seguro de hogar</option><option>Seguro empresarial</option></select></Field>
+            <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><ProductOptions/></select></Field>
             <Field title="Prima estimada (USD)"><input required type="number" min="0" step=".01" value={form.estimatedPremium} onChange={e=>change('estimatedPremium',e.target.value)}/></Field>
             <Field title="Aseguradora de interés"><select value={form.insurerId} onChange={e=>change('insurerId',e.target.value)}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.id}>{i.displayName}</option>)}</select></Field>
             <Field title="Origen"><select value={form.source} onChange={e=>change('source',e.target.value)}><option>Web</option><option>Referido</option><option>Teléfono</option><option>WhatsApp</option><option>Redes sociales</option></select></Field>
@@ -259,7 +260,7 @@ export default function PilotWorkspace({user}:{user:User}) {
             <Field title="Vincular oportunidad (opcional)"><select value={form.leadId} onChange={e=>change('leadId',e.target.value)}><option value="">Sin oportunidad asociada</option>{opportunities.map(l=><option key={l.id} value={l.id}>{l.product} · {l.status}</option>)}</select></Field>
             <Field title="Aseguradora (catálogo oficial)"><select required value={form.insurerId} onChange={e=>change('insurerId',e.target.value)}>{nicaraguanInsurers.map(i=><option key={i.id} value={i.id}>{i.displayName} · SIBOIF {i.registryId}</option>)}</select></Field>
             <div className="ins-policy-ref"><ShieldCheck size={15}/><span>{insurerById(form.insurerId)?.legalName}<small>Referencia de directorio; no existe conexión de emisión con la aseguradora.</small></span></div>
-            <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><option>Seguro vehicular</option><option>Seguro de vida</option><option>Seguro de hogar</option><option>Seguro de salud</option><option>Seguro empresarial</option></select></Field>
+            <Field title="Producto"><select value={form.product} onChange={e=>change('product',e.target.value)}><ProductOptions/></select></Field>
             <div className="pilot-form-duo"><Field title="Prima (USD)"><input required type="number" min="0" step=".01" value={form.premium} onChange={e=>change('premium',e.target.value)}/></Field>
             <Field title="Comisión (%)"><input required type="number" min="0" max="100" step=".01" value={form.commissionRate} onChange={e=>change('commissionRate',e.target.value)}/></Field></div>
             <div className="pilot-form-duo"><Field title="Inicio de vigencia"><input required type="date" value={form.startDate} onChange={e=>change('startDate',e.target.value)}/></Field>
