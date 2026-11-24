@@ -1,0 +1,23 @@
+/* Administration only: compact disclosure navigation, shared with the mobile sheet. */
+.live-shell .ac-admin-navigation{display:flex;flex-direction:column;gap:5px;min-width:0;width:100%}
+.live-shell .ac-admin-nav-group{min-width:0;flex-shrink:0}
+.live-shell .ac-admin-nav-toggle{width:100%;display:flex;align-items:center;gap:11px;min-height:44px;padding:9px 11px;background:transparent;border:1px solid #ffffff0d;border-radius:8px;color:var(--brand-line);font:600 11px var(--brand-sans);text-align:left;cursor:pointer;transition:background .18s,border-color .18s}
+.live-shell .ac-admin-nav-toggle>span{flex:1;min-width:0;line-height:1.4;overflow-wrap:normal}
+.live-shell .ac-admin-nav-toggle>svg{flex:none}
+.live-shell .ac-admin-nav-toggle:hover,.live-shell .ac-admin-nav-toggle[aria-expanded=true]{background:#ffffff0e;border-color:#ffffff20;color:#fff}
+.live-shell .ac-admin-nav-toggle.ac-current{color:var(--brand-logo-gold);border-color:#c99c3144}
+.live-shell .ac-admin-chevron{transition:transform .18s}
+.live-shell .ac-admin-nav-toggle[aria-expanded=true] .ac-admin-chevron{transform:rotate(180deg)}
+.live-shell .ac-admin-nav-children{display:grid;gap:3px;margin:5px 0 6px 12px;padding-left:7px;border-left:1px solid #ffffff25}
+.live-shell .ac-admin-nav-children[hidden]{display:none!important}
+.live-shell .ac-admin-navigation .ac-admin-link{height:auto;min-height:40px;padding:8px 10px;gap:9px;font-size:11px;line-height:1.35}
+.live-shell .ac-admin-navigation .ac-admin-link>span{min-width:0;white-space:normal}
+.live-shell .ac-admin-navigation .ac-admin-link>svg{flex-shrink:0}
+.live-shell .ac-admin-navigation button:focus-visible{outline:2px solid var(--brand-logo-gold);outline-offset:2px}
+.live-shell .ac-admin-navigation-mobile .ac-admin-nav-toggle{color:var(--brand-navy);background:#f4f6f8;border-color:#e4e9ed;font-size:13px;min-height:48px}
+.live-shell .ac-admin-navigation-mobile .ac-admin-nav-toggle.ac-current{border-color:var(--brand-logo-gold);color:var(--brand-navy)}
+.live-shell .ac-admin-navigation-mobile .ac-admin-nav-children{border-left-color:#dbe3e8}
+.live-shell .ac-admin-navigation-mobile .ac-admin-link{color:var(--brand-navy);min-height:44px;font-size:12px}
+.live-shell .ac-admin-navigation-mobile .ac-admin-link.active{background:#f4e6bd;color:var(--brand-navy);box-shadow:none;border-color:#d9bb78}
+.live-shell .ac-admin-navigation-mobile .ac-admin-link:hover:not(.active){background:#f1f4f6;color:var(--brand-navy)}
+@media(prefers-reduced-motion:reduce){.live-shell .ac-admin-nav-toggle,.live-shell .ac-admin-chevron{transition:none}}

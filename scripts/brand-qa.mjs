@@ -55,10 +55,11 @@ try {
       assert.ok(await page.locator('.sidebar-nav button').count()>0);
       assert.equal(await page.locator('.sidebar').evaluate(el=>getComputedStyle(el).backgroundColor), 'rgb(0, 25, 41)');
       assert.match(await page.locator('h1').evaluate(el=>getComputedStyle(el).fontFamily), /ACOS Poppins/);
-      assert.equal(await page.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(), profile==='admin'?1:0);
+      assert.equal(await page.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),0);
+      if(profile==='admin'){const nav=page.locator('.sidebar-nav');assert.equal(await nav.locator('.ac-admin-nav-toggle').count(),5);assert.equal(await nav.locator('.ac-admin-nav-toggle[aria-expanded=true]').count(),0);await nav.getByRole('button',{name:'Equipo y accesos',exact:true}).click();assert.equal(await nav.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),1);await nav.getByRole('button',{name:'Finanzas y administración',exact:true}).click();assert.equal(await nav.getByRole('button',{name:'Papelera',exact:true}).count(),1);assert.equal(await nav.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),0);await nav.getByRole('button',{name:'Finanzas y administración',exact:true}).click();}
       assert.equal(await page.getByRole('button',{name:/Laboratorio operativo|Abrir centro operativo/}).count(),0);
       assert.equal(await page.locator('.ins-live-entry').count(),0);
-      assert.equal(await page.locator('.sidebar-nav').getByRole('button',{name:'Papelera',exact:true}).count(),profile==='admin'?1:0);
+      assert.equal(await page.locator('.sidebar-nav').getByRole('button',{name:'Papelera',exact:true}).count(),0);
     });
     for (const width of [1440,1024,768,390,320]) {
       await page.setViewportSize({width,height:width<600?844:1000});
@@ -70,6 +71,7 @@ try {
     }
     await page.setViewportSize({width:1440,height:1000});
     await check(profile + ': navigation and opportunity form remain usable', async () => {
+      if(profile==='admin')await page.locator('.sidebar-nav').getByRole('button',{name:'Clientes y ventas',exact:true}).click();
       await page.locator('.sidebar-nav').getByRole('button',{name:/^Oportunidades/}).click();
       await page.getByRole('heading',{name:'Oportunidades',level:1,exact:true}).waitFor();
       assert.equal(await page.locator('tbody tr:visible').count(),1);
@@ -90,7 +92,8 @@ try {
       await nav.getByRole('button',{name:'Más',exact:true}).click();
       const sheet=page.getByRole('dialog',{name:'Más opciones'});
       await sheet.waitFor();
-      assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),profile==='admin'?1:0);
+      assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),0);
+      if(profile==='admin'){await sheet.getByRole('button',{name:'Equipo y accesos',exact:true}).click();assert.equal(await sheet.getByRole('button',{name:'Solicitudes de personal',exact:true}).count(),1);await sheet.getByRole('button',{name:'Finanzas y administración',exact:true}).click();}
       assert.equal(await sheet.getByRole('button',{name:'Laboratorio operativo',exact:true}).count(),0);
       assert.equal(await sheet.getByRole('button',{name:'Papelera',exact:true}).count(),profile==='admin'?1:0);
       await page.screenshot({path:resolve(output,profile+'-mobile-menu.png'),animations:'disabled'});
