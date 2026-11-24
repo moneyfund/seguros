@@ -31,7 +31,7 @@ export function permissions(admin:boolean,roles:EnterpriseRole[],sections:Sectio
  const canView=admin||(sections.includes('clientes')&&roles.some(r=>['direccion','ventas','operaciones','servicio'].includes(r)));
  return {canView,wide:canView&&(admin||roles.some(r=>['direccion','operaciones','servicio'].includes(r))),sales:canView&&(admin||roles.some(r=>['direccion','ventas'].includes(r))),operator:canView&&(admin||(sections.includes('polizas')&&roles.some(r=>['direccion','operaciones'].includes(r)))),issuance:canView&&(admin||sections.includes('polizas'))};
 }
-export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean){
+export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean,admin=false){
  const [enabled,setEnabled]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState('');
  const [clients,setClients]=useState<Customer[]>([]),[requests,setRequests]=useState<RequestRecord[]>([]);
  useEffect(()=>{
@@ -52,8 +52,8 @@ export function useEnterpriseRecords(uid:string,canView:boolean,wide:boolean){
   return()=>{live=false;a();b();};
  },[uid,enabled,canView,wide]);
  const visibleClients=clients.filter(c=>!c.archived);
- const visibleRequests=requests.filter(r=>!r.archived).map(r=>({...r,clientName:clients.find(c=>c.id===r.clientId)?.fullName||r.clientName}));
- return {enabled,loading,error,clients:visibleClients,requests:visibleRequests,archivedClients:clients.filter(c=>c.archived),archivedRequests:requests.filter(r=>r.archived)};
+ const visibleRequests=requests.filter(r=>!r.archived&&visibleClients.some(c=>c.id===r.clientId)).map(r=>({...r,clientName:clients.find(c=>c.id===r.clientId)?.fullName||r.clientName}));
+ return {enabled,loading,error,clients:visibleClients,requests:visibleRequests,archivedClients:admin?clients.filter(c=>c.archived):[],archivedRequests:admin?requests.filter(r=>r.archived):[]};
 }
 export type EnterpriseRecords=ReturnType<typeof useEnterpriseRecords>;
 function cleanCustomer(values:Omit<Customer,'id'|'ownerUid'|'trial'>){

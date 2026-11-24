@@ -1,7 +1,7 @@
 import {before,after,test} from 'node:test';
 import {readFileSync} from 'node:fs';
 import {initializeTestEnvironment,assertSucceeds,assertFails} from '@firebase/rules-unit-testing';
-import {doc,setDoc,updateDoc} from 'firebase/firestore';
+import {doc,setDoc,updateDoc,deleteDoc} from 'firebase/firestore';
 import {ref,uploadBytes,getBytes,deleteObject,listAll,getMetadata} from 'firebase/storage';
 const projectId='demo-acos-enterprise';
 let env;
@@ -76,4 +76,17 @@ test('External policy: only assigned agent may fill missing files; only verified
  const owner=env.authenticatedContext('owner-storage',{email:'amyblandon171@gmail.com',email_verified:true});
  await assertSucceeds(deleteObject(ref(owner.storage(),path(jpg,'external'))));
  await assertSucceeds(deleteObject(ref(owner.storage(),path(pdf,'external'))));
+});
+
+test('Trash storage: removed policies are private, listing and deletion require owner purge',async()=>{
+ const owner=env.authenticatedContext('owner-trash-storage',{email:'amyblandon171@gmail.com',email_verified:true});
+ const id='trash-policy';
+ await env.withSecurityRulesDisabled(async c=>setDoc(doc(c.firestore(),root+'enterpriseIssuance/'+id),{agentUid:agent,operatorUid:'',status:'DRAFT',trial:true}));
+ await assertSucceeds(upload(agent,jpg,photo,'image/jpeg',id));
+ await env.withSecurityRulesDisabled(async c=>{const db=c.firestore();await setDoc(doc(db,root+'enterpriseTrashIssuance/'+id),{purging:false,record:{agentUid:agent}});await deleteDoc(doc(db,root+'enterpriseIssuance/'+id));});
+ const ownerFile=ref(owner.storage(),path(jpg,id)),folder=ref(owner.storage(),root+'enterpriseTrial/'+id);
+ await assertFails(getBytes(file(agent,jpg,id)));await assertFails(deleteObject(ownerFile));await assertFails(listAll(folder));
+ await env.withSecurityRulesDisabled(async c=>updateDoc(doc(c.firestore(),root+'enterpriseTrashIssuance/'+id),{purging:true}));
+ await assertFails(listAll(ref(ctx(agent).storage(),root+'enterpriseTrial/'+id)));await assertFails(deleteObject(file(agent,jpg,id)));
+ await assertSucceeds(listAll(folder));await assertSucceeds(deleteObject(ownerFile));await assertSucceeds(listAll(folder));
 });

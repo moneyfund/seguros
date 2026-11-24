@@ -401,13 +401,59 @@ service cloud.firestore {
           validString(d.phone,0,32) && validString(d.city,0,100) &&
           (!d.keys().hasAny(['profile']) || validProfile(d.profile));
       }
+      // Dedicated owner-only trash. Copy and removal must be one atomic operation.
+      function recordPath(kind,id) {
+        return /databases/$(database)/documents/companies/main/$(kind)/$(id);
+      }
+      function validTrashEnvelope(d, original) {
+        return d.keys().hasOnly(['record','movedAt','movedBy','reason','purging']) &&
+          d.keys().hasAll(['record','movedAt','movedBy','reason','purging']) &&
+          d.record == original && d.movedAt == request.time &&
+          d.movedBy == request.auth.uid && validString(d.reason,3,500) && d.purging == false;
+      }
+      function canMoveToTrash(trashKind,id) {
+        let target = recordPath(trashKind,id);
+        return isOwner() && trialEnabled() && !exists(target) &&
+          existsAfter(target) && validTrashEnvelope(getAfter(target).data,resource.data);
+      }
+      function sameRestoredRecord(saved, restored) {
+        return restored.get('archived',true) == false &&
+          restored.diff(saved).affectedKeys().hasOnly(['archived']);
+      }
+      function activeTrashCustomer(id) {
+        let target = enterpriseCustomerPath(id);
+        return existsAfter(target) && getAfter(target).data.get('archived',false) == false;
+      }
+      function canRestore(trashKind,id) {
+        let target = recordPath(trashKind,id);
+        return isOwner() && trialEnabled() && exists(target) && !existsAfter(target) &&
+          get(target).data.purging == false &&
+          sameRestoredRecord(get(target).data.record,request.resource.data);
+      }
+      function trashSource(kind) {
+        return kind == 'enterpriseTrashClients' ? 'enterpriseClients' : 'enterpriseIssuance';
+      }
+      match /{trashKind}/{id} {
+        function isTrash() { return trashKind in ['enterpriseTrashClients','enterpriseTrashIssuance']; }
+        function originalPath() { return recordPath(trashSource(trashKind),id); }
+        allow read: if isTrash() && isOwner();
+        allow create: if isTrash() && isOwner() && trialEnabled() &&
+          exists(originalPath()) && !existsAfter(originalPath()) &&
+          validTrashEnvelope(request.resource.data,get(originalPath()).data);
+        allow update: if isTrash() && isOwner() && trialEnabled() && resource.data.purging == false &&
+          request.resource.data.purging == true && changedOnly(['purging']) && !existsAfter(originalPath());
+        allow delete: if isTrash() && isOwner() && trialEnabled() &&
+          (resource.data.purging == true && !existsAfter(originalPath()) ||
+           resource.data.purging == false && existsAfter(originalPath()) &&
+           sameRestoredRecord(resource.data.record,getAfter(originalPath()).data));
+      }
       match /enterpriseAdminAudit/{auditId} {
         allow read: if isOwner();
         allow create: if isOwner() && request.resource.data.keys().hasOnly(['targetType','targetId','action','reason','actorUid','createdAt']) &&
           request.resource.data.keys().hasAll(['targetType','targetId','action','reason','actorUid','createdAt']) &&
           request.resource.data.targetType in ['enterpriseClients','enterpriseIssuance'] &&
           validString(request.resource.data.targetId,1,100) &&
-          request.resource.data.action in ['EDIT_CLIENT','EDIT_POLICY','ARCHIVE','RESTORE','DELETE_ATTACHMENT'] &&
+          request.resource.data.action in ['EDIT_CLIENT','EDIT_POLICY','ARCHIVE','RESTORE','DELETE_ATTACHMENT','PURGE'] &&
           validString(request.resource.data.reason,3,500) && request.resource.data.actorUid == request.auth.uid &&
           request.resource.data.createdAt == request.time;
         allow update, delete: if false;
@@ -418,11 +464,11 @@ service cloud.firestore {
       }
       match /enterpriseClients/{clientId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.ownerUid));
-        allow create: if trialEnabled() && validCustomer(request.resource.data);
+        allow create: if canRestore('enterpriseTrashClients',clientId) || trialEnabled() && !exists(recordPath('enterpriseTrashClients',clientId)) && validCustomer(request.resource.data);
         allow update: if trialEnabled() && isOwner() && correctionMetadata(request.resource.data) &&
           request.resource.data.diff(resource.data).affectedKeys().hasOnly(['fullName','email','phone','city','profile','archived','adminUpdatedAt','adminUpdatedBy','adminReason']) &&
           customerFields(request.resource.data) && request.resource.data.get('archived',false) is bool;
-        allow delete: if false;
+        allow delete: if canMoveToTrash('enterpriseTrashClients',clientId);
       }
       function validAttachment(name, kind) {
         return name is string && (name == '' ||
@@ -440,9 +486,9 @@ service cloud.firestore {
       function validDraft(d) {
         return d.keys().hasAll(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial']) &&
           d.keys().hasOnly(['clientId','clientName','agentUid','insurerId','productKey','plate','status','files','pdf','policyNumber','startDate','endDate','premiumCents','currency','operatorUid','reason','revision','agentSeenRevision','createdAt','updatedAt','trial','vehicle']) && (!d.keys().hasAny(['vehicle']) || validVehicle(d.vehicle)) &&
-          validString(d.clientId,1,80) && exists(enterpriseCustomerPath(d.clientId)) &&
-          get(enterpriseCustomerPath(d.clientId)).data.ownerUid == request.auth.uid &&
-          get(enterpriseCustomerPath(d.clientId)).data.fullName == d.clientName &&
+          validString(d.clientId,1,80) && activeTrashCustomer(d.clientId) &&
+          getAfter(enterpriseCustomerPath(d.clientId)).data.ownerUid == request.auth.uid &&
+          getAfter(enterpriseCustomerPath(d.clientId)).data.fullName == d.clientName &&
           d.agentUid == request.auth.uid && d.insurerId in ['iniser','assa','america','lafise','mapfre'] &&
           d.productKey == 'VEHICLE_MANDATORY' && validString(d.plate,1,24) && d.status == 'DRAFT' &&
           validAttachments(d) && d.files.front == '' && d.files.back == '' && d.files.registration == '' &&
@@ -508,7 +554,7 @@ service cloud.firestore {
       }
       match /enterpriseIssuance/{requestId} {
         allow read: if trialEnabled() && (enterpriseWide() || enterpriseAgent(resource.data.agentUid));
-        allow create: if trialEnabled() &&
+        allow create: if (canRestore('enterpriseTrashIssuance',requestId) && activeTrashCustomer(request.resource.data.clientId)) || trialEnabled() && !exists(recordPath('enterpriseTrashIssuance',requestId)) &&
           (request.resource.data.get('source','') == 'EXTERNAL' ? externalRecord(request.resource.data) : enterpriseSales() && hasView('polizas') && validDraft(request.resource.data));
         // Evaluate only the relevant action. Avoid exceeding the Rules engine's
         // 1,000-expression budget by repeatedly expanding authorization helpers.
@@ -549,7 +595,7 @@ service cloud.firestore {
               : operatorEdit(old,next,keys);
         }
         allow update: if verified() && trialEnabled() && authorizedChange();
-        allow delete: if false;
+        allow delete: if canMoveToTrash('enterpriseTrashIssuance',requestId);
       }
 
       // Colecciones en reserva. Solo gerencia, hasta definir alcance.

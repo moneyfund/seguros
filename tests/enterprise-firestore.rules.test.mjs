@@ -116,3 +116,31 @@ test('External registration is atomic and corrections belong exclusively to veri
 });
 
 test('Academy public lessons: anyone reads, only verified owners publish, no private fields',async()=>{const owner=env.authenticatedContext('academy-owner',{email:'amyblandon171@gmail.com',email_verified:true}).firestore(),anon=env.unauthenticatedContext().firestore(),agent=ctx(aUid);const item={title:'Prueba educativa',description:'Lección de ejemplo',author:'ACOS Academy',videoId:'AsIub8Z67_k',track:'finanzas',createdAt:serverTimestamp(),updatedAt:serverTimestamp()};await assertFails(setDoc(d(agent,'academyVideos/test'),item));await assertFails(setDoc(d(owner,'academyVideos/invalid'),{...item,privateData:'not allowed'}));await assertSucceeds(setDoc(d(owner,'academyVideos/test'),item));await assertSucceeds(getDocs(collection(anon,base+'academyVideos')));await assertFails(deleteDoc(d(agent,'academyVideos/test')));await assertFails(getDoc(d(anon,'enterpriseClients/a')));await assertSucceeds(deleteDoc(d(owner,'academyVideos/test')));});
+
+test('Administrative trash: atomic movement, restricted reads, restore and irreversible purge',async()=>{
+ const owner=env.authenticatedContext('owner-trash',{email:'amyblandon171@gmail.com',email_verified:true}).firestore(),agent=ctx(aUid),operator=ctx(oUid);
+ await env.withSecurityRulesDisabled(async c=>{const db=c.firestore();await setDoc(d(db,'settings/enterpriseTrial'),{enabled:true});await setDoc(d(db,'enterpriseClients/trash-c'),client(aUid));await setDoc(d(db,'enterpriseIssuance/trash-p'),draft(aUid,'trash-c'));});
+ const original=d(owner,'enterpriseIssuance/trash-p'),bin=d(owner,'enterpriseTrashIssuance/trash-p');
+ const data=(await getDoc(original)).data();
+ const envelope={record:data,movedAt:serverTimestamp(),movedBy:'owner-trash',reason:'Registro ficticio',purging:false};
+ await assertFails(deleteDoc(original));
+ await assertFails(setDoc(bin,envelope));
+ const agentMove=writeBatch(agent);agentMove.set(d(agent,'enterpriseTrashIssuance/trash-p'),{...envelope,movedBy:aUid});agentMove.delete(d(agent,'enterpriseIssuance/trash-p'));await assertFails(agentMove.commit());
+ const forged=writeBatch(owner);forged.set(bin,{...envelope,record:{...data,plate:'FAKE'}});forged.delete(original);await assertFails(forged.commit());
+ const move=writeBatch(owner);move.set(bin,envelope);move.delete(original);await assertSucceeds(move.commit());
+ await assertSucceeds(getDoc(bin));await assertFails(getDoc(d(agent,'enterpriseTrashIssuance/trash-p')));await assertFails(getDocs(collection(operator,base+'enterpriseTrashIssuance')));
+ await assertFails(deleteDoc(bin));
+ const restore=writeBatch(owner);restore.set(original,{...data,archived:false});restore.delete(bin);await assertSucceeds(restore.commit());
+ const again=writeBatch(owner);again.set(bin,{...envelope,record:{...data,archived:false}});again.delete(original);await assertSucceeds(again.commit());
+ await assertFails(updateDoc(d(agent,'enterpriseTrashIssuance/trash-p'),{purging:true}));
+ await assertSucceeds(updateDoc(bin,{purging:true}));
+ const invalidRestore=writeBatch(owner);invalidRestore.set(original,{...data,archived:false});invalidRestore.delete(bin);await assertFails(invalidRestore.commit());
+ await assertSucceeds(deleteDoc(bin));
+ const clientRef=d(owner,'enterpriseClients/trash-c'),clientBin=d(owner,'enterpriseTrashClients/trash-c'),clientData=(await getDoc(clientRef)).data();
+ const clientMove=writeBatch(owner);clientMove.set(clientBin,{...envelope,record:clientData});clientMove.delete(clientRef);await assertSucceeds(clientMove.commit());
+ await assertFails(setDoc(d(agent,'enterpriseIssuance/orphan'),draft(aUid,'trash-c')));
+ await assertFails(getDoc(d(agent,'enterpriseTrashClients/trash-c')));
+ const clientRestore=writeBatch(owner);clientRestore.set(clientRef,{...clientData,archived:false});clientRestore.delete(clientBin);await assertSucceeds(clientRestore.commit());
+ const clientMoveAgain=writeBatch(owner);clientMoveAgain.set(clientBin,{...envelope,record:{...clientData,archived:false}});clientMoveAgain.delete(clientRef);await assertSucceeds(clientMoveAgain.commit());
+ await assertSucceeds(updateDoc(clientBin,{purging:true}));await assertSucceeds(deleteDoc(clientBin));
+});
