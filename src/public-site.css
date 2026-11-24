@@ -529,12 +529,48 @@
 .acos-public .ap-exact-catalog .ap-product button:hover{color:#fff}
 .acos-public .ap-product-detail-photo{position:relative;min-height:260px;border-radius:3px;overflow:hidden;background:linear-gradient(135deg,var(--product-tone),var(--product-ink))}
 .acos-public .ap-product-detail-photo>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:var(--product-position)}
-@media(min-width:1150px){
- .acos-public .ap-exact-catalog .ap-product:first-child,.acos-public .ap-exact-catalog .ap-product:last-child{grid-column:span 2;display:grid;grid-template-columns:1.12fr 1fr;min-height:300px}
- .acos-public .ap-exact-catalog .ap-product:first-child .ap-product-media,.acos-public .ap-exact-catalog .ap-product:last-child .ap-product-media{height:auto;min-height:300px}
- .acos-public .ap-exact-catalog .ap-product:first-child .ap-product-body,.acos-public .ap-exact-catalog .ap-product:last-child .ap-product-body{border-top:0;border-left:3px solid var(--product-accent);padding:29px 27px 23px}
- .acos-public .ap-exact-catalog .ap-product:first-child h3,.acos-public .ap-exact-catalog .ap-product:last-child h3{font-size:29px}
-}
 @media(max-width:1000px){.acos-public .ap-exact-catalog{grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.acos-public .ap-product-media{height:195px}.acos-public .ap-exact-catalog .ap-product-body{padding:19px 20px 16px}}
 @media(max-width:540px){.acos-public .ap-exact-catalog{grid-template-columns:1fr;gap:17px}.acos-public .ap-product-media{height:185px}.acos-public .ap-exact-catalog .ap-product-body{min-height:0;padding:18px 20px 15px}.acos-public .ap-exact-catalog .ap-product h3{font-size:23px}.acos-public .ap-exact-catalog .ap-product p{margin-bottom:13px}.acos-public .ap-product-detail-photo{min-height:180px}}
 @media(prefers-reduced-motion:reduce){.acos-public .ap-exact-catalog .ap-product:hover,.acos-public .ap-exact-catalog .ap-product:focus-within{transform:none}.acos-public .ap-product:hover .ap-product-media>img{transform:none}}
+
+/* Uniform photo-first cards across both public surfaces. No featured spans. */
+.acos-public .ap-exact-catalog .ap-product{display:flex;flex-direction:column;grid-column:auto;min-height:0;align-self:stretch}
+.acos-public .ap-exact-catalog .ap-product-media{height:auto;aspect-ratio:16/9;flex:none;min-height:0}
+.acos-public .ap-exact-catalog .ap-product-body{flex:1;min-height:218px;border-left:0;border-top:3px solid var(--product-accent)}
+.acos-public .ap-exact-catalog .ap-product h3{font-size:clamp(21px,1.9vw,25px);min-height:2.44em}
+.acos-public .ap-exact-catalog .ap-product p{flex:1}
+.acos-public .ap-catalog-grid{grid-auto-rows:1fr}
+.acos-public .ap-insurance-carousel{min-width:0}
+.acos-public .ap-carousel-track{position:relative;display:grid;grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:calc((100% - 44px)/3);gap:22px;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;overscroll-behavior-inline:contain;scrollbar-width:none;scroll-behavior:auto;padding-block:7px 16px;isolation:isolate;align-items:stretch}
+.acos-public .ap-carousel-track::-webkit-scrollbar{display:none}
+.acos-public .ap-carousel-track .ap-product{scroll-snap-align:start;scroll-snap-stop:always}
+.acos-public .ap-carousel-track:focus-visible{outline:2px solid var(--ap-gold);outline-offset:4px}
+.acos-public .ap-carousel-footer{display:grid;grid-template-columns:minmax(100px,1fr) auto auto;align-items:center;gap:24px;margin-top:9px}
+.acos-public .ap-carousel-progress{display:flex;align-items:center;gap:14px;max-width:330px;min-width:0}
+.acos-public .ap-carousel-count{font-size:11px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ap-navy)}
+.acos-public .ap-carousel-line{height:2px;background:#d5dde1;flex:1;min-width:36px;overflow:hidden}
+.acos-public .ap-carousel-line>span{display:block;height:100%;background:#95722c;transition:width .3s ease}
+.acos-public .ap-carousel-controls{display:flex;gap:7px;align-items:center}
+.acos-public .ap-carousel-controls button{width:44px;height:44px;display:grid;place-items:center;flex:none;border:1px solid #bbc8cc;border-radius:3px;background:#fff;color:var(--ap-navy);cursor:pointer;transition:background .2s,color .2s}
+.acos-public .ap-carousel-controls button:hover{background:var(--ap-navy);color:white}
+.acos-public .ap-carousel-controls button:focus-visible{outline:2px solid #95722c;outline-offset:3px}
+.acos-public .ap-catalog-all{justify-self:end;white-space:nowrap}
+.acos-public .ap-catalog-hero{position:relative;background:linear-gradient(110deg,#001929f5,#062b40ed),url('/images/familia-hero.webp') center 40%/cover;color:#fff;padding:58px 0 68px}
+.acos-public .ap-catalog-hero-inner{position:relative}
+.acos-public .ap-catalog-breadcrumb{display:inline-flex;align-items:center;gap:9px;font-size:12px;color:#e5d0a0;margin-bottom:35px;text-decoration:none}
+.acos-public .ap-catalog-hero .ap-eyebrow{display:block;color:#e5d0a0;margin-bottom:14px}
+.acos-public .ap-catalog-hero h1{color:white;font-size:clamp(37px,5.3vw,72px);line-height:1.06;letter-spacing:-1.6px;margin:0}
+.acos-public .ap-catalog-hero h1 span{color:#e5d0a0}
+.acos-public .ap-catalog-hero p{color:#e4edf0;font-size:15px;line-height:1.7;max-width:620px;margin:20px 0 28px}
+.acos-public .ap-catalog-jump{display:flex;gap:12px;flex-wrap:wrap}
+.acos-public .ap-catalog-jump button{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:49px;min-width:158px;padding:10px 16px;color:#fff;border:1px solid #b5c3ca;background:#ffffff08;border-radius:3px;cursor:pointer;font:inherit;font-size:13px}
+.acos-public .ap-catalog-jump button:hover{background:#ffffff17}
+.acos-public .ap-catalog-jump button:focus-visible{outline:2px solid #e5d0a0;outline-offset:3px}
+.acos-public .ap-catalog-segment{padding-block:68px}
+.acos-public .ap-catalog-segment:nth-of-type(3){background:#f5f7f7;border-top:1px solid #e0e7e8}
+.acos-public .ap-catalog-segment .ap-section-heading>p{font-size:13px;line-height:1.65;color:var(--brand-slate);max-width:330px}
+.acos-public .ap-catalog-disclaimer{display:flex;align-items:flex-start;gap:12px;padding-block:28px 45px;color:var(--brand-slate);font-size:12px;line-height:1.65}
+.acos-public .ap-catalog-disclaimer svg{flex:none}
+@media(max-width:1000px){.acos-public .ap-carousel-track{grid-auto-columns:calc((100% - 17px)/2);gap:17px}.acos-public .ap-carousel-footer{gap:16px}.acos-public .ap-exact-catalog .ap-product-body{min-height:210px}}
+@media(max-width:680px){.acos-public .ap-carousel-footer{grid-template-columns:1fr auto;gap:13px}.acos-public .ap-catalog-all{grid-column:1/-1;justify-self:stretch;justify-content:center}.acos-public .ap-catalog-hero{padding:37px 0 48px}.acos-public .ap-catalog-segment{padding-block:45px}.acos-public .ap-catalog-hero p{font-size:13px}.acos-public .ap-catalog-breadcrumb{margin-bottom:25px}}
+@media(max-width:540px){.acos-public .ap-carousel-track{grid-auto-columns:100%;gap:17px}.acos-public .ap-exact-catalog .ap-product-media{aspect-ratio:16/9}.acos-public .ap-exact-catalog .ap-product-body{min-height:190px}.acos-public .ap-exact-catalog .ap-product h3{min-height:0;font-size:23px}.acos-public .ap-catalog-grid{grid-auto-rows:auto}.acos-public .ap-catalog-jump{gap:8px}.acos-public .ap-catalog-jump button{min-width:0;flex:1;gap:8px;font-size:12px}}

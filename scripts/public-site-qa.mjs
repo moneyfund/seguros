@@ -111,6 +111,7 @@ try {
       await page.screenshot({ path: resolve(output, 'home-' + width + '.png'), fullPage: true });
       assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1), 'Horizontal page overflow');
       const clipped = await page.locator('.ap-button,.ap-shortcuts>button,.ap-product button,.ap-filters button').evaluateAll(elements => elements.filter(el => {
+        if(el.closest('.ap-carousel-track')) return false;
         const rect = el.getBoundingClientRect();
         return rect.width > 0 && (rect.left < -1 || rect.right > innerWidth + 1);
       }).map(el => el.textContent));
@@ -179,14 +180,17 @@ try {
     assert.equal(await page.locator('.ap-menu-toggle').getAttribute('aria-expanded'), 'false');
     await page.getByRole('button', { name: 'Abrir menú', exact: true }).click();
     await page.locator('.ap-nav').getByRole('link', { name: 'Nuestros seguros', exact: true }).click();
-    assert.equal(new URL(page.url()).hash, '#/inicio/soluciones');
+    assert.equal(new URL(page.url()).hash, '#/seguros');
+    await page.locator('.ap-catalog-page').waitFor();
+    assert.equal(await page.locator('#catalogo-personas .ap-product').count(),7);
+    assert.equal(await page.locator('#catalogo-empresas .ap-product').count(),13);
     assert.equal(await page.locator('.ap-menu-toggle').getAttribute('aria-expanded'), 'false');
     await page.locator('.ap-product-salud button').click();
     await page.screenshot({ path: resolve(output, 'mobile-details.png') });
     await page.keyboard.press('Escape');
   });
   await test('Canonical and legacy public routes still render the public website', async () => {
-    for (const hash of ['#/inicio', '#/web', '#/inicio/nosotros', '#/inicio/soluciones', '#/inicio/empresas', '#/inicio/proceso', '#/inicio/contacto', '#inicio', '#servicios', '#filosofia', '#proceso', '#contacto']) {
+    for (const hash of ['#/inicio', '#/web', '#/seguros', '#/inicio/nosotros', '#/inicio/soluciones', '#/inicio/empresas', '#/inicio/proceso', '#/inicio/contacto', '#inicio', '#servicios', '#filosofia', '#proceso', '#contacto']) {
       await page.goto(base + hash);
       await page.locator('.acos-public').waitFor();
     }
