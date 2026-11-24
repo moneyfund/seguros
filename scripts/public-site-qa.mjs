@@ -196,7 +196,7 @@ try {
       await page.goto(base + hash);
       await page.locator('input[type=password]').waitFor();
       assert.equal(await page.locator('.acos-public').count(), 0);
-      if (['#/demo', '#/dashboard', '#/admin'].includes(hash)) assert.equal(new URL(page.url()).hash, '#/acceso');
+      if (['#/demo', '#/dashboard', '#/admin'].includes(hash)) { await page.waitForFunction(()=>window.location.hash==='#/acceso'); assert.equal(new URL(page.url()).hash, '#/acceso'); }
     }
     await page.goto(base + '#/inicio');
     await page.locator('.acos-public').waitFor();

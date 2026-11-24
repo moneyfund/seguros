@@ -20,9 +20,18 @@ try{
  await page.locator('.ap-exact-catalog').waitFor();
  await page.locator('#acos-public-loader').waitFor({state:'hidden'});
  assert.equal(await page.locator('.ap-product').count(),7);
+ assert.equal(await page.locator('.ap-product-media img').count(),7);
  assert.equal(await page.locator('.ac-catalog').count(),0);
+ const personalPhotos=await page.locator('.ap-product-media img').evaluateAll(imgs=>imgs.map(img=>img.getAttribute('src')));
+ assert.equal(new Set(personalPhotos).size,7);
  await page.getByRole('button',{name:'Empresas',exact:true}).click();
  assert.equal(await page.locator('.ap-product').count(),13);
+ assert.equal(await page.locator('.ap-product-media img').count(),13);
+ const businessPhotos=await page.locator('.ap-product-media img').evaluateAll(imgs=>imgs.map(img=>img.getAttribute('src')));
+ assert.equal(new Set(businessPhotos).size,13);
+ assert.equal(new Set([...personalPhotos,...businessPhotos]).size,19);
+ const palettes=await page.locator('.ap-product').evaluateAll(els=>els.map(el=>el.style.getPropertyValue('--product-ink')));
+ assert.equal(new Set(palettes).size,13);
  await page.locator('.ap-product-agricola button').click();
  await page.locator('dialog[open]').waitFor();
  assert.match(await page.locator('dialog h2').innerText(),/agrícola/);
@@ -30,6 +39,8 @@ try{
  assert.equal(await page.locator('#ap-interest').inputValue(),'agricola');
  assert.match(await page.locator('#ap-message').inputValue(),/agrícola/);
  await page.keyboard.press('Escape');
+ await page.locator('.ap-exact-catalog').scrollIntoViewIfNeeded();
+ await page.screenshot({path:resolve(output,'catalog-empresas.png')});
  await page.getByRole('button',{name:'Personas',exact:true}).click();
  assert.equal(await page.locator('.ap-product').count(),7);
  await page.locator('.ap-product-soa button').click();
@@ -45,6 +56,11 @@ try{
  }
  await page.locator('.ap-exact-catalog').scrollIntoViewIfNeeded();
  await page.screenshot({path:resolve(output,'catalog-mobile.png')});
+ await page.route('https://images.pexels.com/photos/**',route=>route.abort());
+ await page.reload();
+ await page.locator('#acos-public-loader').waitFor({state:'hidden'});
+ await page.locator('.ap-product-soa').scrollIntoViewIfNeeded();
+ await page.waitForFunction(()=>{const img=document.querySelector('.ap-product-soa img');return img?.getAttribute('src')==='/images/vehiculos.webp'&&img.complete&&img.naturalWidth>0;});
  assert.deepEqual(errors,[]);
- console.log('PASS catalog: exact 7 personal and 13 business listings, one product section, consultation and responsive widths');
+ console.log('PASS catalog: exact 7/13 listings, 19 individual photos, palettes, consultation, responsive widths and CDN fallback');
 }finally{await browser?.close();await new Promise(done=>server.close(done));}

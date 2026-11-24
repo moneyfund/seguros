@@ -16,3 +16,24 @@ Real photographs, stored locally and compressed to WebP. Illustrative scenes onl
 Provider license pages:
 - https://www.pexels.com/license/
 - https://unsplash.com/license
+
+## Catálogo comercial — 24-11-2026
+
+Los productos reutilizan las fotografías locales cuando son específicas del ramo. Las siguientes fotografías adicionales se sirven mediante la CDN de Pexels, limitadas a 1000 px, con carga diferida y respaldo local. Son imágenes ilustrativas, no clientes, asegurados ni empresas asociadas a ACOS. No proceden de Advisers.
+
+| Ramo | Fuente original |
+| --- | --- |
+| soa | https://www.pexels.com/photo/7607202/ |
+| viajes | https://www.pexels.com/photo/3140204/ |
+| accidentes | https://www.pexels.com/photo/20860580/ |
+| robos | https://www.pexels.com/photo/17440970/ |
+| agricola | https://www.pexels.com/photo/8019123/ |
+| gastos-medicos | https://www.pexels.com/photo/5214997/ |
+| maquinarias | https://www.pexels.com/photo/15370211/ |
+| transportes | https://www.pexels.com/photo/4570838/ |
+| do | https://www.pexels.com/photo/8463151/ |
+| eo | https://www.pexels.com/photo/8730759/ |
+| incendios | https://www.pexels.com/photo/2282658/ |
+| responsabilidad | https://www.pexels.com/photo/19895881/ |
+| contratista | https://www.pexels.com/photo/7937365/ |
+| construccion | https://www.pexels.com/photo/31579486/ |

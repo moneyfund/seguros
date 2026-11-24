@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import {
   ArrowDown, ArrowRight, ArrowUpRight, BriefcaseBusiness, CarFront, Check,
   ChevronDown, ClipboardCheck, Copy, FileText, FolderOpen, HeartHandshake,
@@ -9,6 +9,7 @@ import BrandLogo from './BrandLogo';
 import PublicInsurersCarousel from './PublicInsurersCarousel';
 import { publicContact, publicSolutions, featuredSolutions, catalogSolutions, type SolutionId } from './public-site-config';
 import type { CatalogAudience } from './insuranceCatalog';
+import { productVisuals, type ProductVisual } from './productVisuals';
 import './public-site.css';
 
 const navigation = [
@@ -66,6 +67,18 @@ function Modal({ title, description, onClose, children, wide = false }: {
   );
 }
 
+/** An unavailable external image must not break the card or its consultation. */
+function ProductPhoto({visual,className='',eager=false}:{visual:ProductVisual;className?:string;eager?:boolean}){
+ const [failed,setFailed]=useState(false);
+ const [fallbackFailed,setFallbackFailed]=useState(false);
+ const image=failed?visual.fallback:visual.photo;
+ if(fallbackFailed)return null;
+ return <img className={className} src={image} alt="" width="1000" height="667" referrerPolicy="no-referrer" loading={eager?'eager':'lazy'} decoding="async" onError={()=>{if(failed||visual.photo===visual.fallback)setFallbackFailed(true);else setFailed(true);}} />;
+}
+function productStyle(visual:ProductVisual):CSSProperties{
+ return {'--product-tone':visual.tone,'--product-ink':visual.ink,'--product-accent':visual.accent,'--product-position':visual.position} as CSSProperties;
+}
+
 /** Public content only: never reads operational stores, client records or authentication data. */
 export default function PublicSite({ openWorkspace }: { openWorkspace: () => void }) {
   const root = useRef<HTMLDivElement>(null);
@@ -80,7 +93,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
   const [copied, setCopied] = useState<'idle' | 'done' | 'error'>('idle');
   const detailSolution = publicSolutions.find(item => item.id === detail);
   const contactSolution = publicSolutions.find(item => item.id === consultation);
-  const DetailIcon = icons[detail || ''] || ShieldCheck;
+  const detailVisual = detail ? productVisuals[detail] : undefined;
   const message = 'Hola, ACOS. Me gustaría recibir asesoría sobre ' + (contactSolution?.name.toLowerCase() || 'seguros') + '. Quisiera conocer las alternativas disponibles, sus condiciones y los siguientes pasos.';
   const whatsapp = publicContact.whatsapp.replace(/\D/g, '');
   const hasChannel = Boolean(whatsapp || publicContact.email || publicContact.phone);
@@ -243,11 +256,19 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
             <div className="ap-product-grid ap-exact-catalog" aria-label={audience==='personas'?'Seguros para personas':'Seguros para empresas'}>
               {visibleSolutions.map(item => {
                 const Icon = icons[item.id] || ShieldCheck;
-                return <article key={item.id} className={'ap-product ap-product-' + item.id + (item.image ? ' ap-product-photo' : ' ap-product-technical')}>
-                  {item.image ? <img src={item.image} alt="" width="1000" height="667" loading="lazy" decoding="async" /> : <Icon className="ap-product-watermark" size={160} strokeWidth={.65} aria-hidden="true"/>}
-                  <div className="ap-product-shade" />
-                  <div className="ap-product-top"><span className="ap-product-icon"><Icon size={25} strokeWidth={1.6} /></span><span>{audience === 'empresas' ? 'PARA TU EMPRESA' : 'PARA VOS'}</span></div>
-                  <div className="ap-product-body"><h3>{item.name}</h3><p>{item.summary}</p><button onClick={() => setDetail(item.id)} aria-label={'Ver detalles de ' + item.name.toLowerCase()}>Conocé este seguro<ArrowUpRight size={18} /></button></div>
+                const visual=productVisuals[item.id];
+                return <article key={item.id} className={'ap-product ap-product-' + item.id} style={productStyle(visual)}>
+                  <div className="ap-product-media" aria-hidden="true">
+                    <Icon className="ap-product-watermark" size={125} strokeWidth={.8}/>
+                    <ProductPhoto key={item.id} visual={visual} />
+                    <div className="ap-product-media-shade"/>
+                    <span className="ap-product-icon"><Icon size={25} strokeWidth={1.65}/></span>
+                  </div>
+                  <div className="ap-product-body">
+                    <span className="ap-product-audience">{audience === 'empresas' ? 'SEGUROS PARA EMPRESAS' : 'SEGUROS PARA PERSONAS'}</span>
+                    <h3>{item.name}</h3><p>{item.summary}</p>
+                    <button onClick={() => setDetail(item.id)} aria-label={'Ver detalles de ' + item.name.toLowerCase()}>Conocé este seguro<span className="ap-product-arrow"><ArrowUpRight size={18}/></span></button>
+                  </div>
                 </article>;
               })}
             </div>
@@ -317,7 +338,7 @@ export default function PublicSite({ openWorkspace }: { openWorkspace: () => voi
       </footer>
 
       {detailSolution && <Modal wide title={detailSolution.name} description={detailSolution.headline} onClose={() => setDetail(null)}>
-        <div className="ap-detail-layout">{detailSolution.image ? <img src={detailSolution.image} alt="" width="1000" height="667" /> : <div className="ap-product-detail-technical"><DetailIcon size={90} strokeWidth={1}/></div>}<div><p>{detailSolution.description}</p><h3>¿Qué revisamos con vos?</h3><ul>{detailSolution.topics.map(topic => <li key={topic}><Check size={17} />{topic}</li>)}</ul><button className="ap-button" onClick={() => consult(detailSolution.id)}>Solicitar asesoría <ArrowUpRight size={17} /></button></div></div><p className="ap-dialog-note">Información orientativa. Los alcances, requisitos y disponibilidad deben confirmarse con la aseguradora antes de contratar.</p>
+        <div className="ap-detail-layout">{detailVisual ? <div className="ap-product-detail-photo" style={productStyle(detailVisual)}><ProductPhoto key={detailSolution.id} visual={detailVisual} eager/></div> : <img src={detailSolution.image} alt="" width="1000" height="667" />}<div><p>{detailSolution.description}</p><h3>¿Qué revisamos con vos?</h3><ul>{detailSolution.topics.map(topic => <li key={topic}><Check size={17} />{topic}</li>)}</ul><button className="ap-button" onClick={() => consult(detailSolution.id)}>Solicitar asesoría <ArrowUpRight size={17} /></button></div></div><p className="ap-dialog-note">Información orientativa. Los alcances, requisitos y disponibilidad deben confirmarse con la aseguradora antes de contratar.</p>
       </Modal>}
       {consultation && <Modal title={hasChannel ? 'Hablemos de tu seguro.' : 'Prepará tu consulta.'} description={hasChannel ? 'Elegí un canal de atención para continuar tu consulta con ACOS.' : 'Los canales de atención de esta web estarán disponibles próximamente. Por ahora, podés preparar y copiar tu consulta.'} onClose={() => setConsultation(null)}>
         <div className="ap-consultation"><label htmlFor="ap-interest">¿Qué te gustaría proteger?</label><select id="ap-interest" value={consultation} onChange={event => { setConsultation(event.target.value as SolutionId); setCopied('idle'); }}><option value="asesoria">Asesoría general</option><option value="empresas">Asesoría empresarial</option>{catalogSolutions.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select><label htmlFor="ap-message">Tu mensaje inicial</label><textarea id="ap-message" value={message} readOnly rows={5} /><div className="ap-consultation-actions">{whatsapp && <a className="ap-button" href={'https://wa.me/' + whatsapp + '?text=' + encodeURIComponent(message)} target="_blank" rel="noopener noreferrer">Continuar en WhatsApp <ArrowUpRight size={16} /></a>}{publicContact.email && <a className="ap-button" href={'mailto:' + publicContact.email + '?subject=' + encodeURIComponent('Consulta de seguros — ACOS') + '&body=' + encodeURIComponent(message)}>Escribir por correo <Mail size={16} /></a>}{publicContact.phone && <a className="ap-text-link" href={'tel:' + publicContact.phone.replace(/[^+\d]/g, '')}>Llamar a ACOS <Phone size={16} /></a>}<button className={hasChannel ? 'ap-text-link' : 'ap-button'} onClick={copyMessage}>{copied === 'done' ? 'Mensaje copiado' : 'Copiar consulta'}{copied === 'done' ? <Check size={16} /> : <Copy size={16} />}</button></div><p className="ap-copy-status" role="status">{copied === 'done' ? 'Copiado. Podés compartirlo por un canal que ya conozcás de ACOS.' : copied === 'error' ? 'No pudimos copiar automáticamente. Seleccioná el mensaje de arriba y copialo manualmente.' : ''}</p><p className="ap-dialog-note"><LockKeyhole size={14} />No se envía ni se guarda una solicitud desde esta ventana.</p></div>
