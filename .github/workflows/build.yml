@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
       - name: Issuance workflow unit tests
-        run: node --experimental-strip-types --test tests/issuance-workflow.test.mjs tests/attachment-deadline.test.mjs tests/operation-math.test.mjs tests/insurance-catalog.test.mjs
+        run: node --experimental-strip-types --test tests/issuance-workflow.test.mjs tests/attachment-deadline.test.mjs tests/operation-math.test.mjs tests/insurance-catalog.test.mjs tests/vehicle-catalog.test.mjs
       - name: ACOS Mail gateway unit tests (no provider connection)
         run: python3 -m unittest discover -s tests -p 'test_acos_mail.py' -v
       - name: Typecheck and build
