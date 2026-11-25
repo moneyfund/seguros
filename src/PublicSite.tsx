@@ -1,3 +1,4 @@
+import XarconCredit from './XarconCredit';
 import { useEffect, useRef, useState, type ReactNode, type CSSProperties } from 'react';
 import {
   ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, Pause, Play, BriefcaseBusiness, CarFront, Check,
@@ -428,7 +429,7 @@ export default function PublicSite({ catalogPage=false }: { catalogPage?:boolean
             <div><h2>Nuestros seguros</h2><a href="#/seguros">Ver todos los seguros</a>{catalogSolutions.slice(0, 5).map(item => <button key={item.id} onClick={() => setDetail(item.id)}>{item.name}</button>)}</div>
             <div className="ap-footer-help"><h2>Estamos para orientarte</h2><p>Elegí con información clara.<br />Empezá por una consulta.</p><button className="ap-text-link" onClick={() => consult()}>Solicitar asesoría <ArrowUpRight size={16} /></button></div>
           </div>
-          <div className="ap-footer-bottom"><span>© {new Date().getFullYear()} ACOS. Todos los derechos reservados.</span><span>Diseño y desarrollo <strong>XARCON</strong></span><a href={catalogPage?"#/seguros":"#/inicio"} onClick={() => sectionClick(catalogPage?"soluciones":"inicio")}>Volver arriba <ArrowDown size={14} /></a></div>
+          <div className="ap-footer-bottom"><span>© {new Date().getFullYear()} ACOS. Todos los derechos reservados.</span><span className="ap-xarcon-credit">Diseño y desarrollo <XarconCredit/></span><a href={catalogPage?"#/seguros":"#/inicio"} onClick={() => sectionClick(catalogPage?"soluciones":"inicio")}>Volver arriba <ArrowDown size={14} /></a></div>
         </div>
       </footer>
 
