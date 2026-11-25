@@ -123,6 +123,18 @@ try {
       else {await form.getByRole('button',{name:'Atrás'}).click();assert.equal(await form.getByLabel('Nombre completo').inputValue(),'Cliente de prueba temporal');}
       await form.getByRole('button',{name:'Continuar'}).click();
       assert.equal(await form.getByLabel(/Correo electrónico/).inputValue(),'prueba@example.invalid');
+      await form.getByRole('button',{name:'Llenar datos del vehículo'}).click();
+      const make=form.getByRole('combobox',{name:'Marca',exact:true}),model=form.getByRole('combobox',{name:'Modelo',exact:true});
+      await form.getByRole('button',{name:'Buscar marca',exact:true}).click();
+      assert.ok(await form.getByRole('option').count()>=70);
+      await make.fill('toy');await form.getByRole('option',{name:'Toyota',exact:true}).click();
+      await form.getByRole('button',{name:'Buscar modelo',exact:true}).click();
+      assert.equal(await form.getByRole('option',{name:'Hilux',exact:true}).count(),1);
+      assert.equal(await form.getByRole('option',{name:'Emgrand',exact:true}).count(),0);
+      await model.fill('hil');await model.press('ArrowDown');await model.press('Enter');assert.equal(await model.inputValue(),'Hilux');
+      await make.fill('Geely');await form.getByRole('option',{name:'Geely',exact:true}).click();assert.equal(await model.inputValue(),'');
+      await form.getByRole('button',{name:'Buscar modelo',exact:true}).click();await form.getByRole('option',{name:'Emgrand',exact:true}).click();assert.equal(await model.inputValue(),'Emgrand');
+      await make.fill('Marca de prueba importada');await model.fill('Modelo especial');await model.press('Escape');assert.equal(await model.inputValue(),'Modelo especial');
       await form.getByRole('button',{name:'Cerrar formulario'}).click();
       assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Client page overflow');
     });
