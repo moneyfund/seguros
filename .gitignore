@@ -9,3 +9,4 @@ dist
 public-site-qa/
 brand-qa/
 tests/brand/rendered/
+/public/ocr/
