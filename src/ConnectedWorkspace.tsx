@@ -1,3 +1,4 @@
+import XarconCredit from './XarconCredit';
 import AdminNavigation from './AdminNavigation';
 import AdminTrash from './AdminTrash';
 import {Trash2} from 'lucide-react';
@@ -151,7 +152,7 @@ function AuthBox({ user, stage, onRetry, onRequest, onBack, registrationMode, ad
   </>}
   {user&&<button className="live-switch" onClick={()=>void signOut(auth)}>Cerrar sesión · {user.email}</button>}
   <div className="live-auth-foot"><LockKeyhole size={14}/> Tus permisos se validan en Firebase, no en la interfaz.</div>
- </div><p className="live-auth-copyright">ACOS · PLATAFORMA EMPRESARIAL · XARCON 2026</p></div>;
+ </div><p className="live-auth-copyright">ACOS · PLATAFORMA EMPRESARIAL · <XarconCredit/> 2026</p></div>;
 }
 type EntryModal = 'lead' | 'ticket' | 'policy' | 'file' | null;
 const recordNames:LiveCollection[]=['leads','policies','tickets','commissions','documents','members'];
@@ -335,7 +336,7 @@ export function LivePanel({user,role,admin,grantedRoles,grantedSections,onPublic
    <nav className="sidebar-nav" aria-label="Áreas del sistema">{admin?<AdminNavigation items={menuItems}/>:<>{activeTabs.flatMap(tab=>{const Icon=sections[tab].icon;const count=tab==='prospectos'?leads.length:tab==='polizas'?(enterpriseAccess.canView?enterprise.requests.filter(r=>r.status==='ISSUED').length:policies.length):tab==='solicitudes'?tickets.filter(t=>t.status!=='Resuelto').length:tab==='documentos'?documents.length:tab==='clientes'?enterprise.clients.length:0;const item=<button key={tab} className={'sidebar-item '+(section===tab&&!(tab==='clientes'&&enterpriseMode==='issuance')?'active':'')} onClick={()=>go(tab)}><Icon size={18}/><span>{sections[tab].label}</span>{count>0&&<i>{count}</i>}</button>;return tab==='clientes'&&enterpriseAccess.canView&&enterpriseAccess.issuance?[item,<button key="emision" className={'sidebar-item '+(section==='clientes'&&enterpriseMode==='issuance'?'active':'')} onClick={()=>special('modulo/clientes/emision')}><Bell size={18}/><span>Historial de pólizas</span>{enterpriseCount>0&&<i>{enterpriseCount}</i>}</button>]:[item];})}{canMail&&<button className={'sidebar-item '+(section==='mail'?'active':'')} onClick={()=>special('modulo/correo')}><Mail size={18}/><span>ACOS Mail</span></button>}</>}</nav>
    <div className="sidebar-spacer"/>
    <div className="live-sidebar-links">{!admin&&<button onClick={()=>special('accesos')}><ShieldCheck size={16}/> Guía de accesos</button>}<button onClick={onPublic}><ArrowLeft size={16}/> Sitio público</button><button onClick={()=>void signOut(auth)}><LogOut size={16}/> Cerrar sesión</button></div>
-   <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY XARCON</strong><small>Gestión profesional de seguros</small></div></div>
+   <div className="sidebar-bottom"><strong className="live-brand-sign">X</strong><div><strong>ACOS · POWERED BY <XarconCredit/></strong><small>Gestión profesional de seguros</small></div></div>
   </aside>
   <div className="app-main">
    <MobileHeader title={displaySection} home={section==='resumen'} initials={(user.displayName||user.email||'AC').slice(0,2).toUpperCase()} attention={attention} onActivity={()=>setSheet('activity')} onMore={()=>setSheet('more')}/>

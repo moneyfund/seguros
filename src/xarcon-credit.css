@@ -1,0 +1,9 @@
+/* Consistent external developer credit; does not change existing navigation. */
+.acos-public .ap-footer-bottom a.ac-xarcon-credit,.live-shell .ac-xarcon-credit,.live-auth-screen .ac-xarcon-credit{display:inline-flex;align-items:center;gap:4px;min-height:0;color:inherit;font:inherit;font-weight:700;text-decoration:none;white-space:nowrap;vertical-align:baseline;transition:color .18s ease}
+.acos-public .ap-footer-bottom .ap-xarcon-credit{display:inline-flex;align-items:center;gap:4px;flex-wrap:wrap}
+.acos-public .ap-footer-bottom a.ac-xarcon-credit{font-size:10px;letter-spacing:1px;color:var(--brand-slate)}
+.acos-public .ap-footer-bottom a.ac-xarcon-credit svg,.ac-xarcon-credit svg{flex-shrink:0;transform:none;transition:transform .18s ease}
+.acos-public .ap-footer-bottom a.ac-xarcon-credit:hover,.live-shell .ac-xarcon-credit:hover,.live-auth-screen .ac-xarcon-credit:hover{color:#c99c31;text-decoration:underline;text-underline-offset:3px}
+.acos-public .ap-footer-bottom a.ac-xarcon-credit:hover svg,.ac-xarcon-credit:hover svg{transform:translate(2px,-2px)}
+.ac-xarcon-credit:focus-visible{outline:2px solid #c99c31;outline-offset:4px;border-radius:2px}
+@media(prefers-reduced-motion:reduce){.ac-xarcon-credit,.ac-xarcon-credit svg{transition:none!important}.ac-xarcon-credit:hover svg{transform:none!important}}
