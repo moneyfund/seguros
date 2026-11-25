@@ -40,3 +40,16 @@ export function parseCirculation(text:string,nowYear=new Date().getFullYear()):C
  if(mapped[use])result.use=mapped[use];
  return result;
 }
+
+export type CirculationConflict={front:string;back:string};
+export function mergeCirculationSides(front:CirculationResult,back:CirculationResult){
+ const fields:CirculationResult={},conflicts:Partial<Record<keyof CirculationFields,CirculationConflict>>={};
+ const keys=Array.from(new Set([...Object.keys(front),...Object.keys(back)])) as (keyof CirculationFields)[];
+ for(const key of keys){
+  const a=front[key]?.trim(),b=back[key]?.trim();
+  if(a&&b&&a.toUpperCase()!==b.toUpperCase())conflicts[key]={front:a,back:b};
+  else if(a||b)fields[key]=a||b;
+ }
+ if(fields.make&&fields.model)fields.model=knownModel(fields.make,fields.model);
+ return {fields,conflicts};
+}
